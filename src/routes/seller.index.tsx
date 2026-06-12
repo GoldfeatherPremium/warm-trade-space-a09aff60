@@ -256,3 +256,45 @@ function SellerOverview() {
     </div>
   );
 }
+
+function BIStat({
+  icon,
+  label,
+  value,
+  sub,
+  delta,
+  tone,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  sub?: string;
+  delta?: string;
+  tone: "up" | "down" | "neutral";
+}) {
+  const toneCls =
+    tone === "up"
+      ? "text-accent"
+      : tone === "down"
+        ? "text-destructive"
+        : "text-muted-foreground";
+  const TrendIcon = tone === "up" ? TrendingUp : tone === "down" ? TrendingDown : null;
+  return (
+    <div className="bg-background/40 border border-border rounded-lg p-3">
+      <div className="flex items-center justify-between">
+        <p className="text-[9px] font-bold tracking-widest text-muted-foreground flex items-center gap-1">
+          {icon}
+          {label}
+        </p>
+        {delta && (
+          <span className={`text-[9px] font-bold flex items-center gap-0.5 ${toneCls}`}>
+            {TrendIcon && <TrendIcon className="size-2.5" />}
+            {delta}
+          </span>
+        )}
+      </div>
+      <p className="font-mono text-base mt-1.5">{value}</p>
+      {sub && <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{sub}</p>}
+    </div>
+  );
+}
