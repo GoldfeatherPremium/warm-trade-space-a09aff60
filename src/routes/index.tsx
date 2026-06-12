@@ -11,7 +11,7 @@ import {
   ArrowUpRight,
   History,
 } from "lucide-react";
-import { getHomeData, getMyRecommendations } from "@/lib/api/catalog";
+import { getHomeData, getLiveMarketPulse, getMyRecommendations } from "@/lib/api/catalog";
 import { getFollowedFeed } from "@/lib/api/follows";
 import { PageShell } from "@/components/shell";
 import { ProductCard } from "@/components/product-card";
@@ -49,6 +49,12 @@ type RecentItem = { slug: string; title: string; image_key: string | null; price
 function Index() {
   const { me } = useMe();
   const { data } = useQuery({ queryKey: ["home"], queryFn: () => getHomeData() });
+  const { data: pulse } = useQuery({
+    queryKey: ["live-pulse"],
+    queryFn: () => getLiveMarketPulse(),
+    refetchInterval: 20_000,
+    staleTime: 15_000,
+  });
   const { data: recs } = useQuery({
     queryKey: ["recs", me?.id ?? "anon"],
     queryFn: () => getMyRecommendations({ data: { limit: 8 } }),
