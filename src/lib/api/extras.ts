@@ -73,10 +73,12 @@ export const checkCoupon = createServerFn({ method: "POST" })
   .inputValidator(z.object({ code: z.string().min(2).max(40), totalUsdt: z.number().min(0) }))
   .handler(async ({ data }) => {
     await appContext();
-    await requireUser();
+    const user = await requireUser();
+    rateLimit({ key: `coupon:${user.id}`, limit: 20, windowMs: 60_000 });
     const c = await validateCoupon(data.code, Math.round(data.totalUsdt * 100));
     return { code: c.code, pctOff: c.pct_off };
   });
+
 
 // ---------------------------------------------------------------------------
 // Pay with wallet balance (refund credits become instantly spendable)
