@@ -903,6 +903,23 @@ async function migrate(e: Engine): Promise<void> {
     .exec(`create index if not exists idx_products_featured on products(featured_until)`)
     .catch(() => {});
 
+  // --- Phase C (perf audit): additional hot-path indexes ---
+  await e
+    .exec(`create index if not exists idx_products_category_status on products(category_id, status, created_at)`)
+    .catch(() => {});
+  await e
+    .exec(`create index if not exists idx_products_active_created on products(status, created_at)`)
+    .catch(() => {});
+  await e
+    .exec(`create index if not exists idx_audit_created on audit_logs(created_at)`)
+    .catch(() => {});
+  await e
+    .exec(`create index if not exists idx_notif_user_read on notifications(user_id, read_at)`)
+    .catch(() => {});
+  await e
+    .exec(`create index if not exists idx_reviews_product_rating on reviews(product_id, rating)`)
+    .catch(() => {});
+
   // seed a sane default set if empty
   const seeded = await e.q<{ c: number }>(`select count(*) as c from fx_rates`);
   if (!seeded[0] || Number(seeded[0].c) === 0) {
