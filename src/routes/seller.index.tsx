@@ -35,7 +35,77 @@ function SellerOverview() {
         ))}
       </div>
 
+      {/* Business Intelligence — weekly performance, forecast, conversion */}
       <div className="bg-card border border-border rounded-lg p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-xs font-bold tracking-widest text-muted-foreground flex items-center gap-1.5">
+            <BarChart3 className="size-3.5" /> BUSINESS INTELLIGENCE
+          </h2>
+          <span className="text-[9px] text-muted-foreground tracking-widest">TRAILING 14d MODEL</span>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <BIStat
+            icon={<Activity className="size-3.5" />}
+            label="THIS WEEK"
+            value={usdt(data.intelligence.thisWeekCents)}
+            sub={`vs ${usdt(data.intelligence.lastWeekCents)} last`}
+            tone={data.intelligence.wowPct >= 0 ? "up" : "down"}
+            delta={`${data.intelligence.wowPct >= 0 ? "+" : ""}${data.intelligence.wowPct}% WoW`}
+          />
+          <BIStat
+            icon={<Target className="size-3.5" />}
+            label="7-DAY FORECAST"
+            value={usdt(data.intelligence.forecast7dCents)}
+            sub={`${usdt(data.intelligence.avgDailyCents)} / day avg`}
+            tone="neutral"
+          />
+          <BIStat
+            icon={<TrendingUp className="size-3.5" />}
+            label="CONVERSION"
+            value={`${data.intelligence.conversionPct}%`}
+            sub={`${data.intelligence.sold.toLocaleString()} / ${data.intelligence.views.toLocaleString()} views`}
+            tone={data.intelligence.conversionPct >= 5 ? "up" : "neutral"}
+          />
+          <BIStat
+            icon={<Activity className="size-3.5" />}
+            label="COMPLETION"
+            value={`${data.profile.completionRate.toFixed(0)}%`}
+            sub={`Level ${data.profile.level}`}
+            tone={
+              data.profile.completionRate >= 95
+                ? "up"
+                : data.profile.completionRate >= 85
+                  ? "neutral"
+                  : "down"
+            }
+          />
+        </div>
+        {data.intelligence.lastWeekCents > 0 && (
+          <p className="text-[11px] text-muted-foreground mt-3 leading-relaxed">
+            {data.intelligence.wowPct >= 0 ? (
+              <>
+                <span className="text-accent font-bold">Momentum up.</span> You're outpacing last
+                week by {data.intelligence.wowPct}%. If you sustain it, next week's payout could
+                clear{" "}
+                <span className="font-mono text-foreground">
+                  {usdt(data.intelligence.forecast7dCents)}
+                </span>
+                .
+              </>
+            ) : (
+              <>
+                <span className="text-yellow-400 font-bold">Slowing down.</span> Sales are{" "}
+                {Math.abs(data.intelligence.wowPct)}% under last week.{" "}
+                <Link to="/seller/promotions" className="text-primary hover:underline">
+                  Sponsored Boost
+                </Link>{" "}
+                on your top converter can rebuild the trend.
+              </>
+            )}
+          </p>
+        )}
+      </div>
+
         <h2 className="text-xs font-bold tracking-widest text-muted-foreground mb-3">
           NET SALES — LAST 14 DAYS
         </h2>
