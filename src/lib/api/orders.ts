@@ -45,6 +45,7 @@ export const createOrder = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await appContext();
     const user = await requireUser();
+    rateLimit({ key: `order:${user.id}`, limit: 10, windowMs: 60_000 });
     const settings = await getSettings();
 
     const p = await q1<{
