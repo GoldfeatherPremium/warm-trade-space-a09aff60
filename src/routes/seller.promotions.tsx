@@ -198,6 +198,78 @@ function PromotionsPage() {
         )}
       </section>
 
+      <section className="bg-card border border-border rounded-lg p-4 space-y-3">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <h2 className="text-xs font-bold tracking-widest text-muted-foreground flex items-center gap-1.5">
+              <TrendingUp className="size-3.5" /> SPONSORED BOOST
+            </h2>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Pin a listing to the top of trending, category, and home pages.
+              Costs {usdt(BOOST_RATE_CENTS_PER_DAY)}/day, billed from your
+              wallet balance.
+            </p>
+          </div>
+          <span className="text-[10px] font-bold px-2 py-1 rounded bg-secondary">
+            BALANCE: {usdt(productList?.walletCents ?? 0)}
+          </span>
+        </div>
+        {!productList?.products.length ? (
+          <p className="text-xs text-muted-foreground py-4 text-center">
+            Add a product first.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {productList.products.map((p) => {
+              const active =
+                p.featured_until != null && Number(p.featured_until) > Date.now();
+              const daysLeft = active
+                ? Math.max(
+                    1,
+                    Math.ceil((Number(p.featured_until) - Date.now()) / 86_400_000),
+                  )
+                : 0;
+              return (
+                <div
+                  key={`boost-${p.id}`}
+                  className="flex items-center justify-between gap-3 p-3 rounded border border-border/60 bg-background/40"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-bold truncate">{p.title}</p>
+                      {active && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-accent/15 text-accent flex items-center gap-1">
+                          <Zap className="size-2.5" /> BOOSTED · {daysLeft}d LEFT
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      {active
+                        ? `Active through ${new Date(Number(p.featured_until)).toLocaleDateString()}`
+                        : "Not boosted"}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() =>
+                      setBoostEditor({
+                        productId: p.id,
+                        title: p.title,
+                        featuredUntil: p.featured_until,
+                      })
+                    }
+                    className="px-2 py-1 text-[11px] font-bold bg-primary text-primary-foreground rounded hover:opacity-90 shrink-0"
+                  >
+                    {active ? "Extend" : "Boost"}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+
+
       {data && data.recentRedemptions.length > 0 && (
         <section className="bg-card border border-border rounded-lg p-4">
           <h2 className="text-xs font-bold tracking-widest text-muted-foreground mb-3">
