@@ -4,6 +4,7 @@ import { q, q1, run } from "../server/db.server";
 import { appContext } from "../server/app.server";
 import { requireUser, currentUser } from "../server/auth.server";
 import { fail, now } from "../server/core.server";
+import { rateLimit } from "../server/rate-limit.server";
 
 /**
  * Follow / unfollow a seller. Returns the new follow state and current
