@@ -898,6 +898,11 @@ async function migrate(e: Engine): Promise<void> {
     )
     .catch(() => {});
 
+  // --- Phase 12: index for featured-product sort hot-path ---
+  await e
+    .exec(`create index if not exists idx_products_featured on products(featured_until)`)
+    .catch(() => {});
+
   // seed a sane default set if empty
   const seeded = await e.q<{ c: number }>(`select count(*) as c from fx_rates`);
   if (!seeded[0] || Number(seeded[0].c) === 0) {
