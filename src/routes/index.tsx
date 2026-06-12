@@ -81,10 +81,6 @@ function Index() {
 
   return (
     <PageShell>
-      {/* ============ HERO BENTO ============ */}
-      <section className="relative">
-  return (
-    <PageShell>
       {/* ============ LIVE MARKET PULSE — social-proof strip ============ */}
       <LivePulseStrip pulse={pulse} />
 
