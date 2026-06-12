@@ -24,6 +24,7 @@ import { useMe } from "@/hooks/use-me";
 import { logout } from "@/lib/api/auth";
 import { SmartSearch } from "@/components/smart-search";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { AiShoppingAssistant } from "@/components/ai-assistant";
 import {
   DropdownMenu,
   DropdownMenuContent,
