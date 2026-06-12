@@ -247,7 +247,19 @@ export const getPayment = createServerFn({ method: "GET" })
          from users where id = ?`,
       [o!.seller_id],
     );
-    return { order: o!, deposit, seller: seller ?? null };
+    const product = await q1<{ warranty_hours: number; delivery_sla_minutes: number }>(
+      `select coalesce(p.warranty_hours, c.default_warranty_hours) as warranty_hours,
+              p.delivery_sla_minutes
+         from products p join categories c on c.id = p.category_id where p.id = ?`,
+      [o!.product_id],
+    );
+    return {
+      order: o!,
+      deposit,
+      seller: seller ?? null,
+      warrantyHours: product?.warranty_hours ?? 24,
+      deliverySlaMinutes: product?.delivery_sla_minutes ?? 60,
+    };
   });
 
 export const simulatePaymentSent = createServerFn({ method: "POST" })
