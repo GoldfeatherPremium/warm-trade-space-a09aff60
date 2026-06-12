@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { TrendingUp, TrendingDown, Activity, Target, BarChart3 } from "lucide-react";
 import { getSellerOverview } from "@/lib/api/seller";
 import { usdt } from "@/lib/format";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -32,6 +33,77 @@ function SellerOverview() {
             <p className="font-mono text-sm mt-1">{x.v}</p>
           </div>
         ))}
+      </div>
+
+      {/* Business Intelligence — weekly performance, forecast, conversion */}
+      <div className="bg-card border border-border rounded-lg p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-xs font-bold tracking-widest text-muted-foreground flex items-center gap-1.5">
+            <BarChart3 className="size-3.5" /> BUSINESS INTELLIGENCE
+          </h2>
+          <span className="text-[9px] text-muted-foreground tracking-widest">TRAILING 14d MODEL</span>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <BIStat
+            icon={<Activity className="size-3.5" />}
+            label="THIS WEEK"
+            value={usdt(data.intelligence.thisWeekCents)}
+            sub={`vs ${usdt(data.intelligence.lastWeekCents)} last`}
+            tone={data.intelligence.wowPct >= 0 ? "up" : "down"}
+            delta={`${data.intelligence.wowPct >= 0 ? "+" : ""}${data.intelligence.wowPct}% WoW`}
+          />
+          <BIStat
+            icon={<Target className="size-3.5" />}
+            label="7-DAY FORECAST"
+            value={usdt(data.intelligence.forecast7dCents)}
+            sub={`${usdt(data.intelligence.avgDailyCents)} / day avg`}
+            tone="neutral"
+          />
+          <BIStat
+            icon={<TrendingUp className="size-3.5" />}
+            label="CONVERSION"
+            value={`${data.intelligence.conversionPct}%`}
+            sub={`${data.intelligence.sold.toLocaleString()} / ${data.intelligence.views.toLocaleString()} views`}
+            tone={data.intelligence.conversionPct >= 5 ? "up" : "neutral"}
+          />
+          <BIStat
+            icon={<Activity className="size-3.5" />}
+            label="COMPLETION"
+            value={`${data.profile.completionRate.toFixed(0)}%`}
+            sub={`Level ${data.profile.level}`}
+            tone={
+              data.profile.completionRate >= 95
+                ? "up"
+                : data.profile.completionRate >= 85
+                  ? "neutral"
+                  : "down"
+            }
+          />
+        </div>
+        {data.intelligence.lastWeekCents > 0 && (
+          <p className="text-[11px] text-muted-foreground mt-3 leading-relaxed">
+            {data.intelligence.wowPct >= 0 ? (
+              <>
+                <span className="text-accent font-bold">Momentum up.</span> You're outpacing last
+                week by {data.intelligence.wowPct}%. If you sustain it, next week's payout could
+                clear{" "}
+                <span className="font-mono text-foreground">
+                  {usdt(data.intelligence.forecast7dCents)}
+                </span>
+                .
+              </>
+            ) : (
+              <>
+                <span className="text-yellow-400 font-bold">Slowing down.</span> Sales are{" "}
+                {Math.abs(data.intelligence.wowPct)}% under last week.{" "}
+                <Link to="/seller/promotions" className="text-primary hover:underline">
+                  Sponsored Boost
+                </Link>{" "}
+                on your top converter can rebuild the trend.
+              </>
+            )}
+          </p>
+        )}
       </div>
 
       <div className="bg-card border border-border rounded-lg p-4">
@@ -181,6 +253,48 @@ function SellerOverview() {
         completion. Levels rise with sales volume, rating and low dispute rate — higher levels
         unlock more listings and bigger weekly withdrawal caps.
       </div>
+    </div>
+  );
+}
+
+function BIStat({
+  icon,
+  label,
+  value,
+  sub,
+  delta,
+  tone,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  sub?: string;
+  delta?: string;
+  tone: "up" | "down" | "neutral";
+}) {
+  const toneCls =
+    tone === "up"
+      ? "text-accent"
+      : tone === "down"
+        ? "text-destructive"
+        : "text-muted-foreground";
+  const TrendIcon = tone === "up" ? TrendingUp : tone === "down" ? TrendingDown : null;
+  return (
+    <div className="bg-background/40 border border-border rounded-lg p-3">
+      <div className="flex items-center justify-between">
+        <p className="text-[9px] font-bold tracking-widest text-muted-foreground flex items-center gap-1">
+          {icon}
+          {label}
+        </p>
+        {delta && (
+          <span className={`text-[9px] font-bold flex items-center gap-0.5 ${toneCls}`}>
+            {TrendIcon && <TrendIcon className="size-2.5" />}
+            {delta}
+          </span>
+        )}
+      </div>
+      <p className="font-mono text-base mt-1.5">{value}</p>
+      {sub && <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{sub}</p>}
     </div>
   );
 }
