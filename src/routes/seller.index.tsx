@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { TrendingUp, TrendingDown, Activity, Target, BarChart3 } from "lucide-react";
 import { getSellerOverview } from "@/lib/api/seller";
 import { usdt } from "@/lib/format";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
