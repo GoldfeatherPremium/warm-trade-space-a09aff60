@@ -1,12 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { TrendingUp, Zap } from "lucide-react";
 import {
+  BOOST_RATE_CENTS_PER_DAY,
+  boostProduct,
   deleteMyCoupon,
   listMyProductsForPromo,
   listMyPromotions,
   saveMyCoupon,
   setProductSale,
+  stopBoost,
 } from "@/lib/api/promotions";
 import { usdt } from "@/lib/format";
 import { toast } from "sonner";
