@@ -19,12 +19,12 @@ Tracks the production-readiness audit. Each phase is verified before the next.
 - TODO: webhook signature stub on `api/public/cron/*` (✅ follow-digest uses CRON_SECRET)
 
 
-## Phase C — Performance + bundle
-- DB index audit on hot queries (`products.status,created_at`, `orders.buyer_id,status`, `seller_follows.seller_id`)
-- N+1 sweep on browse, storefront, seller orders
-- Code-split admin and seller route bundles
-- LCP image preload on `/`, lazy-load below-fold images
-- Remove unused deps; tree-shake icon imports
+## Phase C — Performance + bundle (PARTIAL)
+- ✅ Hot-path indexes added: `products(category_id,status,created_at)`, `products(status,created_at)`, `audit_logs(created_at)`, `notifications(user_id,read_at)`, `reviews(product_id,rating)` (on top of existing buyer/seller/status indexes)
+- TODO: N+1 sweep on browse, storefront, seller orders
+- TODO: Code-split admin and seller route bundles
+- TODO: LCP image preload on `/`, lazy-load below-fold images
+- TODO: Remove unused deps; tree-shake icon imports
 
 ## Phase D — SEO + structured data
 - ✅ Organization + WebSite JSON-LD (root)
