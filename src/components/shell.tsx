@@ -251,6 +251,7 @@ export function PageShell({ children }: { children: ReactNode }) {
       <main className="flex-1 w-full max-w-6xl mx-auto px-4 py-6 pb-20 sm:pb-6">{children}</main>
       <SiteFooter />
       <MobileBottomNav />
+      <AiShoppingAssistant />
     </div>
   );
 }
