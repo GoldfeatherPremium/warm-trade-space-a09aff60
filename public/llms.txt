@@ -1,0 +1,28 @@
+# X-VAULT — Gaming Marketplace
+
+> X-VAULT is an escrow-protected marketplace for digital gaming goods: game currency, items, accounts, top-ups, gift cards, and boosting services. Every order is held in escrow until the buyer confirms delivery, with seller trust scores, dispute resolution, and a warranty period on every purchase.
+
+## Core pages
+
+- [Home](https://warm-trade-space.lovable.app/): Featured products, top sellers, trending categories, live marketplace activity.
+- [Browse](https://warm-trade-space.lovable.app/browse): Full catalog with filters for category, price, seller level, trust score, delivery speed, and rating.
+- [Sellers](https://warm-trade-space.lovable.app/sellers): Verified sellers ranked by trust score, completion rate, and total sales.
+- [Become a seller](https://warm-trade-space.lovable.app/sell): Seller application flow with verification tiers.
+
+## How it works
+
+1. Buyers pay in USDT (TRC20 or BEP20). Funds are held in marketplace escrow.
+2. Sellers deliver automatically (instant key/code) or manually (within an SLA).
+3. Buyer confirms receipt → escrow releases to the seller minus marketplace fee.
+4. If something goes wrong, either party can open a dispute within the warranty window. Staff reviews evidence and rules in 24–72h.
+
+## Trust signals
+
+- Seller trust score (0–100) derived from sales, completion rate, dispute outcomes, response time, and account age.
+- Seller levels (1–10) tied to total sales and tenure.
+- Verification tiers (email, phone, government ID, business).
+- Public reviews with order-verified badges.
+
+## Robots / crawling
+
+Sitemap: https://warm-trade-space.lovable.app/sitemap.xml

@@ -4,6 +4,7 @@ import { q, q1, run } from "../server/db.server";
 import { appContext } from "../server/app.server";
 import { requireUser, currentUser } from "../server/auth.server";
 import { fail, now } from "../server/core.server";
+import { rateLimit } from "../server/rate-limit.server";
 
 /**
  * Follow / unfollow a seller. Returns the new follow state and current
@@ -14,6 +15,7 @@ export const toggleFollowSeller = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await appContext();
     const user = await requireUser();
+    rateLimit({ key: `follow:${user.id}`, limit: 30, windowMs: 60_000 });
     if (user.id === data.sellerId) fail("You can't follow yourself.");
     const seller = await q1<{ id: string }>(
       `select id from users where id = ? and seller_status = 'approved' and is_banned = 0`,

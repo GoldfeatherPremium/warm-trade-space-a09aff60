@@ -4,6 +4,7 @@ import { q1, run, tx } from "../server/db.server";
 import { appContext } from "../server/app.server";
 import { fail, notify, now, uid } from "../server/core.server";
 import { requireUser } from "../server/auth.server";
+import { rateLimit } from "../server/rate-limit.server";
 import { recomputeSellerTrust } from "../server/trust.server";
 
 export const leaveReview = createServerFn({ method: "POST" })
@@ -17,6 +18,7 @@ export const leaveReview = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await appContext();
     const user = await requireUser();
+    rateLimit({ key: `review:${user.id}`, limit: 6, windowMs: 60_000 });
     const o = await q1<{
       id: string;
       order_no: string;
