@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { updateProfile } from "@/lib/api/auth";
 import { getI18nBootstrap, updatePreferences } from "@/lib/api/i18n";
+import { getMyLoyalty } from "@/lib/api/loyalty";
 import { useMe } from "@/hooks/use-me";
 import { PageShell } from "@/components/shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { usdt } from "@/lib/format";
 
 export const Route = createFileRoute("/account")({
   head: () => ({ meta: [{ title: "Account — X-VAULT" }] }),
@@ -21,6 +23,7 @@ function AccountPage() {
   const qc = useQueryClient();
   const [pw, setPw] = useState({ currentPassword: "", newPassword: "" });
   const i18n = useQuery({ queryKey: ["i18nBootstrap"], queryFn: () => getI18nBootstrap() });
+  const loyalty = useQuery({ queryKey: ["myLoyalty"], queryFn: () => getMyLoyalty(), enabled: !!me });
   const [prefs, setPrefs] = useState({ locale: "en", preferred_currency: "USD", country: "" });
 
   useEffect(() => {
@@ -86,6 +89,39 @@ function AccountPage() {
             </p>
           )}
         </div>
+
+        {loyalty.data && (
+          <div className={`border rounded-lg p-4 space-y-3 ${loyalty.data.cls}`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-bold tracking-widest opacity-80">LOYALTY TIER</p>
+                <p className="font-display text-2xl">{loyalty.data.label.toUpperCase()}</p>
+              </div>
+              <div className="text-right text-[11px] opacity-90">
+                <p>Lifetime spend</p>
+                <p className="font-mono text-base">{usdt(loyalty.data.lifetimeSpendCents)}</p>
+              </div>
+            </div>
+            {loyalty.data.nextTierLabel && (
+              <div>
+                <div className="flex justify-between text-[10px] opacity-80 mb-1">
+                  <span>Progress to {loyalty.data.nextTierLabel}</span>
+                  <span>{usdt(loyalty.data.nextTierRemainingCents)} to go</span>
+                </div>
+                <div className="h-1.5 bg-background/40 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-current opacity-80 transition-all"
+                    style={{ width: `${loyalty.data.progressPct}%` }}
+                  />
+                </div>
+              </div>
+            )}
+            <ul className="text-[11px] space-y-0.5 opacity-90 list-disc list-inside">
+              {loyalty.data.perks.map((p) => <li key={p}>{p}</li>)}
+            </ul>
+          </div>
+        )}
+
 
         {me.seller_status === "approved" && (
           <div className="bg-card border border-border rounded-lg p-4 flex items-center justify-between">

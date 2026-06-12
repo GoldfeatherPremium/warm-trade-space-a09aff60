@@ -80,6 +80,11 @@ export function ProductCard({ product }: { product: PublicProduct }) {
           {product.delivery_type === "auto" ? "INSTANT" : `~${product.delivery_sla_minutes}min`}
         </span>
         <FavoriteButton productId={product.id} className="absolute bottom-2 right-2" />
+        {product.is_promoted && (
+          <span className="absolute top-2 right-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-fuchsia-500/90 text-white tracking-widest">
+            SPONSORED
+          </span>
+        )}
         {product.delivery_type === "auto" && product.stock_count === 0 && (
           <span className="absolute top-2 right-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-destructive/90 text-white">
             OUT OF STOCK
