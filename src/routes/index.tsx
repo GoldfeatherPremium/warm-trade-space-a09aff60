@@ -10,6 +10,10 @@ import {
   Sparkles,
   ArrowUpRight,
   History,
+  Users,
+  Flame,
+  UserPlus,
+  PackageSearch,
 } from "lucide-react";
 import { getHomeData, getLiveMarketPulse, getMyRecommendations } from "@/lib/api/catalog";
 import { getFollowedFeed } from "@/lib/api/follows";
