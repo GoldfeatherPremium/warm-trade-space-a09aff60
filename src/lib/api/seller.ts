@@ -449,20 +449,29 @@ export const getSellerOverview = createServerFn({ method: "GET" }).handler(async
        where seller_id = ? and paid_at > ? and status not in ('refunded','cancelled','expired')`,
       [user.id, t - period],
     );
+  const salesBetween = (from: number, to: number) =>
+    q1<{ c: number; s: number }>(
+      `select count(*) c, coalesce(sum(seller_net_cents),0) s from orders
+       where seller_id = ? and paid_at > ? and paid_at <= ? and status not in ('refunded','cancelled','expired')`,
+      [user.id, from, to],
+    );
   const [
     today,
     week,
     month,
+    prevWeek,
     wallet,
     needsDelivery,
     openDisputes,
     lowStock,
     paidOrders,
     topProducts,
+    funnel,
   ] = await Promise.all([
     sales(dayMs),
     sales(7 * dayMs),
     sales(30 * dayMs),
+    salesBetween(t - 14 * dayMs, t - 7 * dayMs),
     getWallet(user.id),
     q1<{ c: number }>(
       `select count(*) c from orders where seller_id = ? and status in ('paid','delivering')`,
@@ -497,6 +506,11 @@ export const getSellerOverview = createServerFn({ method: "GET" }).handler(async
          order by sold_count desc limit 6`,
       [user.id],
     ),
+    q1<{ views: number; sold: number }>(
+      `select coalesce(sum(views),0) views, coalesce(sum(sold_count),0) sold
+         from products where seller_id = ? and status in ('active','out_of_stock','paused')`,
+      [user.id],
+    ),
   ]);
   const daily: Array<{ day: string; sales: number; orders: number }> = [];
   for (let i = 13; i >= 0; i--) {
@@ -508,6 +522,21 @@ export const getSellerOverview = createServerFn({ method: "GET" }).handler(async
     daily[idx].sales += o.seller_net_cents / 100;
     daily[idx].orders += 1;
   }
+  // 7-day forecast: trailing 14-day average daily net × 7. Conservative —
+  // signals momentum without overpromising during volatile weeks.
+  const trailing14Total = daily.reduce((a, d) => a + d.sales, 0);
+  const forecast7d = Math.round((trailing14Total / 14) * 7 * 100); // cents
+  const thisWeekCents = Number(week?.s ?? 0);
+  const lastWeekCents = Number(prevWeek?.s ?? 0);
+  const wowPct =
+    lastWeekCents > 0
+      ? Math.round(((thisWeekCents - lastWeekCents) / lastWeekCents) * 100)
+      : thisWeekCents > 0
+        ? 100
+        : 0;
+  const views = Number(funnel?.views ?? 0);
+  const sold = Number(funnel?.sold ?? 0);
+  const conversionPct = views > 0 ? Math.round((sold / views) * 1000) / 10 : 0;
   return {
     daily,
     topProducts,
@@ -518,6 +547,16 @@ export const getSellerOverview = createServerFn({ method: "GET" }).handler(async
     needsDelivery: needsDelivery!.c,
     openDisputes: openDisputes!.c,
     lowStock,
+    intelligence: {
+      thisWeekCents,
+      lastWeekCents,
+      wowPct,
+      forecast7dCents: forecast7d,
+      avgDailyCents: Math.round((trailing14Total / 14) * 100),
+      views,
+      sold,
+      conversionPct,
+    },
     profile: {
       level: user.seller_level,
       rating: user.rating,
