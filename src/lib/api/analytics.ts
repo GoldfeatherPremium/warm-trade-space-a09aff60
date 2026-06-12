@@ -171,6 +171,9 @@ export const getAdminAnalytics = createServerFn({ method: "GET" })
       topProducts,
       newSignups,
       conversionRow,
+      topSearches,
+      zeroSearches,
+      searchStats,
     ] = await Promise.all([
       q<{ paid_at: number; v: number; n: number }>(
         `select paid_at, total_cents as v, 1 as n from orders
@@ -222,6 +225,26 @@ export const getAdminAnalytics = createServerFn({ method: "GET" })
       q1<{ views: number; sold: number }>(
         `select coalesce(sum(views),0) views, coalesce(sum(sold_count),0) sold from products`,
       ),
+      // Top searches (with results) — opportunity to merchandise.
+      q<{ query: string; uses: number; avg_results: number }>(
+        `select query, count(*) as uses, avg(results) as avg_results
+           from search_queries
+          where created_at > ? and length(query) >= 2 and results > 0
+          group by query order by uses desc limit 15`,
+        [since],
+      ),
+      // Zero-result searches — demand gap (catalog hole, typo, or banned term).
+      q<{ query: string; uses: number }>(
+        `select query, count(*) as uses from search_queries
+          where created_at > ? and length(query) >= 2 and results = 0
+          group by query order by uses desc limit 15`,
+        [since],
+      ),
+      q1<{ total: number; failed: number }>(
+        `select count(*) total, sum(case when results = 0 then 1 else 0 end) failed
+           from search_queries where created_at > ? and length(query) >= 2`,
+        [since],
+      ),
     ]);
 
     const daily = buildDaily(paidRows, days, t);
@@ -232,6 +255,9 @@ export const getAdminAnalytics = createServerFn({ method: "GET" })
       conversionRow && conversionRow.views > 0
         ? (conversionRow.sold / conversionRow.views) * 100
         : 0;
+    const totalSearches = Number(searchStats?.total ?? 0);
+    const failedSearches = Number(searchStats?.failed ?? 0);
+    const searchFailRate = totalSearches > 0 ? (failedSearches / totalSearches) * 100 : 0;
 
     return {
       range: data.range,
@@ -250,5 +276,12 @@ export const getAdminAnalytics = createServerFn({ method: "GET" })
       topSellers,
       topProducts,
       newSignups: newSignups ?? { buyers: 0, sellers: 0 },
+      search: {
+        total: totalSearches,
+        failed: failedSearches,
+        failRate: searchFailRate,
+        top: topSearches.map((r) => ({ ...r, avg_results: Number(r.avg_results ?? 0) })),
+        zero: zeroSearches,
+      },
     };
   });
