@@ -11,6 +11,7 @@ import {
 import { txEscrowHold, txEscrowRelease, txRefund } from "./money.server";
 import { recomputeSellerTrust } from "./trust.server";
 import { assessOrderRisk, recordRiskEvent } from "./fraud.server";
+import { awardLoyaltySpend } from "./loyalty.server";
 
 export interface OrderRow {
   id: string;
@@ -245,6 +246,8 @@ export function completeOrder(orderId: string, auto: boolean): Promise<void> {
     );
     await run(`update users set total_sales = total_sales + 1 where id = ?`, [o.seller_id]);
     await recomputeSellerTrust(o.seller_id);
+    // Credit lifetime spend to the buyer; tier-up mints a coupon + notifies them.
+    await awardLoyaltySpend(o.buyer_id, o.total_cents - (o.discount_cents ?? 0));
     const convId = await getOrCreateOrderConversation(orderId);
     await systemMessage(
       convId,

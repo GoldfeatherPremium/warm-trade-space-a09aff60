@@ -3,7 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Zap, Clock, ShieldCheck, Star, MessageSquare, Minus, Plus } from "lucide-react";
-import { getProduct, getRelatedProducts } from "@/lib/api/catalog";
+import { getProduct, getRelatedProducts, getFrequentlyBoughtTogether } from "@/lib/api/catalog";
 import { createOrder } from "@/lib/api/orders";
 import { startProductConversation } from "@/lib/api/chat";
 import { checkCoupon } from "@/lib/api/extras";
@@ -527,8 +527,31 @@ function ProductPage() {
         </div>
       </div>
 
+      <FrequentlyBoughtTogether productId={p.id} />
       <RelatedProducts productId={p.id} />
     </PageShell>
+  );
+}
+
+function FrequentlyBoughtTogether({ productId }: { productId: string }) {
+  const { data } = useQuery({
+    queryKey: ["fbt", productId],
+    queryFn: () => getFrequentlyBoughtTogether({ data: { productId, limit: 4 } }),
+    staleTime: 5 * 60_000,
+  });
+  const items = data?.items ?? [];
+  if (items.length === 0) return null;
+  return (
+    <section className="mt-10">
+      <h2 className="font-display text-xl mb-3 flex items-center gap-2">
+        <Sparkle /> FREQUENTLY BOUGHT TOGETHER
+      </h2>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {items.map((it) => (
+          <ProductCard key={it.id} product={it} />
+        ))}
+      </div>
+    </section>
   );
 }
 
