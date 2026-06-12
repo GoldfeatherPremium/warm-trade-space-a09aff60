@@ -83,6 +83,13 @@ function Index() {
     <PageShell>
       {/* ============ HERO BENTO ============ */}
       <section className="relative">
+  return (
+    <PageShell>
+      {/* ============ LIVE MARKET PULSE — social-proof strip ============ */}
+      <LivePulseStrip pulse={pulse} />
+
+      {/* ============ HERO BENTO ============ */}
+      <section className="relative">
         {/* aurora glow background */}
         <div
           aria-hidden
