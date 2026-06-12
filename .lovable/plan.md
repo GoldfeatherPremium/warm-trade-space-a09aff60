@@ -38,12 +38,14 @@ Tracks the production-readiness audit. Each phase is verified before the next.
 - TODO: internal linking pass (category → related categories, seller → similar sellers)
 
 
-## Phase E — Trust + conversion polish
-- Trust chips on every product card surface (browse, search, storefront, recommendations)
-- Social proof on PDP: recent buyers, view count, "X bought today"
-- Urgency cues: low-stock warning, featured countdown, sale ends-in
-- Checkout: guest-friendly summary, savings breakdown, one-tap coupon
-- Empty states: cart, favorites, orders all show high-intent upsell
+## Phase E — Trust + conversion polish (PARTIAL)
+- ✅ Trust chips on PDP (escrow, instant/manual, warranty, insurance, refund)
+- ✅ Low-stock urgency ("ONLY N LEFT" pulse when stock ≤ 5)
+- ✅ Social proof on PDP (sold-count callout when ≥ 10)
+- ✅ Trust + level badges on every product card surface (existing)
+- ✅ Empty states on favorites / orders carry CTA into /browse
+- TODO: checkout savings breakdown, one-tap coupon suggestions
+
 
 ## Phase F — Final pass
 - Accessibility: aria labels, focus rings, color contrast, keyboard nav
