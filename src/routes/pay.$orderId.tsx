@@ -182,6 +182,9 @@ function PayPage() {
               Funds are held in escrow — the seller is paid only after delivery + warranty.
             </div>
 
+            {/* Escrow timeline — visual proof of how protection works */}
+            <EscrowTimeline warrantyHours={data.warrantyHours ?? 24} />
+
             <div className="space-y-2 pt-1">
               {walletAvailable >= deposit.amount_cents && (
                 <Button
