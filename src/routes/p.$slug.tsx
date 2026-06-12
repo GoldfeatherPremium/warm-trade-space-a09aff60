@@ -388,6 +388,16 @@ function ProductPage() {
                   <b className={p.stock_count > 0 ? "text-accent" : "text-destructive"}>
                     {p.stock_count}
                   </b>
+                  {p.stock_count > 0 && p.stock_count <= 5 && (
+                    <span className="ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-destructive/15 text-destructive animate-pulse">
+                      ONLY {p.stock_count} LEFT
+                    </span>
+                  )}
+                </p>
+              )}
+              {p.sold_count >= 10 && (
+                <p className="text-accent">
+                  🔥 <b>{p.sold_count.toLocaleString()}</b> buyers chose this listing
                 </p>
               )}
               <p>
