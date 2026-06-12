@@ -175,6 +175,48 @@ function AdminAnalytics() {
             )}
           </Panel>
 
+          <div className="grid lg:grid-cols-2 gap-3">
+            <Panel title={`TOP SEARCHES — ${data.search.total} queries · ${data.search.failRate.toFixed(1)}% empty`}>
+              {data.search.top.length === 0 ? (
+                <Empty />
+              ) : (
+                <div className="space-y-1">
+                  {data.search.top.map((s) => (
+                    <div
+                      key={s.query}
+                      className="grid grid-cols-[1fr_60px_70px] gap-2 text-xs py-1 border-b border-border/40 last:border-0"
+                    >
+                      <span className="truncate font-mono">{s.query}</span>
+                      <span className="text-right font-mono text-muted-foreground">{s.uses}×</span>
+                      <span className="text-right font-mono text-emerald-400">
+                        {s.avg_results.toFixed(0)} hits
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Panel>
+            <Panel title="ZERO-RESULT SEARCHES — DEMAND GAPS">
+              {data.search.zero.length === 0 ? (
+                <p className="text-xs text-muted-foreground py-6 text-center">
+                  No failing searches in this range. 🎯
+                </p>
+              ) : (
+                <div className="space-y-1">
+                  {data.search.zero.map((s) => (
+                    <div
+                      key={s.query}
+                      className="grid grid-cols-[1fr_60px] gap-2 text-xs py-1 border-b border-border/40 last:border-0"
+                    >
+                      <span className="truncate font-mono text-orange-300">{s.query}</span>
+                      <span className="text-right font-mono text-muted-foreground">{s.uses}×</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Panel>
+          </div>
+
           <div className="grid grid-cols-3 gap-3">
             <Kpi label="NEW BUYERS" value={String(data.newSignups.buyers ?? 0)} />
             <Kpi label="NEW SELLERS" value={String(data.newSignups.sellers ?? 0)} />

@@ -90,6 +90,47 @@ export const Route = createFileRoute("/p/$slug")({
         { "@type": "ListItem", position: 3, name: p.title, item: url },
       ],
     };
+    const faq = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: [
+        {
+          "@type": "Question",
+          name: "Is this purchase protected?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: `Yes. Every order is escrow-protected — funds are released to the seller only after the ${p.warranty_hours}-hour warranty window passes without a dispute.`,
+          },
+        },
+        {
+          "@type": "Question",
+          name: "How fast will I receive my order?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text:
+              p.delivery_type === "auto"
+                ? "Auto-delivery: the digital goods are sent instantly after payment confirms."
+                : `Manual delivery: the seller has up to ${p.delivery_sla_minutes} minutes to deliver after payment confirms.`,
+          },
+        },
+        {
+          "@type": "Question",
+          name: "What if something goes wrong?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: `Open a dispute within the ${p.warranty_hours}-hour warranty window and X-VAULT support will review evidence from both sides and refund or release escrow accordingly.`,
+          },
+        },
+        {
+          "@type": "Question",
+          name: "Which payment methods are accepted?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "X-VAULT accepts USDT on TRC-20 and BEP-20 networks. Payment confirms on-chain before the order moves to delivery.",
+          },
+        },
+      ],
+    };
     return {
       meta: [
         { title },
@@ -107,6 +148,7 @@ export const Route = createFileRoute("/p/$slug")({
       scripts: [
         { type: "application/ld+json", children: JSON.stringify(jsonLd) },
         { type: "application/ld+json", children: JSON.stringify(breadcrumbs) },
+        { type: "application/ld+json", children: JSON.stringify(faq) },
       ],
     };
   },

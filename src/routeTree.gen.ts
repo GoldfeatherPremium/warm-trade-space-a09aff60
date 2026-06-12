@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as SellersRouteImport } from './routes/sellers'
 import { Route as SellerRouteImport } from './routes/seller'
 import { Route as SellRouteImport } from './routes/sell'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
@@ -75,6 +76,11 @@ const WalletRoute = WalletRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SellersRoute = SellersRouteImport.update({
+  id: '/sellers',
+  path: '/sellers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SellerRoute = SellerRouteImport.update({
@@ -368,6 +374,7 @@ export interface FileRoutesByFullPath {
   '/robots.txt': typeof RobotsDottxtRoute
   '/sell': typeof SellRoute
   '/seller': typeof SellerRouteWithChildren
+  '/sellers': typeof SellersRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/wallet': typeof WalletRoute
   '/account/affiliate': typeof AccountAffiliateRoute
@@ -425,6 +432,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof NotificationsRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sell': typeof SellRoute
+  '/sellers': typeof SellersRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/wallet': typeof WalletRoute
   '/account/affiliate': typeof AccountAffiliateRoute
@@ -485,6 +493,7 @@ export interface FileRoutesById {
   '/robots.txt': typeof RobotsDottxtRoute
   '/sell': typeof SellRoute
   '/seller': typeof SellerRouteWithChildren
+  '/sellers': typeof SellersRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/wallet': typeof WalletRoute
   '/account/affiliate': typeof AccountAffiliateRoute
@@ -546,6 +555,7 @@ export interface FileRouteTypes {
     | '/robots.txt'
     | '/sell'
     | '/seller'
+    | '/sellers'
     | '/sitemap.xml'
     | '/wallet'
     | '/account/affiliate'
@@ -603,6 +613,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/robots.txt'
     | '/sell'
+    | '/sellers'
     | '/sitemap.xml'
     | '/wallet'
     | '/account/affiliate'
@@ -662,6 +673,7 @@ export interface FileRouteTypes {
     | '/robots.txt'
     | '/sell'
     | '/seller'
+    | '/sellers'
     | '/sitemap.xml'
     | '/wallet'
     | '/account/affiliate'
@@ -722,6 +734,7 @@ export interface RootRouteChildren {
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SellRoute: typeof SellRoute
   SellerRoute: typeof SellerRouteWithChildren
+  SellersRoute: typeof SellersRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   WalletRoute: typeof WalletRoute
   OrdersOrderIdRoute: typeof OrdersOrderIdRoute
@@ -748,6 +761,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sellers': {
+      id: '/sellers'
+      path: '/sellers'
+      fullPath: '/sellers'
+      preLoaderRoute: typeof SellersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/seller': {
@@ -1256,6 +1276,7 @@ const rootRouteChildren: RootRouteChildren = {
   RobotsDottxtRoute: RobotsDottxtRoute,
   SellRoute: SellRoute,
   SellerRoute: SellerRouteWithChildren,
+  SellersRoute: SellersRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   WalletRoute: WalletRoute,
   OrdersOrderIdRoute: OrdersOrderIdRoute,

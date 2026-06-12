@@ -704,3 +704,86 @@ export const getFrequentlyBoughtTogether = createServerFn({ method: "GET" })
     );
     return { items: rows.map(mapProduct) };
   });
+
+/**
+ * Public Seller Leaderboard — top trusted sellers, ranked by a blended
+ * trust + sales score. Excludes banned / vacation-mode sellers and anyone
+ * with zero completed sales so the page looks credible from day one.
+ */
+export interface LeaderboardSeller extends PublicSeller {
+  rank: number;
+  gmv_cents: number;
+  recent_orders: number;
+  category_name: string | null;
+}
+
+export const getSellerLeaderboard = createServerFn({ method: "GET" })
+  .inputValidator(
+    z.object({
+      range: z.enum(["30d", "90d", "all"]).default("30d"),
+      limit: z.number().int().min(5).max(50).default(25),
+    }),
+  )
+  .handler(async ({ data }) => {
+    await appContext();
+    const dayMs = 86_400_000;
+    const since =
+      data.range === "all" ? 0 : Date.now() - (data.range === "30d" ? 30 : 90) * dayMs;
+    const rows = await q<{
+      id: string;
+      username: string;
+      seller_level: number;
+      rating: number;
+      rating_count: number;
+      total_sales: number;
+      completion_rate: number;
+      vacation_mode: number;
+      created_at: number;
+      verification_tier: PublicSeller["verification_tier"];
+      trust_score: number;
+      refund_count: number;
+      dispute_count: number;
+      gmv_cents: number;
+      recent_orders: number;
+      category_name: string | null;
+    }>(
+      `select u.id, u.username, u.seller_level, u.rating, u.rating_count, u.total_sales,
+              u.completion_rate, u.vacation_mode, u.created_at, u.verification_tier,
+              u.trust_score, u.refund_count, u.dispute_count,
+              coalesce((select sum(o.total_cents) from orders o
+                          where o.seller_id = u.id and o.paid_at > ?
+                            and o.status not in ('cancelled','expired','refunded')),0) as gmv_cents,
+              coalesce((select count(*) from orders o
+                          where o.seller_id = u.id and o.paid_at > ?
+                            and o.status not in ('cancelled','expired','refunded')),0) as recent_orders,
+              (select c.name from products p join categories c on c.id = p.category_id
+                 where p.seller_id = u.id and p.status = 'active'
+                 group by c.id, c.name order by sum(p.sold_count) desc limit 1) as category_name
+         from users u
+        where u.seller_status = 'approved' and u.is_banned = 0 and u.total_sales > 0
+        order by (u.trust_score * 0.7 + (case when u.total_sales < 500 then u.total_sales else 500 end) * 0.3) desc, u.total_sales desc
+        limit ?`,
+      [since, since, data.limit],
+    );
+    const items: LeaderboardSeller[] = rows.map((r, i) => ({
+      id: r.id,
+      username: r.username,
+      seller_level: r.seller_level,
+      rating: r.rating,
+      rating_count: r.rating_count,
+      total_sales: r.total_sales,
+      completion_rate: r.completion_rate,
+      vacation_mode: r.vacation_mode,
+      created_at: r.created_at,
+      verification_tier: r.verification_tier ?? "unverified",
+      trust_score: Number(r.trust_score ?? 0),
+      refund_count: Number(r.refund_count ?? 0),
+      dispute_count: Number(r.dispute_count ?? 0),
+      rank: i + 1,
+      gmv_cents: Number(r.gmv_cents ?? 0),
+      recent_orders: Number(r.recent_orders ?? 0),
+      category_name: r.category_name ?? null,
+    }));
+    return { items, range: data.range };
+  });
+
