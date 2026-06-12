@@ -98,8 +98,14 @@ function mapProduct(r: Record<string, unknown>): PublicProduct {
     s_disputes,
     ...rest
   } = r;
+  const rest2 = rest as Omit<PublicProduct, "seller" | "is_promoted"> & {
+    featured_until?: number | null;
+  };
+  const featuredUntil = rest2.featured_until == null ? null : Number(rest2.featured_until);
   return {
-    ...(rest as Omit<PublicProduct, "seller">),
+    ...rest2,
+    featured_until: featuredUntil,
+    is_promoted: featuredUntil != null && featuredUntil > Date.now(),
     seller: {
       id: s_id as string,
       username: s_username as string,
