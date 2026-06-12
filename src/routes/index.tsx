@@ -238,8 +238,12 @@ function Index() {
               <img
                 src={productImage(featured.image_key)}
                 alt={featured.title}
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
                 className="absolute inset-0 size-full object-cover opacity-70 group-hover:opacity-90 group-hover:scale-105 transition-all duration-500"
               />
+
               <div className="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-transparent" />
               <div className="relative h-full flex flex-col justify-end p-5 min-h-[260px]">
                 <span className="inline-flex items-center gap-1 self-start text-[9px] font-bold tracking-widest text-accent bg-accent/15 border border-accent/30 rounded-full px-2 py-0.5 mb-2">
@@ -408,8 +412,9 @@ function Index() {
           link={{ to: "/browse", label: "View all" }}
         />
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          {data?.trending.map((p) => <ProductCard key={p.id} product={p} />)}
+          {data?.trending.map((p, i) => <ProductCard key={p.id} product={p} priority={i < 4} />)}
         </div>
+
       </section>
 
       {/* ============ FRESH LISTINGS ============ */}

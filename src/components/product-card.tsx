@@ -51,7 +51,7 @@ export function FavoriteButton({
   );
 }
 
-export function ProductCard({ product }: { product: PublicProduct }) {
+export function ProductCard({ product, priority }: { product: PublicProduct; priority?: boolean }) {
   return (
     <Link
       to="/p/$slug"
@@ -62,7 +62,9 @@ export function ProductCard({ product }: { product: PublicProduct }) {
         <img
           src={productImage(product.image_key)}
           alt={product.title}
-          loading="lazy"
+          loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : "auto"}
+          decoding="async"
           className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-[1.02] transition-all"
         />
         <span
