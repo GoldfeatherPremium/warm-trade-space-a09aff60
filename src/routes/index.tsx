@@ -10,8 +10,12 @@ import {
   Sparkles,
   ArrowUpRight,
   History,
+  Users,
+  Flame,
+  UserPlus,
+  PackageSearch,
 } from "lucide-react";
-import { getHomeData, getMyRecommendations } from "@/lib/api/catalog";
+import { getHomeData, getLiveMarketPulse, getMyRecommendations } from "@/lib/api/catalog";
 import { getFollowedFeed } from "@/lib/api/follows";
 import { PageShell } from "@/components/shell";
 import { ProductCard } from "@/components/product-card";
@@ -49,6 +53,12 @@ type RecentItem = { slug: string; title: string; image_key: string | null; price
 function Index() {
   const { me } = useMe();
   const { data } = useQuery({ queryKey: ["home"], queryFn: () => getHomeData() });
+  const { data: pulse } = useQuery({
+    queryKey: ["live-pulse"],
+    queryFn: () => getLiveMarketPulse(),
+    refetchInterval: 20_000,
+    staleTime: 15_000,
+  });
   const { data: recs } = useQuery({
     queryKey: ["recs", me?.id ?? "anon"],
     queryFn: () => getMyRecommendations({ data: { limit: 8 } }),
@@ -75,6 +85,9 @@ function Index() {
 
   return (
     <PageShell>
+      {/* ============ LIVE MARKET PULSE — social-proof strip ============ */}
+      <LivePulseStrip pulse={pulse} />
+
       {/* ============ HERO BENTO ============ */}
       <section className="relative">
         {/* aurora glow background */}
@@ -595,6 +608,79 @@ function SectionHeader({
           {link.label} <ArrowUpRight className="size-3" />
         </Link>
       )}
+    </div>
+  );
+}
+
+/**
+ * LivePulseStrip — thin marquee above the hero showing live shopper count,
+ * orders this hour, and recent signups. Pulses gently to communicate "live"
+ * without being shouty. All numbers come from `getLiveMarketPulse`.
+ */
+function LivePulseStrip({
+  pulse,
+}: {
+  pulse:
+    | {
+        shoppersNow: number;
+        sellersOnline: number;
+        joinedToday: number;
+        ordersLastHour: number;
+        liveListingsToday: number;
+      }
+    | undefined;
+}) {
+  const stats = [
+    {
+      Icon: Users,
+      label: "shopping now",
+      value: pulse?.shoppersNow ?? 0,
+      tone: "accent" as const,
+    },
+    {
+      Icon: Flame,
+      label: "orders / last hr",
+      value: pulse?.ordersLastHour ?? 0,
+      tone: "primary" as const,
+    },
+    {
+      Icon: PackageSearch,
+      label: "fresh listings today",
+      value: pulse?.liveListingsToday ?? 0,
+      tone: "muted" as const,
+    },
+    {
+      Icon: UserPlus,
+      label: "joined today",
+      value: pulse?.joinedToday ?? 0,
+      tone: "muted" as const,
+    },
+  ];
+  return (
+    <div className="mb-3 -mt-1 rounded-full border border-border bg-card/70 backdrop-blur px-3 py-1.5 flex items-center gap-2 overflow-x-auto no-scrollbar">
+      <span className="inline-flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-accent shrink-0 pr-2 border-r border-border">
+        <span className="size-1.5 rounded-full bg-accent animate-pulse" />
+        LIVE
+      </span>
+      <div className="flex items-center gap-4 sm:gap-5 text-[11px] whitespace-nowrap">
+        {stats.map(({ Icon, label, value, tone }) => (
+          <span key={label} className="inline-flex items-center gap-1.5">
+            <Icon
+              className={`size-3.5 ${
+                tone === "accent"
+                  ? "text-accent"
+                  : tone === "primary"
+                    ? "text-primary"
+                    : "text-muted-foreground"
+              }`}
+            />
+            <b className="font-mono text-foreground tabular-nums">
+              {value.toLocaleString()}
+            </b>
+            <span className="text-muted-foreground">{label}</span>
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
