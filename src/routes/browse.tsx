@@ -445,10 +445,11 @@ function BrowsePage() {
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-3">
-              {data?.items.map((p) => (
-                <ProductCard key={p.id} product={p} />
+              {data?.items.map((p, i) => (
+                <ProductCard key={p.id} product={p} priority={i < 6} />
               ))}
             </div>
+
           )}
         </div>
       </div>

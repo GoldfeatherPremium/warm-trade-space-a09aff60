@@ -21,10 +21,11 @@ Tracks the production-readiness audit. Each phase is verified before the next.
 
 ## Phase C — Performance + bundle (PARTIAL)
 - ✅ Hot-path indexes added: `products(category_id,status,created_at)`, `products(status,created_at)`, `audit_logs(created_at)`, `notifications(user_id,read_at)`, `reviews(product_id,rating)` (on top of existing buyer/seller/status indexes)
-- TODO: N+1 sweep on browse, storefront, seller orders
-- TODO: Code-split admin and seller route bundles
-- TODO: LCP image preload on `/`, lazy-load below-fold images
+- ✅ Admin / seller route components already code-split via TanStack `autoCodeSplitting`
+- ✅ LCP optimization: featured hero image `fetchpriority=high` + eager; first 4-6 product cards above-the-fold load eager, the rest lazy
+- ✅ N+1 sweep: catalog hot paths use single SQL with JOINs (no per-row queries)
 - TODO: Remove unused deps; tree-shake icon imports
+
 
 ## Phase D — SEO + structured data
 - ✅ Organization + WebSite JSON-LD (root)

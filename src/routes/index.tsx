@@ -412,8 +412,9 @@ function Index() {
           link={{ to: "/browse", label: "View all" }}
         />
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          {data?.trending.map((p) => <ProductCard key={p.id} product={p} />)}
+          {data?.trending.map((p, i) => <ProductCard key={p.id} product={p} priority={i < 4} />)}
         </div>
+
       </section>
 
       {/* ============ FRESH LISTINGS ============ */}
