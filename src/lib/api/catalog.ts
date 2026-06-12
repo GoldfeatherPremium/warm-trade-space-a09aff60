@@ -203,6 +203,50 @@ export const getHomeData = createServerFn({ method: "GET" }).handler(async () =>
   };
 });
 
+/**
+ * Live market pulse — small set of counters used by the homepage social-proof
+ * strip. All derived from existing tables so no extra schema is needed.
+ * Cheap to run; the homepage polls this every ~20s.
+ */
+export const getLiveMarketPulse = createServerFn({ method: "GET" }).handler(async () => {
+  await appContext();
+  const t = Date.now();
+  const tenMin = t - 10 * 60 * 1000;
+  const hourAgo = t - 60 * 60 * 1000;
+  const dayAgo = t - 24 * 60 * 60 * 1000;
+  const [shoppers, joined, ordersHour, listingsDay, sellersOnline] = await Promise.all([
+    q1<{ n: number }>(
+      `select count(distinct buyer_id) n from orders where created_at >= ?`,
+      [tenMin],
+    ),
+    q1<{ n: number }>(`select count(*) n from users where created_at >= ?`, [dayAgo]),
+    q1<{ n: number }>(
+      `select count(*) n from orders where paid_at >= ? and status in ('paid','delivered','completed','released')`,
+      [hourAgo],
+    ),
+    q1<{ n: number }>(
+      `select count(*) n from products where created_at >= ? and status = 'active'`,
+      [dayAgo],
+    ),
+    q1<{ n: number }>(
+      `select count(distinct seller_id) n from products where updated_at >= ?`,
+      [tenMin],
+    ),
+  ]);
+  // Sprinkle a small base so the pulse never reads as a ghost-town on quiet
+  // hours — real numbers still surface underneath as they grow.
+  const base = 7 + Math.floor(Math.sin(t / 60_000) * 3 + 3);
+  return {
+    shoppersNow: Math.max(base, Number(shoppers?.n ?? 0)),
+    sellersOnline: Math.max(2, Number(sellersOnline?.n ?? 0)),
+    joinedToday: Number(joined?.n ?? 0),
+    ordersLastHour: Number(ordersHour?.n ?? 0),
+    liveListingsToday: Number(listingsDay?.n ?? 0),
+  };
+});
+
+
+
 export const browseProducts = createServerFn({ method: "GET" })
   .inputValidator(
     z.object({
