@@ -154,7 +154,10 @@ export const getHomeData = createServerFn({ method: "GET" }).handler(async () =>
        from categories c where c.is_active = 1 order by c.sort`,
     ),
     q(
-      `${productSelect} where p.status = 'active' order by p.sold_count desc, p.views desc limit 8`,
+      `${productSelect} where p.status = 'active'
+       order by (case when p.featured_until is not null and p.featured_until > ? then 0 else 1 end),
+                p.sold_count desc, p.views desc limit 8`,
+      [Date.now()],
     ),
     q(`${productSelect} where p.status = 'active' order by p.created_at desc limit 8`),
     q<PublicSeller>(
