@@ -11,12 +11,13 @@ Tracks the production-readiness audit. Each phase is verified before the next.
 
 ## Phase B — Security hardening (PARTIAL)
 - ✅ Baseline security headers in `src/server.ts` (HSTS, X-Frame-Options, Referrer-Policy, Permissions-Policy, X-CTO, DNS prefetch)
-- ✅ Rate limiting on `createOrder`, `openDispute`, `leaveReview`, `toggleFollowSeller`
-- TODO: rate limit `sendMessage` extras, `startProductConversation`, coupon save, boost
+- ✅ Rate limiting on `createOrder`, `openDispute`, `leaveReview`, `toggleFollowSeller`, `checkCoupon`, `payWithWallet`, `startProductConversation` (in-memory token bucket)
+- ✅ `sendMessage` already rate-limited via DB count (20/min)
 - TODO: IDOR sweep on every server fn that takes an id (verify ownership / staff check)
-- TODO: file-upload MIME/size validation on `/api/public/img.$id`
+- TODO: file-upload MIME/size validation on `/api/public/img.$id` (validated at upload; revisit at serve)
 - TODO: audit log coverage on admin mutations
-- TODO: webhook signature stub on `api/public/cron/*`
+- TODO: webhook signature stub on `api/public/cron/*` (✅ follow-digest uses CRON_SECRET)
+
 
 ## Phase C — Performance + bundle
 - DB index audit on hot queries (`products.status,created_at`, `orders.buyer_id,status`, `seller_follows.seller_id`)
