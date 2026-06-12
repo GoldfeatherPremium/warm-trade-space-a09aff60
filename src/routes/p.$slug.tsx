@@ -304,7 +304,22 @@ function ProductPage() {
             <p className="text-xs text-muted-foreground mt-1">
               {p.sold_count} sold · {p.views} views
             </p>
+            <div className="flex flex-wrap gap-1.5 mt-3 text-[10px] font-bold">
+              <span className="bg-accent/15 text-accent px-2 py-1 rounded inline-flex items-center gap-1">
+                <ShieldCheck className="size-3" /> ESCROW PROTECTED
+              </span>
+              <span className="bg-secondary px-2 py-1 rounded inline-flex items-center gap-1">
+                {p.delivery_type === "auto" ? <Zap className="size-3" /> : <Clock className="size-3" />}
+                {p.delivery_type === "auto" ? "INSTANT" : `~${p.delivery_sla_minutes}MIN`}
+              </span>
+              <span className="bg-secondary px-2 py-1 rounded">{p.warranty_hours}H WARRANTY</span>
+              {p.insurance_days > 0 && (
+                <span className="bg-secondary px-2 py-1 rounded">+{p.insurance_days}D INSURANCE</span>
+              )}
+              <span className="bg-secondary px-2 py-1 rounded">REFUND ON FAILURE</span>
+            </div>
           </div>
+
 
           <div className="bg-card border border-border rounded-lg p-4">
             <h2 className="text-xs font-bold tracking-widest text-muted-foreground mb-2">
@@ -388,6 +403,16 @@ function ProductPage() {
                   <b className={p.stock_count > 0 ? "text-accent" : "text-destructive"}>
                     {p.stock_count}
                   </b>
+                  {p.stock_count > 0 && p.stock_count <= 5 && (
+                    <span className="ml-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-destructive/15 text-destructive animate-pulse">
+                      ONLY {p.stock_count} LEFT
+                    </span>
+                  )}
+                </p>
+              )}
+              {p.sold_count >= 10 && (
+                <p className="text-accent">
+                  🔥 <b>{p.sold_count.toLocaleString()}</b> buyers chose this listing
                 </p>
               )}
               <p>
