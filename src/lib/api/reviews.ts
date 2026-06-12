@@ -18,6 +18,7 @@ export const leaveReview = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await appContext();
     const user = await requireUser();
+    rateLimit({ key: `review:${user.id}`, limit: 6, windowMs: 60_000 });
     const o = await q1<{
       id: string;
       order_no: string;
