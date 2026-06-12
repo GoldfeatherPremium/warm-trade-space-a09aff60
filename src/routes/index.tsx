@@ -27,6 +27,45 @@ import { useMe } from "@/hooks/use-me";
 
 const SITE = "https://warm-trade-space.lovable.app";
 
+const FAQ_JSONLD = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: "How does X-VAULT escrow protect my purchase?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Your USDT is held in escrow when you pay. Funds are only released to the seller after you confirm the digital goods were delivered as described. If anything goes wrong you can open a dispute and our team reviews it within 24 hours.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "How fast is delivery?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Stocked listings deliver instantly — codes, accounts and keys are released the moment payment is confirmed on-chain. Manual delivery items show an expected delivery window on the listing.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Which payment methods are supported?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "X-VAULT settles in USDT (TRC-20 and ERC-20). Refunds and dispute settlements are credited back as wallet balance that you can withdraw or spend instantly.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "What fees does X-VAULT charge?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Buyers pay zero platform fees. Sellers pay a small commission only on completed orders — verified and premium sellers unlock lower rates.",
+      },
+    },
+  ],
+};
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -44,9 +83,11 @@ export const Route = createFileRoute("/")({
       { property: "og:url", content: SITE + "/" },
     ],
     links: [{ rel: "canonical", href: SITE + "/" }],
+    scripts: [{ type: "application/ld+json", children: JSON.stringify(FAQ_JSONLD) }],
   }),
   component: Index,
 });
+
 
 type RecentItem = { slug: string; title: string; image_key: string | null; price_cents: number };
 

@@ -7,6 +7,8 @@ import { requireUser } from "../server/auth.server";
 import { getWallet } from "../server/money.server";
 import { confirmPayment, getOrderRow } from "../server/lifecycle.server";
 import { validateCoupon } from "../server/coupons.server";
+import { rateLimit } from "../server/rate-limit.server";
+
 
 // ---------------------------------------------------------------------------
 // Favorites / wishlist
@@ -71,10 +73,12 @@ export const checkCoupon = createServerFn({ method: "POST" })
   .inputValidator(z.object({ code: z.string().min(2).max(40), totalUsdt: z.number().min(0) }))
   .handler(async ({ data }) => {
     await appContext();
-    await requireUser();
+    const user = await requireUser();
+    rateLimit({ key: `coupon:${user.id}`, limit: 20, windowMs: 60_000 });
     const c = await validateCoupon(data.code, Math.round(data.totalUsdt * 100));
     return { code: c.code, pctOff: c.pct_off };
   });
+
 
 // ---------------------------------------------------------------------------
 // Pay with wallet balance (refund credits become instantly spendable)
@@ -84,8 +88,10 @@ export const payWithWallet = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await appContext();
     const user = await requireUser();
+    rateLimit({ key: `walletpay:${user.id}`, limit: 10, windowMs: 60_000 });
     if (user.wallet_frozen) fail("Your wallet is frozen. Contact support.");
     const o = await getOrderRow(data.orderId);
+
     if (!o || o.buyer_id !== user.id) fail("Order not found.");
     if (o!.status !== "awaiting_payment") fail("This order is not awaiting payment.");
     if (o!.expires_at && o!.expires_at < now())
