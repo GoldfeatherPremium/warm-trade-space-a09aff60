@@ -229,8 +229,8 @@ export const getLiveMarketPulse = createServerFn({ method: "GET" }).handler(asyn
       [dayAgo],
     ),
     q1<{ n: number }>(
-      `select count(distinct seller_id) n from products where updated_at >= ?`,
-      [tenMin],
+      `select count(distinct seller_id) n from products where created_at >= ?`,
+      [hourAgo],
     ),
   ]);
   // Sprinkle a small base so the pulse never reads as a ghost-town on quiet
