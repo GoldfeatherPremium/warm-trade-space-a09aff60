@@ -59,6 +59,8 @@ export interface PublicProduct {
   item_name: string | null;
   insurance_days: number;
   expires_at: number | null;
+  featured_until: number | null;
+  is_promoted: boolean;
   seller: PublicSeller;
 }
 
@@ -73,7 +75,7 @@ const productSelect = `
          u.completion_rate as s_completion, u.vacation_mode as s_vacation, u.created_at as s_created,
          u.verification_tier as s_verification, u.trust_score as s_trust,
          u.refund_count as s_refunds, u.dispute_count as s_disputes,
-         p.item_id, ci.name as item_name, p.insurance_days, p.expires_at
+         p.item_id, ci.name as item_name, p.insurance_days, p.expires_at, p.featured_until
   from products p
   join categories c on c.id = p.category_id
   join users u on u.id = p.seller_id
