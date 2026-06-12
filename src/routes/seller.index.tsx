@@ -106,6 +106,7 @@ function SellerOverview() {
         )}
       </div>
 
+      <div className="bg-card border border-border rounded-lg p-4">
         <h2 className="text-xs font-bold tracking-widest text-muted-foreground mb-3">
           NET SALES — LAST 14 DAYS
         </h2>
