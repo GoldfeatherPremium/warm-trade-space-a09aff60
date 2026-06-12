@@ -462,6 +462,7 @@ export const openDispute = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await appContext();
     const user = await requireUser();
+    rateLimit({ key: `dispute:${user.id}`, limit: 5, windowMs: 60_000 });
     const o = await getOrderRow(data.orderId);
     if (!o || o.buyer_id !== user.id) fail("Order not found.");
     if (!["delivered", "completed", "delivering", "paid"].includes(o!.status))
