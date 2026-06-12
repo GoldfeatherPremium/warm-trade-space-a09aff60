@@ -15,6 +15,7 @@ export const toggleFollowSeller = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await appContext();
     const user = await requireUser();
+    rateLimit({ key: `follow:${user.id}`, limit: 30, windowMs: 60_000 });
     if (user.id === data.sellerId) fail("You can't follow yourself.");
     const seller = await q1<{ id: string }>(
       `select id from users where id = ? and seller_status = 'approved' and is_banned = 0`,
