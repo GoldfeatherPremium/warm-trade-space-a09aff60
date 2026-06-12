@@ -1,10 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { appContext } from "../server/app.server";
-import { requireSeller, requireStaff } from "../server/auth.server";
+import { currentUser, requireSeller, requireStaff } from "../server/auth.server";
 import { q, q1, run } from "../server/db.server";
 import { callAiJson } from "../server/ai.server";
-import { fail } from "../server/core.server";
+import { fail, now } from "../server/core.server";
+import { buildSearchClause, tokenize } from "../server/search.server";
+import { rateLimit } from "../server/rate-limit.server";
 
 // ---------------------------------------------------------------------------
 // AI Product Generator — fills title/description/tags/SEO from item + notes
