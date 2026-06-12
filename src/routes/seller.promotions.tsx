@@ -34,6 +34,11 @@ function PromotionsPage() {
     title: string;
     priceCents: number;
   } | null>(null);
+  const [boostEditor, setBoostEditor] = useState<{
+    productId: string;
+    title: string;
+    featuredUntil: number | null;
+  } | null>(null);
 
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ["myPromotions"] });
