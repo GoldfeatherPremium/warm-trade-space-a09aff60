@@ -185,10 +185,105 @@ export const setProductSale = createServerFn({ method: "POST" })
 export const listMyProductsForPromo = createServerFn({ method: "GET" }).handler(async () => {
   await appContext();
   const user = await requireSeller();
-  const products = await q<{ id: string; title: string; price_cents: number; status: string }>(
-    `select id, title, price_cents, status from products where seller_id = ?
-     and status in ('active','out_of_stock','paused') order by title`,
-    [user.id],
-  );
-  return { products };
+  const [products, wallet] = await Promise.all([
+    q<{
+      id: string;
+      title: string;
+      price_cents: number;
+      status: string;
+      featured_until: number | null;
+    }>(
+      `select id, title, price_cents, status, featured_until from products where seller_id = ?
+       and status in ('active','out_of_stock','paused') order by title`,
+      [user.id],
+    ),
+    q1<{ available_cents: number }>(
+      `select available_cents from wallets where user_id = ?`,
+      [user.id],
+    ),
+  ]);
+  return { products, walletCents: wallet?.available_cents ?? 0 };
 });
+
+// ---------------------------------------------------------------------------
+// Sponsored boost — sellers spend wallet balance to feature a product
+// ---------------------------------------------------------------------------
+export const BOOST_RATE_CENTS_PER_DAY = 200; // $2.00 / day
+
+export const boostProduct = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      productId: z.string(),
+      days: z.number().int().min(1).max(60),
+    }),
+  )
+  .handler(async ({ data }) => {
+    await appContext();
+    const user = await requireSeller();
+    const p = await q1<{ seller_id: string; title: string; featured_until: number | null }>(
+      `select seller_id, title, featured_until from products where id = ?`,
+      [data.productId],
+    );
+    if (!p || p.seller_id !== user.id) fail("Product not found.");
+    if (user.wallet_frozen) fail("Your wallet is frozen. Contact support.");
+    const costCents = BOOST_RATE_CENTS_PER_DAY * data.days;
+    const wallet = await q1<{ available_cents: number }>(
+      `select available_cents from wallets where user_id = ?`,
+      [user.id],
+    );
+    if ((wallet?.available_cents ?? 0) < costCents)
+      fail("Not enough wallet balance to fund this boost. Earn or top-up first.");
+    const startFrom = Math.max(p!.featured_until ?? 0, now());
+    const newUntil = startFrom + data.days * 86_400_000;
+    const { tx } = await import("../server/db.server");
+    await tx(async () => {
+      await run(
+        `update wallets set available_cents = available_cents - ? where user_id = ?`,
+        [costCents, user.id],
+      );
+      const balRow = await q1<{ available_cents: number; pending_cents: number }>(
+        `select available_cents, pending_cents from wallets where user_id = ?`,
+        [user.id],
+      );
+      const balAfter =
+        (balRow?.available_cents ?? 0) + (balRow?.pending_cents ?? 0);
+      await run(
+        `insert into wallet_ledger (user_id, order_id, type, amount_cents, balance_after_cents, note, created_at)
+         values (?,?,?,?,?,?,?)`,
+        [
+          user.id,
+          null,
+          "promo_boost",
+          -costCents,
+          balAfter,
+          `Sponsored boost: ${p!.title} (${data.days}d)`,
+          now(),
+        ],
+      );
+      await run(
+        `update products set featured_until = ? where id = ?`,
+        [newUntil, data.productId],
+      );
+    });
+    await audit(user.id, "promo.boost", "product", data.productId, {
+      days: data.days,
+      costCents,
+      featured_until: newUntil,
+    });
+    return { ok: true, featuredUntil: newUntil, costCents };
+  });
+
+export const stopBoost = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ productId: z.string() }))
+  .handler(async ({ data }) => {
+    await appContext();
+    const user = await requireSeller();
+    const p = await q1<{ seller_id: string }>(
+      `select seller_id from products where id = ?`,
+      [data.productId],
+    );
+    if (!p || p.seller_id !== user.id) fail("Product not found.");
+    await run(`update products set featured_until = null where id = ?`, [data.productId]);
+    await audit(user.id, "promo.boost.stop", "product", data.productId);
+    return { ok: true };
+  });
