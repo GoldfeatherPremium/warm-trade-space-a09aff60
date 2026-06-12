@@ -668,6 +668,12 @@ async function migrate(e: Engine): Promise<void> {
     `alter table coupons add column label text`,
     `alter table products add column sale_price_cents ${big}`,
     `alter table products add column sale_ends_at ${big}`,
+    // --- Phase 12: sponsored / featured placement (paid or admin-granted) ---
+    `alter table products add column featured_until ${big}`,
+    // --- Phase 9: buyer loyalty engine ---
+    `alter table users add column lifetime_spend_cents ${big} not null default 0`,
+    `alter table users add column loyalty_tier text not null default 'bronze'`,
+    `alter table users add column loyalty_tier_at ${big}`,
   ];
   for (const stmt of addColumns) {
     await e.exec(stmt).catch(() => {}); // already exists
