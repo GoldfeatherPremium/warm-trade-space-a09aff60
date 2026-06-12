@@ -640,3 +640,67 @@ export const searchSuggest = createServerFn({ method: "GET" })
     );
     return { suggestions: rows.map((r) => r.s) };
   });
+
+/**
+ * Frequently Bought Together — true co-purchase signal from order history.
+ *
+ * For the given product, find buyers who purchased it, then surface the
+ * top other products those buyers also bought (excluding the same product
+ * and out-of-stock listings). Falls back to category-mates so the section
+ * never renders empty on long-tail items.
+ */
+export const getFrequentlyBoughtTogether = createServerFn({ method: "GET" })
+  .inputValidator(
+    z.object({ productId: z.string(), limit: z.number().int().min(1).max(8).default(4) }),
+  )
+  .handler(async ({ data }) => {
+    await appContext();
+    const lookback = Date.now() - 180 * 86_400_000;
+    const co = await q<{ id: string; pairs: number }>(
+      `select p.id, count(*) as pairs
+         from orders a
+         join orders b on b.buyer_id = a.buyer_id and b.product_id <> a.product_id
+                       and abs(b.created_at - a.created_at) < ${30 * 86_400_000}
+         join products p on p.id = b.product_id
+        where a.product_id = ?
+          and a.created_at >= ?
+          and a.status in ('completed','released','delivered')
+          and b.status in ('completed','released','delivered')
+          and p.status = 'active'
+        group by p.id
+        order by pairs desc
+        limit ?`,
+      [data.productId, lookback, data.limit],
+    );
+    let ids = co.map((r) => r.id);
+    if (ids.length < data.limit) {
+      const seed = await q1<{ category_id: string; seller_id: string }>(
+        `select category_id, seller_id from products where id = ?`,
+        [data.productId],
+      );
+      if (seed) {
+        const excludes = [data.productId, ...ids];
+        const fillers = await q<{ id: string }>(
+          `select id from products
+            where status = 'active' and id not in (${excludes.map(() => "?").join(",")})
+              and category_id = ? and seller_id <> ?
+            order by sold_count desc limit ?`,
+          [...excludes, seed.category_id, seed.seller_id, data.limit - ids.length],
+        );
+        ids = ids.concat(fillers.map((f) => f.id));
+      }
+    }
+    if (ids.length === 0) return { items: [] as PublicProduct[] };
+    const rows = await q(
+      `${productSelect} where p.id in (${ids.map(() => "?").join(",")})`,
+      ids,
+    );
+    // preserve co-purchase ranking order
+    const order = new Map(ids.map((id, i) => [id, i]));
+    rows.sort(
+      (a, b) =>
+        (order.get((a as { id: string }).id) ?? 0) -
+        (order.get((b as { id: string }).id) ?? 0),
+    );
+    return { items: rows.map(mapProduct) };
+  });
