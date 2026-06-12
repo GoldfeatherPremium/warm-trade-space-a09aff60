@@ -126,6 +126,9 @@ export const startProductConversation = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await appContext();
     const user = await requireUser();
+    const { rateLimit } = await import("../server/rate-limit.server");
+    rateLimit({ key: `convo-start:${user.id}`, limit: 15, windowMs: 60_000 });
+
     const p = await q1<{ id: string; seller_id: string }>(
       `select id, seller_id from products where id = ?`,
       [data.productId],
