@@ -31,10 +31,11 @@ Tracks the production-readiness audit. Each phase is verified before the next.
 - ✅ Product + Breadcrumb JSON-LD (PDP)
 - ✅ Sitemap with products, sellers, categories
 - ✅ llms.txt
-- TODO: FAQ JSON-LD on homepage
-- TODO: Seller / Store JSON-LD on `/s/$username`
+- ✅ FAQ JSON-LD on homepage
+- ✅ Seller / Store JSON-LD on `/s/$username`
 - TODO: per-route head() on browse, sellers, account pages
 - TODO: internal linking pass (category → related categories, seller → similar sellers)
+
 
 ## Phase E — Trust + conversion polish
 - Trust chips on every product card surface (browse, search, storefront, recommendations)
