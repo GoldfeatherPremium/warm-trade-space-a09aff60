@@ -24,6 +24,7 @@ import { useMe } from "@/hooks/use-me";
 import { logout } from "@/lib/api/auth";
 import { SmartSearch } from "@/components/smart-search";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
+import { AiShoppingAssistant } from "@/components/ai-assistant";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -250,6 +251,7 @@ export function PageShell({ children }: { children: ReactNode }) {
       <main className="flex-1 w-full max-w-6xl mx-auto px-4 py-6 pb-20 sm:pb-6">{children}</main>
       <SiteFooter />
       <MobileBottomNav />
+      <AiShoppingAssistant />
     </div>
   );
 }

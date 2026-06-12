@@ -1,10 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { appContext } from "../server/app.server";
-import { requireSeller, requireStaff } from "../server/auth.server";
+import { currentUser, requireSeller, requireStaff } from "../server/auth.server";
 import { q, q1, run } from "../server/db.server";
 import { callAiJson } from "../server/ai.server";
-import { fail } from "../server/core.server";
+import { fail, now } from "../server/core.server";
+import { buildSearchClause, tokenize } from "../server/search.server";
+import { rateLimit } from "../server/rate-limit.server";
 
 // ---------------------------------------------------------------------------
 // AI Product Generator — fills title/description/tags/SEO from item + notes
@@ -322,3 +324,169 @@ export const listOptimizationCandidates = createServerFn({ method: "GET" }).hand
   };
 });
 
+
+// ---------------------------------------------------------------------------
+// AI Shopping Assistant — natural-language product discovery
+// Public (guest-friendly), rate-limited. Two-stage: LLM intent → SQL search
+// → LLM picks top recommendations with one-line reasons.
+// ---------------------------------------------------------------------------
+type ShopIntent = {
+  reply: string;
+  keywords: string[];
+  categorySlug?: string | null;
+  maxPriceCents?: number | null;
+};
+type ShopPick = { slug: string; reason: string };
+type ShopPicks = { reply: string; picks: ShopPick[] };
+
+export const aiShoppingAssistant = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      query: z.string().trim().min(2).max(400),
+      budgetUsd: z.number().min(0).max(100_000).optional(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    await appContext();
+    const me = await currentUser();
+    rateLimit({
+      key: `ai_shop:${me?.id ?? "guest"}`,
+      limit: 12,
+      windowMs: 60_000,
+    });
+
+    const cats = await q<{ slug: string; name: string }>(
+      `select slug, name from categories order by sort_order, name limit 40`,
+    );
+    const catLines = cats.map((c) => `${c.slug} (${c.name})`).join(", ");
+
+    // Stage 1 — intent extraction
+    const intent = await callAiJson<ShopIntent>({
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are X-VAULT's shopping concierge for a digital goods marketplace " +
+            "(game currency, gift cards, keys, accounts, boosting). Be friendly and concise. " +
+            "Extract search intent. Never invent products. Return ONLY valid JSON.",
+        },
+        {
+          role: "user",
+          content: `Shopper said: "${data.query}"
+${data.budgetUsd ? `Stated budget: $${data.budgetUsd.toFixed(2)}` : ""}
+
+Available categories: ${catLines}
+
+Return JSON: {
+  "reply": one short sentence acknowledging what they want,
+  "keywords": 1-5 short lowercase search terms (no stopwords),
+  "categorySlug": best matching slug from the list or null,
+  "maxPriceCents": integer cents or null
+}`,
+        },
+      ],
+      temperature: 0.3,
+      maxTokens: 400,
+    });
+
+    const tokens = tokenize((intent.keywords ?? []).join(" ") || data.query);
+    const where: string[] = ["p.status = 'active'"];
+    const params: (string | number)[] = [];
+    if (tokens.length) {
+      const sc = buildSearchClause(tokens, ["p.title", "p.description", "p.platform"]);
+      where.push(`(${sc.sql})`);
+      params.push(...sc.params);
+    }
+    if (intent.categorySlug) {
+      where.push("c.slug = ?");
+      params.push(intent.categorySlug);
+    }
+    const maxCents = intent.maxPriceCents ?? (data.budgetUsd ? Math.round(data.budgetUsd * 100) : 0);
+    if (maxCents > 0) {
+      where.push("p.price_cents <= ?");
+      params.push(maxCents);
+    }
+
+    const rows = await q<{
+      id: string;
+      slug: string;
+      title: string;
+      price_cents: number;
+      image_key: string | null;
+      sold_count: number;
+      seller_username: string;
+      seller_trust: number;
+      seller_rating: number;
+      category_name: string;
+    }>(
+      `select p.id, p.slug, p.title, p.price_cents, p.image_key, p.sold_count,
+              u.username as seller_username, u.trust_score as seller_trust,
+              u.rating as seller_rating, c.name as category_name
+         from products p
+         join users u on u.id = p.seller_id
+         join categories c on c.id = p.category_id
+        where ${where.join(" and ")}
+        order by (p.sold_count * 0.6 + u.trust_score * 0.4) desc,
+                 p.featured_until > ${now()} desc
+        limit 12`,
+      params,
+    );
+
+    if (rows.length === 0) {
+      return {
+        reply:
+          intent.reply +
+          " I couldn't find a strong match in the live catalog — try a broader keyword or browse the full marketplace.",
+        picks: [] as Array<(typeof rows)[number] & { reason: string }>,
+      };
+    }
+
+    // Stage 2 — pick top 3 and explain
+    const candidateList = rows
+      .map(
+        (r, i) =>
+          `${i + 1}. slug=${r.slug} | "${r.title}" | $${(r.price_cents / 100).toFixed(2)} | seller @${r.seller_username} (trust ${r.seller_trust}, ${r.sold_count} sold) | ${r.category_name}`,
+      )
+      .join("\n");
+
+    const picks = await callAiJson<ShopPicks>({
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are X-VAULT's shopping concierge. Pick the best matches for the shopper " +
+            "from the candidate list. Prefer high trust, strong sales, on-budget. " +
+            "Return ONLY valid JSON.",
+        },
+        {
+          role: "user",
+          content: `Shopper said: "${data.query}"
+${data.budgetUsd ? `Budget: $${data.budgetUsd.toFixed(2)}` : ""}
+
+Candidates:
+${candidateList}
+
+Return JSON: {
+  "reply": 1-2 friendly sentences summarising the recommendation,
+  "picks": up to 3 objects { "slug": existing slug from list, "reason": <= 90 char reason }
+}`,
+        },
+      ],
+      temperature: 0.4,
+      maxTokens: 500,
+    });
+
+    const bySlug = new Map(rows.map((r) => [r.slug, r] as const));
+    const merged = (picks.picks ?? [])
+      .map((p) => {
+        const r = bySlug.get(p.slug);
+        return r ? { ...r, reason: p.reason } : null;
+      })
+      .filter((x): x is NonNullable<typeof x> => !!x)
+      .slice(0, 3);
+
+    return {
+      reply: picks.reply || intent.reply,
+      picks: merged,
+    };
+  });
