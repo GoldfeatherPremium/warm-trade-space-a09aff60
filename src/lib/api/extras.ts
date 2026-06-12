@@ -88,8 +88,10 @@ export const payWithWallet = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await appContext();
     const user = await requireUser();
+    rateLimit({ key: `walletpay:${user.id}`, limit: 10, windowMs: 60_000 });
     if (user.wallet_frozen) fail("Your wallet is frozen. Contact support.");
     const o = await getOrderRow(data.orderId);
+
     if (!o || o.buyer_id !== user.id) fail("Order not found.");
     if (o!.status !== "awaiting_payment") fail("This order is not awaiting payment.");
     if (o!.expires_at && o!.expires_at < now())
