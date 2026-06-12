@@ -225,3 +225,68 @@ function PayPage() {
     </PageShell>
   );
 }
+
+/**
+ * Escrow timeline — visualizes the 4-stage buyer-protection flow so buyers
+ * understand exactly when funds move. The first stage ("PAY") is the
+ * active one on this page; subsequent stages are upcoming/locked.
+ */
+function EscrowTimeline({ warrantyHours }: { warrantyHours: number }) {
+  const steps = [
+    { Icon: CreditCard, label: "Pay", sub: "USDT held safe", state: "active" as const },
+    { Icon: Zap, label: "Deliver", sub: "Seller ships goods", state: "next" as const },
+    {
+      Icon: ShieldHalf,
+      label: "Warranty",
+      sub: `${warrantyHours}h to test`,
+      state: "upcoming" as const,
+    },
+    {
+      Icon: CircleDollarSign,
+      label: "Release",
+      sub: "Seller paid out",
+      state: "upcoming" as const,
+    },
+  ];
+  return (
+    <div className="bg-secondary/40 border border-border rounded-md p-3">
+      <p className="text-[9px] font-bold tracking-widest text-muted-foreground mb-2.5 text-center">
+        ESCROW TIMELINE — YOUR FUNDS, YOUR CONTROL
+      </p>
+      <div className="grid grid-cols-4 gap-1 relative">
+        <div
+          aria-hidden
+          className="absolute top-3.5 left-[12%] right-[12%] h-px bg-border"
+        />
+        {steps.map(({ Icon, label, sub, state }) => {
+          const isActive = state === "active";
+          const isNext = state === "next";
+          const cls = isActive
+            ? "bg-accent text-accent-foreground border-accent shadow-[0_0_0_4px_rgba(34,197,94,0.18)]"
+            : isNext
+              ? "bg-card text-primary border-primary/60"
+              : "bg-card text-muted-foreground border-border";
+          return (
+            <div key={label} className="relative flex flex-col items-center gap-1.5">
+              <span
+                className={`size-7 rounded-full grid place-items-center border ${cls} relative z-10`}
+              >
+                {isActive ? <Check className="size-3.5" /> : <Icon className="size-3.5" />}
+              </span>
+              <span
+                className={`text-[10px] font-bold tracking-wide ${
+                  isActive ? "text-accent" : isNext ? "text-foreground" : "text-muted-foreground"
+                }`}
+              >
+                {label.toUpperCase()}
+              </span>
+              <span className="text-[9px] text-muted-foreground text-center leading-tight">
+                {sub}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
