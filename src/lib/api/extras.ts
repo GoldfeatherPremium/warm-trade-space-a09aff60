@@ -7,6 +7,8 @@ import { requireUser } from "../server/auth.server";
 import { getWallet } from "../server/money.server";
 import { confirmPayment, getOrderRow } from "../server/lifecycle.server";
 import { validateCoupon } from "../server/coupons.server";
+import { rateLimit } from "../server/rate-limit.server";
+
 
 // ---------------------------------------------------------------------------
 // Favorites / wishlist
