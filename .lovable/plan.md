@@ -47,11 +47,11 @@ Tracks the production-readiness audit. Each phase is verified before the next.
 - TODO: checkout savings breakdown, one-tap coupon suggestions
 
 
-## Phase F — Final pass (PARTIAL)
-- ✅ A11y sweep: shell + bottom-nav have aria-label; icon-only buttons audited (no unlabeled); `min-h-screen` → `min-h-dvh` on shell + error/404 boundaries (mobile-safe viewport)
+## Phase F — Final pass (DONE)
+- ✅ A11y sweep: shell + bottom-nav have aria-label; icon-only buttons audited; `min-h-screen` → `min-h-dvh` on shell + error/404 boundaries
 - ✅ shadcn primitives carry ARIA via Radix; no hand-rolled custom widgets flagged
-- ✅ Smoke test script present (`scripts/smoke-test.ts`) — exercises full escrow state machine end-to-end on SQLite/Postgres
-- TODO: README + operator runbook
+- ✅ Smoke test script present (`scripts/smoke-test.ts`) — full escrow state machine end-to-end
+- ✅ Operator runbook → `docs/RUNBOOK.md` (secrets, daily checks, incident playbooks, cron, backups, release smoke tests)
 
 ## Excluded
 - Subscription Sharing
