@@ -198,6 +198,24 @@ function PayPage() {
             <EscrowTimeline warrantyHours={data.warrantyHours ?? 24} />
 
             <div className="space-y-2 pt-1">
+              {creditsAvailable >= deposit.amount_cents ? (
+                <Button
+                  variant="secondary"
+                  className="w-full font-bold border border-accent/60 text-accent"
+                  onClick={() => payCredits.mutate()}
+                  disabled={payCredits.isPending}
+                >
+                  {payCredits.isPending
+                    ? "Applying credits…"
+                    : `Pay with store credits (${usdt(creditsAvailable)} available)`}
+                </Button>
+              ) : creditsAvailable > 0 ? (
+                <div className="text-[11px] text-muted-foreground bg-secondary/50 rounded-md p-2.5 text-center">
+                  You have <b className="text-accent">{usdt(creditsAvailable)}</b> in credits —
+                  short {usdt(deposit.amount_cents - creditsAvailable)} for full coverage. Top up
+                  or pay below.
+                </div>
+              ) : null}
               {walletAvailable >= deposit.amount_cents && (
                 <Button
                   variant="secondary"
