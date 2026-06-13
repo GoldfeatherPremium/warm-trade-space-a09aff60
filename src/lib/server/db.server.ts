@@ -759,6 +759,28 @@ async function migrate(e: Engine): Promise<void> {
     .exec(`create index if not exists idx_credit_ledger_user on credit_ledger(user_id, created_at)`)
     .catch(() => {});
 
+  // --- Phase 6: Order attachments (delivery proof, before/after, dispute evidence) ---
+  await e
+    .exec(
+      `create table if not exists order_attachments (
+        id text primary key,
+        order_id text not null references orders(id),
+        uploader_id text not null references users(id),
+        uploader_role text not null,
+        kind text not null,
+        mime text not null,
+        data text not null,
+        note text,
+        created_at ${big} not null
+      )`,
+    )
+    .catch(() => {});
+  await e
+    .exec(`create index if not exists idx_order_attachments on order_attachments(order_id, created_at)`)
+    .catch(() => {});
+
+
+
 
   await e
     .exec(
