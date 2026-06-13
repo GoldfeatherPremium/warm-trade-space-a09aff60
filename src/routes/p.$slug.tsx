@@ -15,6 +15,7 @@ import { productImage } from "@/lib/images";
 import { usdt, usdtShort, timeAgo } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { DynamicFields } from "@/components/dynamic-fields";
 
 const SITE = "https://warm-trade-space.lovable.app";
 
