@@ -714,7 +714,18 @@ async function migrate(e: Engine): Promise<void> {
     `alter table seller_verifications add column contact_phone text`,
     `alter table seller_verifications add column contact_whatsapp text`,
     `alter table seller_verifications add column contact_telegram text`,
+    // --- Phase 13: admin-configurable category + per-product subscription / delivery / stock ---
+    `alter table categories add column requires_subscription integer not null default 0`,
+    `alter table categories add column allowed_durations text not null default ''`,
+    `alter table categories add column admin_description text`,
+    `alter table categories add column delivery_kind text not null default 'code'`,
+    `alter table products add column subscription_duration text`,
+    `alter table products add column max_orders_at_once integer not null default 10`,
+    `alter table products add column manual_stock integer`,
+    `alter table stock_items add column locked_at ${big}`,
+    `alter table order_deliveries add column locked_at ${big}`,
   ];
+
   for (const stmt of addColumns) {
     await e.exec(stmt).catch(() => {}); // already exists
   }
