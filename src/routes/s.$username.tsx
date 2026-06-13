@@ -165,25 +165,10 @@ function SellerStorePage() {
                 {s.store_description}
               </p>
             )}
-            {socials.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-3">
-                {socials.map(([k, url]) => {
-                  const meta = SOCIAL_ICONS[k] ?? { Icon: Globe, label: k };
-                  const Icon = meta.Icon;
-                  return (
-                    <a
-                      key={k}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer nofollow"
-                      className="inline-flex items-center gap-1.5 text-[11px] bg-secondary hover:bg-border border border-border rounded-full px-2.5 py-1"
-                    >
-                      <Icon className="size-3" /> {meta.label}
-                    </a>
-                  );
-                })}
-              </div>
-            )}
+            {/* External social links are intentionally hidden from buyers.
+                X-VAULT keeps all communication on-platform for safety + escrow. */}
+            {socials.length > 0 && false && null}
+
           </div>
         </div>
 
