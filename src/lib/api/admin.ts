@@ -775,7 +775,13 @@ export const adminGetProduct = createServerFn({ method: "GET" })
     const categories = await q<Row>(
       `select id, name, slug, commission_pct, default_warranty_hours from categories where is_active = 1 order by sort`,
     );
-    return { product: product!, categories };
+    const items = await q<{ id: string; name: string; slug: string }>(
+      `select id, name, slug from catalog_items where is_active = 1 order by sort, name`,
+    );
+    const itemCats = await q<{ item_id: string; category_id: string }>(
+      `select item_id, category_id from catalog_item_categories`,
+    );
+    return { product: product!, categories, items, itemCategories: itemCats };
   });
 
 export const adminUpdateProduct = createServerFn({ method: "POST" })
