@@ -785,6 +785,7 @@ export const adminUpdateProduct = createServerFn({ method: "POST" })
       title: z.string().min(8).max(120),
       description: z.string().min(30).max(5000),
       categoryId: z.string(),
+      itemId: z.string().optional().nullable(),
       priceUsdt: z.number().min(0.5).max(100_000),
       warrantyHours: z.number().int().min(1).max(24 * 365).nullable(),
       minQty: z.number().int().min(1).max(1000),
@@ -803,8 +804,21 @@ export const adminUpdateProduct = createServerFn({ method: "POST" })
     if (data.minQty > data.maxQty) fail("Min qty exceeds max qty.");
     const exists = await q1(`select id from products where id = ?`, [data.productId]);
     if (!exists) fail("Product not found.");
+    let itemId: string | null = null;
+    if (data.itemId) {
+      const item = await q1(`select id from catalog_items where id = ? and is_active = 1`, [data.itemId]);
+      if (!item) fail("Selected sub-category is not available.");
+      const allowed = await q<{ category_id: string }>(
+        `select category_id from catalog_item_categories where item_id = ?`,
+        [data.itemId],
+      );
+      if (allowed.length > 0 && !allowed.some((r) => r.category_id === data.categoryId)) {
+        fail("That sub-category is not enabled for this category.");
+      }
+      itemId = data.itemId;
+    }
     await run(
-      `update products set title = ?, description = ?, category_id = ?, price_cents = ?, warranty_hours = ?,
+      `update products set title = ?, description = ?, category_id = ?, item_id = ?, price_cents = ?, warranty_hours = ?,
          min_qty = ?, max_qty = ?, region = ?, platform = ?, required_info = ?,
          admin_seo_description = ?, category_attrs = ?${data.status ? ", status = ?" : ""}
        where id = ?`,
@@ -812,6 +826,7 @@ export const adminUpdateProduct = createServerFn({ method: "POST" })
         data.title,
         data.description,
         data.categoryId,
+        itemId,
         Math.round(data.priceUsdt * 100),
         data.warrantyHours,
         data.minQty,
