@@ -165,8 +165,9 @@ await run(`insert into disputes (id, order_id, opened_by, reason, created_at) va
 await run(`update orders set status = 'disputed' where id = ?`, [o2]);
 const ord2 = (await lc.getOrderRow(o2))!;
 await lc.refundOrder(o2, ord2.total_cents, "test refund");
-const bw = await money.getWallet(buyer.id);
-check("buyer refunded full total", bw.available_cents === ord2.total_cents, bw);
+// Refunds are issued to the buyer's credit balance (not spendable wallet cash).
+const bc = await money.getBuyerCredits(buyer.id);
+check("buyer refunded full total to credits", bc.balance_cents === ord2.total_cents, bc);
 sw = await money.getWallet(autoProduct.seller_id);
 check("seller pending back to 0 after refund", sw.pending_cents === 0, sw);
 check("order status refunded", (await lc.getOrderRow(o2))!.status === "refunded");
@@ -198,14 +199,17 @@ await lc.confirmPayment(o5);
 await lc.markManualDelivered(o5, manualProduct.seller_id, "partial delivery");
 const ord5 = (await lc.getOrderRow(o5))!;
 const sellerBefore = await money.getWallet(manualProduct.seller_id);
-const buyerBefore = await money.getWallet(buyer.id);
+const buyerBefore = await money.getBuyerCredits(buyer.id);
 const half = Math.round(ord5.total_cents / 2);
 await lc.refundOrder(o5, half, "partial refund test");
 const sellerAfter = await money.getWallet(manualProduct.seller_id);
-const buyerAfter = await money.getWallet(buyer.id);
+const buyerAfter = await money.getBuyerCredits(buyer.id);
 const keepGross = ord5.total_cents - half;
 const keepNet = keepGross - Math.round((keepGross * ord5.commission_pct) / 100);
-check("partial: buyer got half", buyerAfter.available_cents - buyerBefore.available_cents === half);
+check(
+  "partial: buyer got half as credits",
+  buyerAfter.balance_cents - buyerBefore.balance_cents === half,
+);
 check(
   "partial: seller kept net of remainder",
   sellerAfter.available_cents - sellerBefore.available_cents === keepNet,
@@ -255,6 +259,68 @@ check(
 check("automod flags telegram", core.automodCheck("hit me on telegram @scam") !== null);
 check("automod flags email", core.automodCheck("mail me at x@y.com") !== null);
 check("automod passes normal text", core.automodCheck("thanks, code worked great!") === null);
+
+// =============== 9. atomic stock reservation (oversell guard) ===============
+// Exercises the exact guarded UPDATE…RETURNING used by checkout. Reserving
+// more than is available must claim only what's left and report the shortfall.
+{
+  const stockProduct = (await q1<any>(
+    `select * from products where delivery_type = 'auto' and stock_count > 0 limit 1`,
+  ))!;
+  const avail = await stockOf(stockProduct.id);
+  const claimAll = await q<{ id: string }>(
+    `update stock_items set status = 'reserved', order_id = ?
+       where status = 'available'
+         and id in (
+           select id from stock_items where product_id = ? and status = 'available'
+           order by id limit ?
+         )
+     returning id`,
+    ["smoke-reserve-1", stockProduct.id, avail + 5],
+  );
+  check("atomic reserve claims only available stock", claimAll.length === avail, {
+    claimed: claimAll.length,
+    avail,
+  });
+  // A second reservation finds nothing left — never double-sells a code.
+  const claimAgain = await q<{ id: string }>(
+    `update stock_items set status = 'reserved', order_id = ?
+       where status = 'available'
+         and id in (
+           select id from stock_items where product_id = ? and status = 'available'
+           order by id limit ?
+         )
+     returning id`,
+    ["smoke-reserve-2", stockProduct.id, 1],
+  );
+  check("atomic reserve never double-sells", claimAgain.length === 0);
+  // restore for any later assertions
+  await run(`update stock_items set status = 'available', order_id = null where order_id = ?`, [
+    "smoke-reserve-1",
+  ]);
+}
+
+// =============== 10. atomic coupon redemption (max_uses guard) ===============
+{
+  const cid = core.uid();
+  await run(
+    `insert into coupons (id, code, pct_off, min_total_cents, max_uses, used_count, is_active, created_at)
+     values (?,?,?,?,?,?,?,?)`,
+    [cid, "SMOKE1USE", 10, 0, 1, 0, 1, Date.now()],
+  );
+  const first = await q<{ id: string }>(
+    `update coupons set used_count = used_count + 1
+       where id = ? and (max_uses = 0 or used_count < max_uses) returning id`,
+    [cid],
+  );
+  const second = await q<{ id: string }>(
+    `update coupons set used_count = used_count + 1
+       where id = ? and (max_uses = 0 or used_count < max_uses) returning id`,
+    [cid],
+  );
+  check("coupon guard allows first redemption", first.length === 1);
+  check("coupon guard blocks redemption past max_uses", second.length === 0);
+}
 
 console.log(
   `\nAll ${passed} checks passed ✔ (engine: ${process.env.DATABASE_URL ? "postgres" : "sqlite"})`,

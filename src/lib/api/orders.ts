@@ -141,17 +141,24 @@ export const createOrder = createServerFn({ method: "POST" })
     const t = now();
     await tx(async () => {
       if (p!.delivery_type === "auto") {
-        const free = await q<{ id: string }>(
-          `select id from stock_items where product_id = ? and status = 'available' limit ?`,
-          [p!.id, data.qty],
+        // Atomically reserve in a single guarded UPDATE. The outer
+        // `status = 'available'` recheck makes this safe under concurrent
+        // checkouts on Postgres (READ COMMITTED) — a racing transaction can
+        // never reserve a code another checkout already took, so unique stock
+        // codes are sold exactly once. If fewer than requested were claimed we
+        // fail and the surrounding tx() rolls the partial reservation back.
+        const reserved = await q<{ id: string }>(
+          `update stock_items set status = 'reserved', order_id = ?
+             where status = 'available'
+               and id in (
+                 select id from stock_items
+                  where product_id = ? and status = 'available'
+                  order by id limit ?
+               )
+           returning id`,
+          [orderId, p!.id, data.qty],
         );
-        if (free.length < data.qty) fail(`Only ${free.length} in stock.`);
-        for (const s of free) {
-          await run(`update stock_items set status = 'reserved', order_id = ? where id = ?`, [
-            orderId,
-            s.id,
-          ]);
-        }
+        if (reserved.length < data.qty) fail(`Only ${reserved.length} in stock.`);
         await run(
           `update products set stock_count = (select count(*) from stock_items where product_id = ? and status = 'available') where id = ?`,
           [p!.id, p!.id],
@@ -167,7 +174,14 @@ export const createOrder = createServerFn({ method: "POST" })
         });
         discount = Math.round((grossTotal * coupon.pct_off) / 100);
         couponCode = coupon.code;
-        await run(`update coupons set used_count = used_count + 1 where id = ?`, [coupon.id]);
+        // Atomic redemption guard: enforces max_uses even when two checkouts
+        // race for the last use of a single-use (e.g. loyalty) coupon.
+        const claimed = await q<{ id: string }>(
+          `update coupons set used_count = used_count + 1
+             where id = ? and (max_uses = 0 or used_count < max_uses) returning id`,
+          [coupon.id],
+        );
+        if (claimed.length === 0) fail("This coupon has been fully redeemed.");
       }
       const total = grossTotal - discount;
       const commissionPct = p!.cat_commission;
