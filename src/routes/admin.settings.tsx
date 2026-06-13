@@ -28,6 +28,8 @@ interface FormShape {
   presencePingSeconds: number;
   lowStockThreshold: number;
   disputeSlaHours: number;
+  chatRateLimitPerMin: number;
+  automodSeverity: "block" | "flag";
 }
 
 const DEFAULTS: FormShape = {
@@ -44,6 +46,8 @@ const DEFAULTS: FormShape = {
   presencePingSeconds: 60,
   lowStockThreshold: 5,
   disputeSlaHours: 72,
+  chatRateLimitPerMin: 20,
+  automodSeverity: "block",
 };
 
 function AdminSettings() {
