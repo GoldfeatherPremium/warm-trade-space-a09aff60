@@ -303,7 +303,36 @@ function AdminProductEdit() {
             onChange={(e) => setForm({ ...form, maxQty: Number(e.target.value) })}
           />
         </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Max orders per single checkout</Label>
+          <Input
+            type="number"
+            min={1}
+            value={form.maxOrdersAtOnce}
+            onChange={(e) => setForm({ ...form, maxOrdersAtOnce: Number(e.target.value) })}
+          />
+        </div>
+        {schema?.config?.requiresSubscription && (
+          <div className="space-y-1.5">
+            <Label className="text-xs">Subscription duration</Label>
+            <select
+              value={form.subscriptionDuration}
+              onChange={(e) =>
+                setForm({ ...form, subscriptionDuration: e.target.value as never })
+              }
+              className="w-full bg-secondary border border-border rounded-md px-2 py-2 text-xs h-9"
+            >
+              <option value="">— Use seller's pick —</option>
+              {(schema?.config?.allowedDurations ?? []).map((d) => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
+
 
       <Button type="submit" disabled={save.isPending}>
         {save.isPending ? "Saving…" : "Save changes"}
