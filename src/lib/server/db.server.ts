@@ -685,6 +685,13 @@ async function migrate(e: Engine): Promise<void> {
     `alter table categories add column submission_schema text`,
     `alter table products add column category_attrs text`,
     `alter table products add column admin_seo_description text`,
+    // --- Phase 8: global configurability sweep ---
+    `alter table site_settings add column credit_withdrawal_fee_pct ${real} not null default 2`,
+    `alter table site_settings add column credit_withdrawal_min_fee_cents ${big} not null default 100`,
+    `alter table site_settings add column attachment_max_mb integer not null default 5`,
+    `alter table site_settings add column presence_ping_seconds integer not null default 60`,
+    `alter table site_settings add column low_stock_threshold integer not null default 5`,
+    `alter table site_settings add column dispute_sla_hours integer not null default 72`,
   ];
   for (const stmt of addColumns) {
     await e.exec(stmt).catch(() => {}); // already exists

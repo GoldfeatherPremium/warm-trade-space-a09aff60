@@ -120,6 +120,13 @@ export interface SiteSettings {
   auto_confirm_hours: number;
   payment_window_minutes: number;
   maintenance_mode: number;
+  announcement: string | null;
+  credit_withdrawal_fee_pct: number;
+  credit_withdrawal_min_fee_cents: number;
+  attachment_max_mb: number;
+  presence_ping_seconds: number;
+  low_stock_threshold: number;
+  dispute_sla_hours: number;
 }
 
 export async function getSettings(): Promise<SiteSettings> {

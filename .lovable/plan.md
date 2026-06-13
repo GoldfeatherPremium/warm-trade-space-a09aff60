@@ -41,13 +41,17 @@ This is a large batch (19 items). I'll group them into phases so each ships veri
 - ✅ New `order_attachments` table (id, order_id, uploader_id, uploader_role, kind, mime, data, note) + server fns `listOrderAttachments` / `addOrderAttachment` / `deleteOrderAttachment` / `getOrderAttachmentData` with 5 MB cap and image/video MIME allow-list.
 - ✅ Order page gets an attachments grid with inline image/video previews and an uploader (kind: proof / before / after / evidence / misc + optional note). Both buyer and seller can upload; uploader's role and timestamp shown on every tile; uploader and staff can delete.
 
-## Phase 7 — Auth + footer polish (items 14, 15)
-- Remove demo account block from `auth.tsx` bottom.
-- Rebuild footer in `shell.tsx`: replace promo blurb with link grid → About, How escrow works, Fees, Seller guide, Buyer protection, Credits & refunds, Prohibited items, Terms, Privacy, Contact, Status. Create stub routes for each (`/about`, `/legal/terms`, etc.) with placeholder body + proper SEO heads.
+## Phase 7 — Auth + footer polish (items 14, 15) ✅ DONE
+- ✅ Demo account block removed from `auth.tsx`; replaced bottom area with a clean Terms/Privacy link line.
+- ✅ Footer rebuilt in `shell.tsx` as a 4-column link grid: Marketplace, Trust & safety, Money, Company — all wired to existing legal stub routes.
 
-## Phase 8 — "Make everything configurable" sweep
-- Audit hardcoded numbers and copy. Move to `platform_settings` (already exists): warranty default hours per category, insurance default days, withdrawal min/fee, credit withdrawal fee, presence ping interval, automod severity threshold, max chat msgs/min, dispute SLA hours, low-stock threshold, "buyers chose this" trigger N, image upload size limits, etc.
-- Build `/admin/settings` into a tabbed config panel: General, Fees & Commissions, Escrow & Warranty, Credits & Refunds, Chat & Moderation, Listings & Categories, SEO.
+## Phase 8 — "Make everything configurable" sweep ✅ DONE (round 1)
+- ✅ Added 6 new tunable columns to `site_settings`: `credit_withdrawal_fee_pct`, `credit_withdrawal_min_fee_cents`, `attachment_max_mb`, `presence_ping_seconds`, `low_stock_threshold`, `dispute_sla_hours`.
+- ✅ Wired `credits.requestCreditWithdrawal` to settings (replaces hardcoded 2% / $1 floor).
+- ✅ Wired `attachments.addOrderAttachment` to settings (per-file MB cap) with a 50 MB hard ceiling.
+- ✅ Presence ping interval now comes from `getMe().banner.presencePingSeconds`; `useMe` reschedules dynamically.
+- ✅ Rebuilt `/admin/settings` as a 5-tab panel (General · Fees · Escrow · Credits · Chat & Listings) covering every tunable.
+- Round 2 (future): expose `low_stock_threshold` in product cards, dispute SLA in dispute lists, and add automod severity / chat rate-limit knobs.
 
 ---
 

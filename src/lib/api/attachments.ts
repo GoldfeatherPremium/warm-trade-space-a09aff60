@@ -2,12 +2,12 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { q, q1, run } from "../server/db.server";
 import { appContext } from "../server/app.server";
-import { audit, fail, now, uid } from "../server/core.server";
+import { audit, fail, getSettings, now, uid } from "../server/core.server";
 import { isStaff, requireUser } from "../server/auth.server";
 import { rateLimit } from "../server/rate-limit.server";
 import { getOrderRow } from "../server/lifecycle.server";
 
-const MAX_BYTES = 5 * 1024 * 1024; // 5 MB raw
+const MAX_BYTES_HARD_CAP = 50 * 1024 * 1024; // 50 MB absolute ceiling
 const ALLOWED_MIME = [
   "image/png",
   "image/jpeg",
@@ -55,7 +55,7 @@ export const addOrderAttachment = createServerFn({ method: "POST" })
       orderId: z.string(),
       mime: z.string().min(3).max(40),
       kind: z.enum(KINDS),
-      dataBase64: z.string().min(16).max(Math.ceil((MAX_BYTES * 4) / 3) + 1024),
+      dataBase64: z.string().min(16).max(Math.ceil((MAX_BYTES_HARD_CAP * 4) / 3) + 1024),
       note: z.string().max(500).optional(),
     }),
   )
@@ -65,8 +65,10 @@ export const addOrderAttachment = createServerFn({ method: "POST" })
     rateLimit({ key: `attach:${user.id}`, limit: 30, windowMs: 60_000 });
     if (!ALLOWED_MIME.includes(data.mime))
       fail("Unsupported file type. Use PNG, JPEG, WebP, GIF, MP4, or WebM.");
+    const settings = await getSettings();
+    const maxBytes = settings.attachment_max_mb * 1024 * 1024;
     const approxBytes = Math.floor((data.dataBase64.length * 3) / 4);
-    if (approxBytes > MAX_BYTES) fail("File is too large (5 MB max).");
+    if (approxBytes > maxBytes) fail(`File is too large (${settings.attachment_max_mb} MB max).`);
     const staff = isStaff(user);
     const o = await assertAccess(data.orderId, user.id, staff);
     const role = staff
