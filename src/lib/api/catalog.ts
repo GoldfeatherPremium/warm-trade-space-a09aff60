@@ -550,6 +550,22 @@ export const listCatalogItems = createServerFn({ method: "GET" }).handler(async 
   return { items: items.map((i) => ({ ...i, categoryIds: byItem[i.id] ?? [] })) };
 });
 
+export const getCategorySchema = createServerFn({ method: "GET" })
+  .inputValidator(z.object({ categoryId: z.string() }))
+  .handler(async ({ data }) => {
+    await appContext();
+    const c = await q1<{ id: string; name: string; submission_schema: string | null }>(
+      `select id, name, submission_schema from categories where id = ?`,
+      [data.categoryId],
+    );
+    if (!c) return { schema: null as CategorySubmissionSchema | null };
+    let schema: CategorySubmissionSchema | null = null;
+    if (c.submission_schema) {
+      try { schema = JSON.parse(c.submission_schema) as CategorySubmissionSchema; } catch { /* ignore */ }
+    }
+    return { schema };
+  });
+
 export const quickSearch = createServerFn({ method: "GET" })
   .inputValidator(z.object({ q: z.string().max(100) }))
   .handler(async ({ data }) => {
