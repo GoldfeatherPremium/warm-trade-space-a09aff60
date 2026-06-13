@@ -31,7 +31,9 @@ function DisputeVault() {
     queryKey: ["disputeThread", orderId],
     queryFn: () => getDisputeThread({ data: { orderId } }),
     enabled: !!me,
-    refetchInterval: 15_000,
+    // Stop polling once the dispute is resolved — the thread is closed, so
+    // there's nothing new to fetch every 15s.
+    refetchInterval: (query) => (query.state.data?.dispute?.status === "resolved" ? false : 15_000),
   });
 
   const refresh = () => qc.invalidateQueries({ queryKey: ["disputeThread", orderId] });
