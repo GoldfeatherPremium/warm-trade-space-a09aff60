@@ -130,7 +130,11 @@ function ProductForm() {
           setRegionCountry(region);
         }
         setItemId((p.item_id as string) ?? "");
-        // Load existing images
+        // Hydrate dynamic category attrs (admin-defined per-category fields)
+        const attrs = p.category_attrs as string | null;
+        if (attrs) {
+          try { setCategoryAttrs(JSON.parse(attrs) as Record<string, string>); } catch { /* ignore */ }
+        }
         listMyProductImages({ data: { productId: edit } })
           .then((r) => setImageIds(r.images.map((i) => i.id)))
           .catch(() => {});
