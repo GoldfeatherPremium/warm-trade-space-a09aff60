@@ -19,11 +19,13 @@ import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as MenuRouteImport } from './routes/menu'
 import { Route as FavoritesRouteImport } from './routes/favorites'
 import { Route as DisputesRouteImport } from './routes/disputes'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as BrowseRouteImport } from './routes/browse'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AccountRouteImport } from './routes/account'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SellerIndexRouteImport } from './routes/seller.index'
 import { Route as OrdersIndexRouteImport } from './routes/orders.index'
@@ -44,6 +46,14 @@ import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as PayOrderIdRouteImport } from './routes/pay.$orderId'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
 import { Route as OrdersOrderIdRouteImport } from './routes/orders.$orderId'
+import { Route as LegalTermsRouteImport } from './routes/legal.terms'
+import { Route as LegalProhibitedRouteImport } from './routes/legal.prohibited'
+import { Route as LegalPrivacyRouteImport } from './routes/legal.privacy'
+import { Route as LegalPayoutsRouteImport } from './routes/legal.payouts'
+import { Route as LegalFeesRouteImport } from './routes/legal.fees'
+import { Route as LegalEscrowRouteImport } from './routes/legal.escrow'
+import { Route as LegalCreditsRouteImport } from './routes/legal.credits'
+import { Route as LegalBuyerProtectionRouteImport } from './routes/legal.buyer-protection'
 import { Route as DisputesOrderIdRouteImport } from './routes/disputes.$orderId'
 import { Route as AdminVerificationsRouteImport } from './routes/admin.verifications'
 import { Route as AdminUsersRouteImport } from './routes/admin.users'
@@ -118,6 +128,11 @@ const DisputesRoute = DisputesRouteImport.update({
   path: '/disputes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ChatRoute = ChatRouteImport.update({
   id: '/chat',
   path: '/chat',
@@ -141,6 +156,11 @@ const AdminRoute = AdminRouteImport.update({
 const AccountRoute = AccountRouteImport.update({
   id: '/account',
   path: '/account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -241,6 +261,46 @@ const PSlugRoute = PSlugRouteImport.update({
 const OrdersOrderIdRoute = OrdersOrderIdRouteImport.update({
   id: '/orders/$orderId',
   path: '/orders/$orderId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalTermsRoute = LegalTermsRouteImport.update({
+  id: '/legal/terms',
+  path: '/legal/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalProhibitedRoute = LegalProhibitedRouteImport.update({
+  id: '/legal/prohibited',
+  path: '/legal/prohibited',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalPrivacyRoute = LegalPrivacyRouteImport.update({
+  id: '/legal/privacy',
+  path: '/legal/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalPayoutsRoute = LegalPayoutsRouteImport.update({
+  id: '/legal/payouts',
+  path: '/legal/payouts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalFeesRoute = LegalFeesRouteImport.update({
+  id: '/legal/fees',
+  path: '/legal/fees',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalEscrowRoute = LegalEscrowRouteImport.update({
+  id: '/legal/escrow',
+  path: '/legal/escrow',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalCreditsRoute = LegalCreditsRouteImport.update({
+  id: '/legal/credits',
+  path: '/legal/credits',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalBuyerProtectionRoute = LegalBuyerProtectionRouteImport.update({
+  id: '/legal/buyer-protection',
+  path: '/legal/buyer-protection',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DisputesOrderIdRoute = DisputesOrderIdRouteImport.update({
@@ -362,11 +422,13 @@ const ApiPublicCronFollowDigestRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/account': typeof AccountRouteWithChildren
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/browse': typeof BrowseRoute
   '/chat': typeof ChatRoute
+  '/contact': typeof ContactRoute
   '/disputes': typeof DisputesRouteWithChildren
   '/favorites': typeof FavoritesRoute
   '/menu': typeof MenuRoute
@@ -397,6 +459,14 @@ export interface FileRoutesByFullPath {
   '/admin/users': typeof AdminUsersRoute
   '/admin/verifications': typeof AdminVerificationsRoute
   '/disputes/$orderId': typeof DisputesOrderIdRoute
+  '/legal/buyer-protection': typeof LegalBuyerProtectionRoute
+  '/legal/credits': typeof LegalCreditsRoute
+  '/legal/escrow': typeof LegalEscrowRoute
+  '/legal/fees': typeof LegalFeesRoute
+  '/legal/payouts': typeof LegalPayoutsRoute
+  '/legal/privacy': typeof LegalPrivacyRoute
+  '/legal/prohibited': typeof LegalProhibitedRoute
+  '/legal/terms': typeof LegalTermsRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/p/$slug': typeof PSlugRoute
   '/pay/$orderId': typeof PayOrderIdRoute
@@ -422,10 +492,12 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/account': typeof AccountRouteWithChildren
   '/auth': typeof AuthRoute
   '/browse': typeof BrowseRoute
   '/chat': typeof ChatRoute
+  '/contact': typeof ContactRoute
   '/disputes': typeof DisputesRouteWithChildren
   '/favorites': typeof FavoritesRoute
   '/menu': typeof MenuRoute
@@ -455,6 +527,14 @@ export interface FileRoutesByTo {
   '/admin/users': typeof AdminUsersRoute
   '/admin/verifications': typeof AdminVerificationsRoute
   '/disputes/$orderId': typeof DisputesOrderIdRoute
+  '/legal/buyer-protection': typeof LegalBuyerProtectionRoute
+  '/legal/credits': typeof LegalCreditsRoute
+  '/legal/escrow': typeof LegalEscrowRoute
+  '/legal/fees': typeof LegalFeesRoute
+  '/legal/payouts': typeof LegalPayoutsRoute
+  '/legal/privacy': typeof LegalPrivacyRoute
+  '/legal/prohibited': typeof LegalProhibitedRoute
+  '/legal/terms': typeof LegalTermsRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/p/$slug': typeof PSlugRoute
   '/pay/$orderId': typeof PayOrderIdRoute
@@ -481,11 +561,13 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
   '/account': typeof AccountRouteWithChildren
   '/admin': typeof AdminRouteWithChildren
   '/auth': typeof AuthRoute
   '/browse': typeof BrowseRoute
   '/chat': typeof ChatRoute
+  '/contact': typeof ContactRoute
   '/disputes': typeof DisputesRouteWithChildren
   '/favorites': typeof FavoritesRoute
   '/menu': typeof MenuRoute
@@ -516,6 +598,14 @@ export interface FileRoutesById {
   '/admin/users': typeof AdminUsersRoute
   '/admin/verifications': typeof AdminVerificationsRoute
   '/disputes/$orderId': typeof DisputesOrderIdRoute
+  '/legal/buyer-protection': typeof LegalBuyerProtectionRoute
+  '/legal/credits': typeof LegalCreditsRoute
+  '/legal/escrow': typeof LegalEscrowRoute
+  '/legal/fees': typeof LegalFeesRoute
+  '/legal/payouts': typeof LegalPayoutsRoute
+  '/legal/privacy': typeof LegalPrivacyRoute
+  '/legal/prohibited': typeof LegalProhibitedRoute
+  '/legal/terms': typeof LegalTermsRoute
   '/orders/$orderId': typeof OrdersOrderIdRoute
   '/p/$slug': typeof PSlugRoute
   '/pay/$orderId': typeof PayOrderIdRoute
@@ -543,11 +633,13 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
     | '/account'
     | '/admin'
     | '/auth'
     | '/browse'
     | '/chat'
+    | '/contact'
     | '/disputes'
     | '/favorites'
     | '/menu'
@@ -578,6 +670,14 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/verifications'
     | '/disputes/$orderId'
+    | '/legal/buyer-protection'
+    | '/legal/credits'
+    | '/legal/escrow'
+    | '/legal/fees'
+    | '/legal/payouts'
+    | '/legal/privacy'
+    | '/legal/prohibited'
+    | '/legal/terms'
     | '/orders/$orderId'
     | '/p/$slug'
     | '/pay/$orderId'
@@ -603,10 +703,12 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
     | '/account'
     | '/auth'
     | '/browse'
     | '/chat'
+    | '/contact'
     | '/disputes'
     | '/favorites'
     | '/menu'
@@ -636,6 +738,14 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/verifications'
     | '/disputes/$orderId'
+    | '/legal/buyer-protection'
+    | '/legal/credits'
+    | '/legal/escrow'
+    | '/legal/fees'
+    | '/legal/payouts'
+    | '/legal/privacy'
+    | '/legal/prohibited'
+    | '/legal/terms'
     | '/orders/$orderId'
     | '/p/$slug'
     | '/pay/$orderId'
@@ -661,11 +771,13 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/about'
     | '/account'
     | '/admin'
     | '/auth'
     | '/browse'
     | '/chat'
+    | '/contact'
     | '/disputes'
     | '/favorites'
     | '/menu'
@@ -696,6 +808,14 @@ export interface FileRouteTypes {
     | '/admin/users'
     | '/admin/verifications'
     | '/disputes/$orderId'
+    | '/legal/buyer-protection'
+    | '/legal/credits'
+    | '/legal/escrow'
+    | '/legal/fees'
+    | '/legal/payouts'
+    | '/legal/privacy'
+    | '/legal/prohibited'
+    | '/legal/terms'
     | '/orders/$orderId'
     | '/p/$slug'
     | '/pay/$orderId'
@@ -722,11 +842,13 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
   AccountRoute: typeof AccountRouteWithChildren
   AdminRoute: typeof AdminRouteWithChildren
   AuthRoute: typeof AuthRoute
   BrowseRoute: typeof BrowseRoute
   ChatRoute: typeof ChatRoute
+  ContactRoute: typeof ContactRoute
   DisputesRoute: typeof DisputesRouteWithChildren
   FavoritesRoute: typeof FavoritesRoute
   MenuRoute: typeof MenuRoute
@@ -737,6 +859,14 @@ export interface RootRouteChildren {
   SellersRoute: typeof SellersRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   WalletRoute: typeof WalletRoute
+  LegalBuyerProtectionRoute: typeof LegalBuyerProtectionRoute
+  LegalCreditsRoute: typeof LegalCreditsRoute
+  LegalEscrowRoute: typeof LegalEscrowRoute
+  LegalFeesRoute: typeof LegalFeesRoute
+  LegalPayoutsRoute: typeof LegalPayoutsRoute
+  LegalPrivacyRoute: typeof LegalPrivacyRoute
+  LegalProhibitedRoute: typeof LegalProhibitedRoute
+  LegalTermsRoute: typeof LegalTermsRoute
   OrdersOrderIdRoute: typeof OrdersOrderIdRoute
   PSlugRoute: typeof PSlugRoute
   PayOrderIdRoute: typeof PayOrderIdRoute
@@ -819,6 +949,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DisputesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/chat': {
       id: '/chat'
       path: '/chat'
@@ -852,6 +989,13 @@ declare module '@tanstack/react-router' {
       path: '/account'
       fullPath: '/account'
       preLoaderRoute: typeof AccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -992,6 +1136,62 @@ declare module '@tanstack/react-router' {
       path: '/orders/$orderId'
       fullPath: '/orders/$orderId'
       preLoaderRoute: typeof OrdersOrderIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/terms': {
+      id: '/legal/terms'
+      path: '/legal/terms'
+      fullPath: '/legal/terms'
+      preLoaderRoute: typeof LegalTermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/prohibited': {
+      id: '/legal/prohibited'
+      path: '/legal/prohibited'
+      fullPath: '/legal/prohibited'
+      preLoaderRoute: typeof LegalProhibitedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/privacy': {
+      id: '/legal/privacy'
+      path: '/legal/privacy'
+      fullPath: '/legal/privacy'
+      preLoaderRoute: typeof LegalPrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/payouts': {
+      id: '/legal/payouts'
+      path: '/legal/payouts'
+      fullPath: '/legal/payouts'
+      preLoaderRoute: typeof LegalPayoutsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/fees': {
+      id: '/legal/fees'
+      path: '/legal/fees'
+      fullPath: '/legal/fees'
+      preLoaderRoute: typeof LegalFeesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/escrow': {
+      id: '/legal/escrow'
+      path: '/legal/escrow'
+      fullPath: '/legal/escrow'
+      preLoaderRoute: typeof LegalEscrowRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/credits': {
+      id: '/legal/credits'
+      path: '/legal/credits'
+      fullPath: '/legal/credits'
+      preLoaderRoute: typeof LegalCreditsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal/buyer-protection': {
+      id: '/legal/buyer-protection'
+      path: '/legal/buyer-protection'
+      fullPath: '/legal/buyer-protection'
+      preLoaderRoute: typeof LegalBuyerProtectionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/disputes/$orderId': {
@@ -1264,11 +1464,13 @@ const SellerRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
   AccountRoute: AccountRouteWithChildren,
   AdminRoute: AdminRouteWithChildren,
   AuthRoute: AuthRoute,
   BrowseRoute: BrowseRoute,
   ChatRoute: ChatRoute,
+  ContactRoute: ContactRoute,
   DisputesRoute: DisputesRouteWithChildren,
   FavoritesRoute: FavoritesRoute,
   MenuRoute: MenuRoute,
@@ -1279,6 +1481,14 @@ const rootRouteChildren: RootRouteChildren = {
   SellersRoute: SellersRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   WalletRoute: WalletRoute,
+  LegalBuyerProtectionRoute: LegalBuyerProtectionRoute,
+  LegalCreditsRoute: LegalCreditsRoute,
+  LegalEscrowRoute: LegalEscrowRoute,
+  LegalFeesRoute: LegalFeesRoute,
+  LegalPayoutsRoute: LegalPayoutsRoute,
+  LegalPrivacyRoute: LegalPrivacyRoute,
+  LegalProhibitedRoute: LegalProhibitedRoute,
+  LegalTermsRoute: LegalTermsRoute,
   OrdersOrderIdRoute: OrdersOrderIdRoute,
   PSlugRoute: PSlugRoute,
   PayOrderIdRoute: PayOrderIdRoute,
