@@ -383,6 +383,15 @@ export const getOrder = createServerFn({ method: "GET" })
       payload:
         isBuyer || isStaff(user) ? del.payload : del.payload ? "•••• (visible to buyer)" : null,
     }));
+    let snapshot: Record<string, unknown> | null = null;
+    const snapRaw = (o as unknown as { product_snapshot?: string | null }).product_snapshot;
+    if (snapRaw) {
+      try {
+        snapshot = JSON.parse(snapRaw);
+      } catch {
+        snapshot = null;
+      }
+    }
     return {
       order: o!,
       deliveries: safeDeliveries,
@@ -394,6 +403,7 @@ export const getOrder = createServerFn({ method: "GET" })
       viewerIsBuyer: isBuyer,
       viewerIsSeller: o!.seller_id === user.id,
       autoConfirmHours: settings.auto_confirm_hours,
+      productSnapshot: snapshot,
     };
   });
 
