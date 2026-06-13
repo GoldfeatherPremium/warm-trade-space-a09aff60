@@ -231,7 +231,14 @@ export async function q<T = Record<string, unknown>>(sql: string, params?: Param
   try {
     return await (await getEngine()).q<T>(sql, params);
   } catch (e) {
-    console.error("[db] q failed:", (e as Error)?.message, "sql:", sql, "params:", JSON.stringify(params));
+    console.error(
+      "[db] q failed:",
+      (e as Error)?.message,
+      "sql:",
+      sql,
+      "params:",
+      JSON.stringify(params),
+    );
     throw e;
   }
 }
@@ -247,7 +254,14 @@ export async function run(sql: string, params?: Params): Promise<void> {
   try {
     return await (await getEngine()).run(sql, params);
   } catch (e) {
-    console.error("[db] run failed:", (e as Error)?.message, "sql:", sql, "params:", JSON.stringify(params));
+    console.error(
+      "[db] run failed:",
+      (e as Error)?.message,
+      "sql:",
+      sql,
+      "params:",
+      JSON.stringify(params),
+    );
     throw e;
   }
 }
@@ -794,11 +808,10 @@ async function migrate(e: Engine): Promise<void> {
     )
     .catch(() => {});
   await e
-    .exec(`create index if not exists idx_order_attachments on order_attachments(order_id, created_at)`)
+    .exec(
+      `create index if not exists idx_order_attachments on order_attachments(order_id, created_at)`,
+    )
     .catch(() => {});
-
-
-
 
   await e
     .exec(
@@ -826,9 +839,7 @@ async function migrate(e: Engine): Promise<void> {
     )
     .catch(() => {});
   await e
-    .exec(
-      `create index if not exists idx_product_images on product_images(product_id, sort)`,
-    )
+    .exec(`create index if not exists idx_product_images on product_images(product_id, sort)`)
     .catch(() => {});
 
   // --- Phase 2: search analytics ---
@@ -886,7 +897,9 @@ async function migrate(e: Engine): Promise<void> {
     )
     .catch(() => {});
   await e
-    .exec(`create index if not exists idx_referral_clicks_ref on referral_clicks(referral_id, created_at)`)
+    .exec(
+      `create index if not exists idx_referral_clicks_ref on referral_clicks(referral_id, created_at)`,
+    )
     .catch(() => {});
   await e
     .exec(
@@ -916,7 +929,9 @@ async function migrate(e: Engine): Promise<void> {
     )
     .catch(() => {});
   await e
-    .exec(`create index if not exists idx_trust_history_user on seller_trust_history(user_id, captured_at)`)
+    .exec(
+      `create index if not exists idx_trust_history_user on seller_trust_history(user_id, captured_at)`,
+    )
     .catch(() => {});
 
   // --- Seller follows (buyers subscribe to a seller's storefront) ---
@@ -982,7 +997,9 @@ async function migrate(e: Engine): Promise<void> {
 
   // --- Phase C (perf audit): additional hot-path indexes ---
   await e
-    .exec(`create index if not exists idx_products_category_status on products(category_id, status, created_at)`)
+    .exec(
+      `create index if not exists idx_products_category_status on products(category_id, status, created_at)`,
+    )
     .catch(() => {});
   await e
     .exec(`create index if not exists idx_products_active_created on products(status, created_at)`)

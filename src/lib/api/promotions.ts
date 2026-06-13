@@ -66,10 +66,10 @@ export const saveMyCoupon = createServerFn({ method: "POST" })
 
     // Reserved scope: a seller can only manage their own coupons
     if (data.productId) {
-      const owned = await q1(
-        `select 1 as x from products where id = ? and seller_id = ?`,
-        [data.productId, user.id],
-      );
+      const owned = await q1(`select 1 as x from products where id = ? and seller_id = ?`, [
+        data.productId,
+        user.id,
+      ]);
       if (!owned) fail("Product not found.");
     }
 
@@ -160,21 +160,20 @@ export const setProductSale = createServerFn({ method: "POST" })
     );
     if (!p || p.seller_id !== user.id) fail("Product not found.");
     if (data.salePriceUsdt === null) {
-      await run(
-        `update products set sale_price_cents = null, sale_ends_at = null where id = ?`,
-        [data.productId],
-      );
+      await run(`update products set sale_price_cents = null, sale_ends_at = null where id = ?`, [
+        data.productId,
+      ]);
       await audit(user.id, "promo.sale.clear", "product", data.productId);
       return { ok: true };
     }
     const saleCents = Math.round(data.salePriceUsdt * 100);
-    if (saleCents >= p!.price_cents)
-      fail("Sale price must be lower than the regular price.");
+    if (saleCents >= p!.price_cents) fail("Sale price must be lower than the regular price.");
     const endsAt = data.endsInDays > 0 ? now() + data.endsInDays * 86_400_000 : null;
-    await run(
-      `update products set sale_price_cents = ?, sale_ends_at = ? where id = ?`,
-      [saleCents, endsAt, data.productId],
-    );
+    await run(`update products set sale_price_cents = ?, sale_ends_at = ? where id = ?`, [
+      saleCents,
+      endsAt,
+      data.productId,
+    ]);
     await audit(user.id, "promo.sale.set", "product", data.productId, {
       saleCents,
       endsAt,
@@ -197,10 +196,9 @@ export const listMyProductsForPromo = createServerFn({ method: "GET" }).handler(
        and status in ('active','out_of_stock','paused') order by title`,
       [user.id],
     ),
-    q1<{ available_cents: number }>(
-      `select available_cents from wallets where user_id = ?`,
-      [user.id],
-    ),
+    q1<{ available_cents: number }>(`select available_cents from wallets where user_id = ?`, [
+      user.id,
+    ]),
   ]);
   return { products, walletCents: wallet?.available_cents ?? 0 };
 });
@@ -237,16 +235,15 @@ export const boostProduct = createServerFn({ method: "POST" })
     const newUntil = startFrom + data.days * 86_400_000;
     const { tx } = await import("../server/db.server");
     await tx(async () => {
-      await run(
-        `update wallets set available_cents = available_cents - ? where user_id = ?`,
-        [costCents, user.id],
-      );
+      await run(`update wallets set available_cents = available_cents - ? where user_id = ?`, [
+        costCents,
+        user.id,
+      ]);
       const balRow = await q1<{ available_cents: number; pending_cents: number }>(
         `select available_cents, pending_cents from wallets where user_id = ?`,
         [user.id],
       );
-      const balAfter =
-        (balRow?.available_cents ?? 0) + (balRow?.pending_cents ?? 0);
+      const balAfter = (balRow?.available_cents ?? 0) + (balRow?.pending_cents ?? 0);
       await run(
         `insert into wallet_ledger (user_id, order_id, type, amount_cents, balance_after_cents, note, created_at)
          values (?,?,?,?,?,?,?)`,
@@ -260,10 +257,7 @@ export const boostProduct = createServerFn({ method: "POST" })
           now(),
         ],
       );
-      await run(
-        `update products set featured_until = ? where id = ?`,
-        [newUntil, data.productId],
-      );
+      await run(`update products set featured_until = ? where id = ?`, [newUntil, data.productId]);
     });
     await audit(user.id, "promo.boost", "product", data.productId, {
       days: data.days,
@@ -278,10 +272,9 @@ export const stopBoost = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await appContext();
     const user = await requireSeller();
-    const p = await q1<{ seller_id: string }>(
-      `select seller_id from products where id = ?`,
-      [data.productId],
-    );
+    const p = await q1<{ seller_id: string }>(`select seller_id from products where id = ?`, [
+      data.productId,
+    ]);
     if (!p || p.seller_id !== user.id) fail("Product not found.");
     await run(`update products set featured_until = null where id = ?`, [data.productId]);
     await audit(user.id, "promo.boost.stop", "product", data.productId);

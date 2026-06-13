@@ -19,13 +19,17 @@ export const Route = createFileRoute("/contact")({
     >
       <h2>Order / dispute issues</h2>
       <p>
-        Open the order, click <b>"Open dispute"</b>, and describe the issue. A staff agent picks it up within
-        the dispute SLA. Attach screenshots or video of what was delivered vs. what was promised.
+        Open the order, click <b>"Open dispute"</b>, and describe the issue. A staff agent picks it
+        up within the dispute SLA. Attach screenshots or video of what was delivered vs. what was
+        promised.
       </p>
       <h2>Account / trust issues</h2>
       <p>
         For account lockouts, ID verification questions or reporting a seller, use the in-app{" "}
-        <a href="/chat" className="underline">support chat</a>.
+        <a href="/chat" className="underline">
+          support chat
+        </a>
+        .
       </p>
       <h2>Press &amp; partnerships</h2>
       <p>Reach out through the in-app support thread and pick the "Partnerships" category.</p>

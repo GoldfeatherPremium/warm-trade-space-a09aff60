@@ -123,23 +123,23 @@ async function attachImagesToProduct(
   sellerId: string,
   imageIds: string[],
 ): Promise<void> {
-  const existing = await q<{ id: string }>(
-    `select id from product_images where product_id = ?`,
-    [productId],
-  );
+  const existing = await q<{ id: string }>(`select id from product_images where product_id = ?`, [
+    productId,
+  ]);
   for (const row of existing) {
     if (!imageIds.includes(row.id)) {
       await run(`delete from product_images where id = ? and seller_id = ?`, [row.id, sellerId]);
     }
   }
   for (let i = 0; i < imageIds.length; i++) {
-    await run(
-      `update product_images set product_id = ?, sort = ? where id = ? and seller_id = ?`,
-      [productId, i, imageIds[i], sellerId],
-    );
+    await run(`update product_images set product_id = ?, sort = ? where id = ? and seller_id = ?`, [
+      productId,
+      i,
+      imageIds[i],
+      sellerId,
+    ]);
   }
 }
-
 
 export const saveProduct = createServerFn({ method: "POST" })
   .inputValidator(productInput.extend({ productId: z.string().optional() }))
@@ -738,7 +738,10 @@ export const uploadProductImage = createServerFn({ method: "POST" })
   .inputValidator(
     z.object({
       mime: z.string().min(3).max(40),
-      dataBase64: z.string().min(16).max(Math.ceil((MAX_IMAGE_BYTES * 4) / 3) + 1024),
+      dataBase64: z
+        .string()
+        .min(16)
+        .max(Math.ceil((MAX_IMAGE_BYTES * 4) / 3) + 1024),
     }),
   )
   .handler(async ({ data }) => {

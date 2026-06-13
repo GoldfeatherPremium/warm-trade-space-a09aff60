@@ -151,9 +151,7 @@ function PromotionsPage() {
           <h2 className="text-xs font-bold tracking-widest text-muted-foreground">FLASH SALES</h2>
         </div>
         {!productList?.products.length ? (
-          <p className="text-xs text-muted-foreground py-4 text-center">
-            Add a product first.
-          </p>
+          <p className="text-xs text-muted-foreground py-4 text-center">Add a product first.</p>
         ) : (
           <div className="space-y-2">
             {productList.products.map((p) => {
@@ -205,9 +203,8 @@ function PromotionsPage() {
               <TrendingUp className="size-3.5" /> SPONSORED BOOST
             </h2>
             <p className="text-[11px] text-muted-foreground mt-1">
-              Pin a listing to the top of trending, category, and home pages.
-              Costs {usdt(BOOST_RATE_CENTS_PER_DAY)}/day, billed from your
-              wallet balance.
+              Pin a listing to the top of trending, category, and home pages. Costs{" "}
+              {usdt(BOOST_RATE_CENTS_PER_DAY)}/day, billed from your wallet balance.
             </p>
           </div>
           <span className="text-[10px] font-bold px-2 py-1 rounded bg-secondary">
@@ -215,19 +212,13 @@ function PromotionsPage() {
           </span>
         </div>
         {!productList?.products.length ? (
-          <p className="text-xs text-muted-foreground py-4 text-center">
-            Add a product first.
-          </p>
+          <p className="text-xs text-muted-foreground py-4 text-center">Add a product first.</p>
         ) : (
           <div className="space-y-2">
             {productList.products.map((p) => {
-              const active =
-                p.featured_until != null && Number(p.featured_until) > Date.now();
+              const active = p.featured_until != null && Number(p.featured_until) > Date.now();
               const daysLeft = active
-                ? Math.max(
-                    1,
-                    Math.ceil((Number(p.featured_until) - Date.now()) / 86_400_000),
-                  )
+                ? Math.max(1, Math.ceil((Number(p.featured_until) - Date.now()) / 86_400_000))
                 : 0;
               return (
                 <div
@@ -267,8 +258,6 @@ function PromotionsPage() {
           </div>
         )}
       </section>
-
-
 
       {data && data.recentRedemptions.length > 0 && (
         <section className="bg-card border border-border rounded-lg p-4">
@@ -352,8 +341,7 @@ function BoostDialog({
   const [days, setDays] = useState(7);
   const cost = BOOST_RATE_CENTS_PER_DAY * days;
   const tooPoor = cost > walletCents;
-  const active =
-    ctx.featuredUntil != null && Number(ctx.featuredUntil) > Date.now();
+  const active = ctx.featuredUntil != null && Number(ctx.featuredUntil) > Date.now();
 
   const boostMut = useMutation({
     mutationFn: () => boostProduct({ data: { productId: ctx.productId, days } }),
@@ -387,9 +375,8 @@ function BoostDialog({
         <p className="text-xs text-muted-foreground">{ctx.title}</p>
         {active && (
           <p className="text-[11px] text-accent">
-            Currently boosted through{" "}
-            {new Date(Number(ctx.featuredUntil)).toLocaleString()} — buying more
-            extends from that date.
+            Currently boosted through {new Date(Number(ctx.featuredUntil)).toLocaleString()} —
+            buying more extends from that date.
           </p>
         )}
         <Field label="Duration (days)">
@@ -399,9 +386,7 @@ function BoostDialog({
                 key={n}
                 onClick={() => setDays(n)}
                 className={`flex-1 px-2 py-2 rounded text-xs font-bold ${
-                  days === n
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-secondary"
+                  days === n ? "bg-primary text-primary-foreground" : "bg-secondary"
                 }`}
               >
                 {n}d
@@ -412,9 +397,7 @@ function BoostDialog({
         <div className="bg-background/60 border border-border/60 rounded p-3 text-xs space-y-1">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Rate</span>
-            <span className="font-mono">
-              {usdt(BOOST_RATE_CENTS_PER_DAY)} / day
-            </span>
+            <span className="font-mono">{usdt(BOOST_RATE_CENTS_PER_DAY)} / day</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Total</span>
@@ -422,9 +405,7 @@ function BoostDialog({
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Wallet after</span>
-            <span
-              className={`font-mono ${tooPoor ? "text-destructive" : ""}`}
-            >
+            <span className={`font-mono ${tooPoor ? "text-destructive" : ""}`}>
               {usdt(Math.max(0, walletCents - cost))}
             </span>
           </div>
@@ -463,8 +444,6 @@ function BoostDialog({
   );
 }
 
-
-
 function CouponDialog({
   coupon,
   products,
@@ -482,10 +461,7 @@ function CouponDialog({
     minTotalUsdt: coupon?.min_total_cents ? Number(coupon.min_total_cents) / 100 : 0,
     maxUses: Number(coupon?.max_uses ?? 0),
     expiresInDays: coupon?.expires_at
-      ? Math.max(
-          0,
-          Math.ceil((Number(coupon.expires_at) - Date.now()) / 86_400_000),
-        )
+      ? Math.max(0, Math.ceil((Number(coupon.expires_at) - Date.now()) / 86_400_000))
       : 30,
     productId: coupon?.product_id ? String(coupon.product_id) : "",
     label: String(coupon?.label ?? ""),

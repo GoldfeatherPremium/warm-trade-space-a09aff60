@@ -41,7 +41,9 @@ function SellerOverview() {
           <h2 className="text-xs font-bold tracking-widest text-muted-foreground flex items-center gap-1.5">
             <BarChart3 className="size-3.5" /> BUSINESS INTELLIGENCE
           </h2>
-          <span className="text-[9px] text-muted-foreground tracking-widest">TRAILING 14d MODEL</span>
+          <span className="text-[9px] text-muted-foreground tracking-widest">
+            TRAILING 14d MODEL
+          </span>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <BIStat
@@ -273,11 +275,7 @@ function BIStat({
   tone: "up" | "down" | "neutral";
 }) {
   const toneCls =
-    tone === "up"
-      ? "text-accent"
-      : tone === "down"
-        ? "text-destructive"
-        : "text-muted-foreground";
+    tone === "up" ? "text-accent" : tone === "down" ? "text-destructive" : "text-muted-foreground";
   const TrendIcon = tone === "up" ? TrendingUp : tone === "down" ? TrendingDown : null;
   return (
     <div className="bg-background/40 border border-border rounded-lg p-3">

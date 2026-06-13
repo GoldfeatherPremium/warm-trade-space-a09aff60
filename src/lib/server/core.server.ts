@@ -165,8 +165,14 @@ const AUTOMOD_PATTERNS: Array<[RegExp, string]> = [
     "off-platform payment",
   ],
   [/\bpay(ing)?\s+(me\s+)?(outside|directly|off[- ]?site|in[- ]?person)\b/i, "fee circumvention"],
-  [/\b(meet[- ]?up|in person|street address|zip\s?code|postal code)\b/i, "physical contact / address"],
-  [/https?:\/\/(?!(?:[\w-]+\.)*(?:warm-trade-space\.lovable\.app|x-?vault\.[a-z]{2,}))\S+/i, "external link"],
+  [
+    /\b(meet[- ]?up|in person|street address|zip\s?code|postal code)\b/i,
+    "physical contact / address",
+  ],
+  [
+    /https?:\/\/(?!(?:[\w-]+\.)*(?:warm-trade-space\.lovable\.app|x-?vault\.[a-z]{2,}))\S+/i,
+    "external link",
+  ],
 ];
 
 export function automodCheck(body: string): string | null {

@@ -124,13 +124,20 @@ function mapProduct(r: Record<string, unknown>): PublicProduct {
     category_attrs,
     ...rest
   } = r;
-  const rest2 = rest as Omit<PublicProduct, "seller" | "is_promoted" | "category_attrs" | "submission_schema"> & {
+  const rest2 = rest as Omit<
+    PublicProduct,
+    "seller" | "is_promoted" | "category_attrs" | "submission_schema"
+  > & {
     featured_until?: number | null;
   };
   const featuredUntil = rest2.featured_until == null ? null : Number(rest2.featured_until);
-  const parseJson = <T,>(v: unknown): T | null => {
+  const parseJson = <T>(v: unknown): T | null => {
     if (!v || typeof v !== "string") return null;
-    try { return JSON.parse(v) as T; } catch { return null; }
+    try {
+      return JSON.parse(v) as T;
+    } catch {
+      return null;
+    }
   };
   return {
     ...rest2,
@@ -193,7 +200,9 @@ export const getHomeData = createServerFn({ method: "GET" }).handler(async () =>
                 p.sold_count desc, p.views desc limit 8`,
       [Date.now()],
     ),
-    q(`${productSelect} where p.status = 'active' and ${PUBLIC_SELLER_COND} order by p.created_at desc limit 8`),
+    q(
+      `${productSelect} where p.status = 'active' and ${PUBLIC_SELLER_COND} order by p.created_at desc limit 8`,
+    ),
     q<PublicSeller>(
       `select id, username, seller_level, rating, rating_count, total_sales, completion_rate, vacation_mode, created_at,
               verification_tier, trust_score
@@ -249,10 +258,9 @@ export const getLiveMarketPulse = createServerFn({ method: "GET" }).handler(asyn
   const hourAgo = t - 60 * 60 * 1000;
   const dayAgo = t - 24 * 60 * 60 * 1000;
   const [shoppers, joined, ordersHour, listingsDay, sellersOnline] = await Promise.all([
-    q1<{ n: number }>(
-      `select count(distinct buyer_id) n from orders where created_at >= ?`,
-      [tenMin],
-    ),
+    q1<{ n: number }>(`select count(distinct buyer_id) n from orders where created_at >= ?`, [
+      tenMin,
+    ]),
     q1<{ n: number }>(`select count(*) n from users where created_at >= ?`, [dayAgo]),
     q1<{ n: number }>(
       `select count(*) n from orders where paid_at >= ? and status in ('paid','delivered','completed','released')`,
@@ -262,10 +270,9 @@ export const getLiveMarketPulse = createServerFn({ method: "GET" }).handler(asyn
       `select count(*) n from products where created_at >= ? and status = 'active'`,
       [dayAgo],
     ),
-    q1<{ n: number }>(
-      `select count(distinct seller_id) n from products where created_at >= ?`,
-      [hourAgo],
-    ),
+    q1<{ n: number }>(`select count(distinct seller_id) n from products where created_at >= ?`, [
+      hourAgo,
+    ]),
   ]);
   // Sprinkle a small base so the pulse never reads as a ghost-town on quiet
   // hours — real numbers still surface underneath as they grow.
@@ -278,8 +285,6 @@ export const getLiveMarketPulse = createServerFn({ method: "GET" }).handler(asyn
     liveListingsToday: Number(listingsDay?.n ?? 0),
   };
 });
-
-
 
 export const browseProducts = createServerFn({ method: "GET" })
   .inputValidator(
@@ -309,7 +314,14 @@ export const browseProducts = createServerFn({ method: "GET" })
     }
     if (data.q) {
       const tokens = tokenize(data.q);
-      const cols = ["p.title", "p.description", "coalesce(p.platform,'')", "u.username", "c.name", "coalesce(ci.name,'')"];
+      const cols = [
+        "p.title",
+        "p.description",
+        "coalesce(p.platform,'')",
+        "u.username",
+        "c.name",
+        "coalesce(ci.name,'')",
+      ];
       const { sql, params: sp } = buildSearchClause(tokens, cols);
       if (tokens.length > 0) {
         where.push(`(${sql})`);
@@ -363,16 +375,19 @@ export const browseProducts = createServerFn({ method: "GET" })
     // Log non-empty queries for analytics. Cap query length and best-effort
     // (never block search if logging fails).
     if (data.q && data.q.trim().length >= 2) {
-      run(
-        `insert into search_queries (query, results, created_at) values (?,?,?)`,
-        [data.q.trim().slice(0, 100).toLowerCase(), total, Date.now()],
-      ).catch(() => {});
+      run(`insert into search_queries (query, results, created_at) values (?,?,?)`, [
+        data.q.trim().slice(0, 100).toLowerCase(),
+        total,
+        Date.now(),
+      ]).catch(() => {});
     }
     return { items, total, page: data.page, pageCount: Math.max(1, Math.ceil(total / PAGE)) };
   });
 
 export const getRelatedProducts = createServerFn({ method: "GET" })
-  .inputValidator(z.object({ productId: z.string(), limit: z.number().int().min(1).max(12).default(8) }))
+  .inputValidator(
+    z.object({ productId: z.string(), limit: z.number().int().min(1).max(12).default(8) }),
+  )
   .handler(async ({ data }) => {
     await appContext();
     const seed = await q1<{ category_id: string; item_id: string | null; seller_id: string }>(
@@ -409,7 +424,11 @@ export const getMyRecommendations = createServerFn({ method: "GET" })
     const { currentUser } = await import("../server/auth.server");
     const user = await currentUser();
     if (!user) return { items: [] as PublicProduct[] };
-    const signals = await q<{ category_id: string | null; item_id: string | null; product_id: string }>(
+    const signals = await q<{
+      category_id: string | null;
+      item_id: string | null;
+      product_id: string;
+    }>(
       `select p.category_id, p.item_id, p.id as product_id
          from favorites f join products p on p.id = f.product_id where f.user_id = ?
        union all
@@ -452,7 +471,6 @@ export const getMyRecommendations = createServerFn({ method: "GET" })
     );
     return { items: rows.map(mapProduct) };
   });
-
 
 export const getProduct = createServerFn({ method: "GET" })
   .inputValidator(z.object({ slug: z.string() }))
@@ -561,7 +579,11 @@ export const getCategorySchema = createServerFn({ method: "GET" })
     if (!c) return { schema: null as CategorySubmissionSchema | null };
     let schema: CategorySubmissionSchema | null = null;
     if (c.submission_schema) {
-      try { schema = JSON.parse(c.submission_schema) as CategorySubmissionSchema; } catch { /* ignore */ }
+      try {
+        schema = JSON.parse(c.submission_schema) as CategorySubmissionSchema;
+      } catch {
+        /* ignore */
+      }
     }
     return { schema };
   });
@@ -671,23 +693,14 @@ export const browseFacets = createServerFn({ method: "GET" })
     });
 
     // Categories — count ignoring active category filter
-    const catCond = withCond(
-      data.item ? [`p.item_id = ?`] : [],
-      data.item ? [data.item] : [],
-    );
+    const catCond = withCond(data.item ? [`p.item_id = ?`] : [], data.item ? [data.item] : []);
     const itemCond = withCond(
       data.category ? [`c.slug = ?`] : [],
       data.category ? [data.category] : [],
     );
     const fullCond = withCond(
-      [
-        ...(data.category ? [`c.slug = ?`] : []),
-        ...(data.item ? [`p.item_id = ?`] : []),
-      ],
-      [
-        ...(data.category ? [data.category] : []),
-        ...(data.item ? [data.item] : []),
-      ],
+      [...(data.category ? [`c.slug = ?`] : []), ...(data.item ? [`p.item_id = ?`] : [])],
+      [...(data.category ? [data.category] : []), ...(data.item ? [data.item] : [])],
     );
 
     const [categories, items, delivery, tiers, priceRange] = await Promise.all([
@@ -807,16 +820,12 @@ export const getFrequentlyBoughtTogether = createServerFn({ method: "GET" })
       }
     }
     if (ids.length === 0) return { items: [] as PublicProduct[] };
-    const rows = await q(
-      `${productSelect} where p.id in (${ids.map(() => "?").join(",")})`,
-      ids,
-    );
+    const rows = await q(`${productSelect} where p.id in (${ids.map(() => "?").join(",")})`, ids);
     // preserve co-purchase ranking order
     const order = new Map(ids.map((id, i) => [id, i]));
     rows.sort(
       (a, b) =>
-        (order.get((a as { id: string }).id) ?? 0) -
-        (order.get((b as { id: string }).id) ?? 0),
+        (order.get((a as { id: string }).id) ?? 0) - (order.get((b as { id: string }).id) ?? 0),
     );
     return { items: rows.map(mapProduct) };
   });
@@ -843,8 +852,7 @@ export const getSellerLeaderboard = createServerFn({ method: "GET" })
   .handler(async ({ data }) => {
     await appContext();
     const dayMs = 86_400_000;
-    const since =
-      data.range === "all" ? 0 : Date.now() - (data.range === "30d" ? 30 : 90) * dayMs;
+    const since = data.range === "all" ? 0 : Date.now() - (data.range === "30d" ? 30 : 90) * dayMs;
     const rows = await q<{
       id: string;
       username: string;
@@ -902,4 +910,3 @@ export const getSellerLeaderboard = createServerFn({ method: "GET" })
     }));
     return { items, range: data.range };
   });
-

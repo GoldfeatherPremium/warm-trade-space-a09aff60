@@ -15,10 +15,7 @@ import { Sparkles, Wand2 } from "lucide-react";
 
 export const Route = createFileRoute("/seller/optimize")({
   head: () => ({
-    meta: [
-      { title: "AI Listing Optimizer — X-VAULT" },
-      { name: "robots", content: "noindex" },
-    ],
+    meta: [{ title: "AI Listing Optimizer — X-VAULT" }, { name: "robots", content: "noindex" }],
   }),
   component: SellerOptimizePage,
 });
@@ -61,9 +58,7 @@ function SellerOptimizePage() {
   if (!me || me.seller_status !== "approved")
     return (
       <PageShell>
-        <p className="py-16 text-center text-sm text-muted-foreground">
-          Approved sellers only.
-        </p>
+        <p className="py-16 text-center text-sm text-muted-foreground">Approved sellers only.</p>
       </PageShell>
     );
 

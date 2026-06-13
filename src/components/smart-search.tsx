@@ -184,9 +184,7 @@ export function SmartSearch({
             : "bg-secondary/60 border-border px-3 py-2 focus-within:border-primary/50"
         }`}
       >
-        <Search
-          className={`shrink-0 text-muted-foreground ${isHero ? "size-5" : "size-4"}`}
-        />
+        <Search className={`shrink-0 text-muted-foreground ${isHero ? "size-5" : "size-4"}`} />
         <input
           ref={inputRef}
           value={q}
@@ -345,10 +343,7 @@ export function SmartSearch({
                       ?
                     </p>
                   )}
-                  <button
-                    onClick={() => submit()}
-                    className="text-primary font-bold text-xs"
-                  >
+                  <button onClick={() => submit()} className="text-primary font-bold text-xs">
                     Search all listings →
                   </button>
                 </div>
@@ -379,9 +374,7 @@ export function SmartSearch({
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-bold truncate">{p.title}</p>
                           <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                            {p.delivery_type === "auto" && (
-                              <Zap className="size-2.5 text-accent" />
-                            )}
+                            {p.delivery_type === "auto" && <Zap className="size-2.5 text-accent" />}
                             {p.category_name}
                           </p>
                         </div>

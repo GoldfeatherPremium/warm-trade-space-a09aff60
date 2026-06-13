@@ -23,7 +23,11 @@ function AccountPage() {
   const qc = useQueryClient();
   const [pw, setPw] = useState({ currentPassword: "", newPassword: "" });
   const i18n = useQuery({ queryKey: ["i18nBootstrap"], queryFn: () => getI18nBootstrap() });
-  const loyalty = useQuery({ queryKey: ["myLoyalty"], queryFn: () => getMyLoyalty(), enabled: !!me });
+  const loyalty = useQuery({
+    queryKey: ["myLoyalty"],
+    queryFn: () => getMyLoyalty(),
+    enabled: !!me,
+  });
   const [prefs, setPrefs] = useState({ locale: "en", preferred_currency: "USD", country: "" });
 
   useEffect(() => {
@@ -117,11 +121,12 @@ function AccountPage() {
               </div>
             )}
             <ul className="text-[11px] space-y-0.5 opacity-90 list-disc list-inside">
-              {loyalty.data.perks.map((p) => <li key={p}>{p}</li>)}
+              {loyalty.data.perks.map((p) => (
+                <li key={p}>{p}</li>
+              ))}
             </ul>
           </div>
         )}
-
 
         {me.seller_status === "approved" && (
           <div className="bg-card border border-border rounded-lg p-4 flex items-center justify-between">
@@ -202,7 +207,6 @@ function AccountPage() {
             Save preferences
           </Button>
         </form>
-
 
         <form
           className="bg-card border border-border rounded-lg p-4 space-y-3"

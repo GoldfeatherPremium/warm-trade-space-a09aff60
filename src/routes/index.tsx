@@ -15,7 +15,12 @@ import {
   UserPlus,
   PackageSearch,
 } from "lucide-react";
-import { getHomeData, getLiveMarketPulse, getMyRecommendations, filterAvailableSlugs } from "@/lib/api/catalog";
+import {
+  getHomeData,
+  getLiveMarketPulse,
+  getMyRecommendations,
+  filterAvailableSlugs,
+} from "@/lib/api/catalog";
 import { getFollowedFeed } from "@/lib/api/follows";
 import { PageShell } from "@/components/shell";
 import { ProductCard } from "@/components/product-card";
@@ -87,7 +92,6 @@ export const Route = createFileRoute("/")({
   }),
   component: Index,
 });
-
 
 type RecentItem = { slug: string; title: string; image_key: string | null; price_cents: number };
 
@@ -307,7 +311,8 @@ function Index() {
               <div>
                 <p className="text-sm font-bold leading-tight">{c.name}</p>
                 <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-0.5">
-                  {c.product_count > 0 ? `${c.product_count.toLocaleString()} listings` : "Browse"} <ArrowUpRight className="size-2.5" />
+                  {c.product_count > 0 ? `${c.product_count.toLocaleString()} listings` : "Browse"}{" "}
+                  <ArrowUpRight className="size-2.5" />
                 </p>
               </div>
             </Link>
@@ -346,7 +351,6 @@ function Index() {
         </section>
       )}
 
-
       {/* ============ FOR YOU (logged-in personalization) ============ */}
       {me && recs && recs.items.length > 0 && (
         <section className="pt-10">
@@ -366,11 +370,7 @@ function Index() {
       {/* ============ FROM SELLERS YOU FOLLOW ============ */}
       {me && feed && feed.sellers.length > 0 && (
         <section className="pt-10">
-          <SectionHeader
-            label="FOLLOWING"
-            title="From sellers you follow"
-            icon={<Star />}
-          />
+          <SectionHeader label="FOLLOWING" title="From sellers you follow" icon={<Star />} />
           <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 mb-3">
             {feed.sellers.slice(0, 12).map((s) => (
               <Link
@@ -383,7 +383,11 @@ function Index() {
                   {s.username.slice(0, 2)}
                 </span>
                 <span className="text-xs font-bold">{s.username}</span>
-                <VerificationBadge tier={s.verification_tier as never} size="xs" showLabel={false} />
+                <VerificationBadge
+                  tier={s.verification_tier as never}
+                  size="xs"
+                  showLabel={false}
+                />
               </Link>
             ))}
           </div>
@@ -432,9 +436,10 @@ function Index() {
           link={{ to: "/browse", label: "View all" }}
         />
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          {data?.trending.map((p, i) => <ProductCard key={p.id} product={p} priority={i < 4} />)}
+          {data?.trending.map((p, i) => (
+            <ProductCard key={p.id} product={p} priority={i < 4} />
+          ))}
         </div>
-
       </section>
 
       {/* ============ FRESH LISTINGS ============ */}
@@ -446,7 +451,9 @@ function Index() {
           link={{ to: "/browse", search: { sort: "newest" as const }, label: "See more" }}
         />
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          {data?.newest.slice(0, 4).map((p) => <ProductCard key={p.id} product={p} />)}
+          {data?.newest.slice(0, 4).map((p) => (
+            <ProductCard key={p.id} product={p} />
+          ))}
         </div>
       </section>
 
@@ -483,7 +490,9 @@ function Index() {
                     <VerificationBadge tier={s.verification_tier} size="xs" showLabel={false} />
                   </div>
                   <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                    <span>Lvl {s.seller_level} · {s.total_sales.toLocaleString()} sales</span>
+                    <span>
+                      Lvl {s.seller_level} · {s.total_sales.toLocaleString()} sales
+                    </span>
                     <TrustScore score={s.trust_score} />
                   </div>
                 </div>
@@ -517,9 +526,8 @@ function Index() {
                     <span className="text-muted-foreground">bought</span> {s.product_title}
                   </p>
                   <p className="text-[10px] text-muted-foreground mt-0.5">
-                    {timeAgo(s.created_at)} · <span className="text-accent font-mono">
-                      {usdtShort(s.total_cents)}
-                    </span>
+                    {timeAgo(s.created_at)} ·{" "}
+                    <span className="text-accent font-mono">{usdtShort(s.total_cents)}</span>
                   </p>
                 </div>
               </div>
@@ -740,9 +748,7 @@ function LivePulseStrip({
                     : "text-muted-foreground"
               }`}
             />
-            <b className="font-mono text-foreground tabular-nums">
-              {value.toLocaleString()}
-            </b>
+            <b className="font-mono text-foreground tabular-nums">{value.toLocaleString()}</b>
             <span className="text-muted-foreground">{label}</span>
           </span>
         ))}

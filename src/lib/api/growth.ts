@@ -26,8 +26,11 @@ export const getMyReferral = createServerFn({ method: "GET" }).handler(async () 
     purchase_count: number;
     earnings_cents: number;
     created_at: number;
-  }>(`select id, code, commission_pct, click_count, signup_count, purchase_count, earnings_cents, created_at
-        from referrals where owner_user_id = ?`, [user.id]);
+  }>(
+    `select id, code, commission_pct, click_count, signup_count, purchase_count, earnings_cents, created_at
+        from referrals where owner_user_id = ?`,
+    [user.id],
+  );
   if (!r) {
     const id = uid();
     let code = genCode();
@@ -94,7 +97,12 @@ const LOYALTY_TIERS = [
   { id: "bronze", label: "Bronze", min_spend_cents: 0, perk: "Welcome bonus on first purchase" },
   { id: "silver", label: "Silver", min_spend_cents: 50_000, perk: "5% off coupon every month" },
   { id: "gold", label: "Gold", min_spend_cents: 250_000, perk: "Priority support + 7% off" },
-  { id: "platinum", label: "Platinum", min_spend_cents: 1_000_000, perk: "Dedicated support + 10% off" },
+  {
+    id: "platinum",
+    label: "Platinum",
+    min_spend_cents: 1_000_000,
+    perk: "Dedicated support + 10% off",
+  },
 ] as const;
 
 export const getMyLoyalty = createServerFn({ method: "GET" }).handler(async () => {

@@ -59,10 +59,22 @@ function SellerAnalytics() {
       ) : (
         <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <Kpi label="NET REVENUE" value={usdt(data.summary.net)} sub={growthSub(data.summary.growth)} />
-            <Kpi label="ORDERS" value={String(data.summary.orders)} sub={`${data.summary.qty} units`} />
+            <Kpi
+              label="NET REVENUE"
+              value={usdt(data.summary.net)}
+              sub={growthSub(data.summary.growth)}
+            />
+            <Kpi
+              label="ORDERS"
+              value={String(data.summary.orders)}
+              sub={`${data.summary.qty} units`}
+            />
             <Kpi label="AOV" value={`${data.summary.aov.toFixed(2)} USDT`} />
-            <Kpi label="UNIQUE BUYERS" value={String(data.summary.uniqueBuyers)} sub={`${data.summary.repeatRate.toFixed(0)}% repeat`} />
+            <Kpi
+              label="UNIQUE BUYERS"
+              value={String(data.summary.uniqueBuyers)}
+              sub={`${data.summary.repeatRate.toFixed(0)}% repeat`}
+            />
           </div>
 
           <div className="bg-card border border-border rounded-lg p-4">
@@ -79,13 +91,34 @@ function SellerAnalytics() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid stroke="#27272a" vertical={false} />
-                  <XAxis dataKey="day" tick={{ fontSize: 10, fill: "#71717a" }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 10, fill: "#71717a" }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v / 100).toFixed(0)}`} />
+                  <XAxis
+                    dataKey="day"
+                    tick={{ fontSize: 10, fill: "#71717a" }}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 10, fill: "#71717a" }}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(v) => `${(v / 100).toFixed(0)}`}
+                  />
                   <Tooltip
-                    contentStyle={{ background: "#18181b", border: "1px solid #27272a", borderRadius: 8, fontSize: 12 }}
+                    contentStyle={{
+                      background: "#18181b",
+                      border: "1px solid #27272a",
+                      borderRadius: 8,
+                      fontSize: 12,
+                    }}
                     formatter={(v: number) => [`${(v / 100).toFixed(2)} USDT`, "Net"]}
                   />
-                  <Area type="monotone" dataKey="v" stroke="#3b82f6" strokeWidth={2} fill="url(#sa-fill)" />
+                  <Area
+                    type="monotone"
+                    dataKey="v"
+                    stroke="#3b82f6"
+                    strokeWidth={2}
+                    fill="url(#sa-fill)"
+                  />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -99,10 +132,25 @@ function SellerAnalytics() {
               <div className="h-44">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={data.hours} margin={{ top: 4, right: 8, left: -24, bottom: 0 }}>
-                    <XAxis dataKey="hour" tick={{ fontSize: 9, fill: "#71717a" }} tickLine={false} axisLine={false} />
-                    <YAxis tick={{ fontSize: 10, fill: "#71717a" }} tickLine={false} axisLine={false} allowDecimals={false} />
+                    <XAxis
+                      dataKey="hour"
+                      tick={{ fontSize: 9, fill: "#71717a" }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 10, fill: "#71717a" }}
+                      tickLine={false}
+                      axisLine={false}
+                      allowDecimals={false}
+                    />
                     <Tooltip
-                      contentStyle={{ background: "#18181b", border: "1px solid #27272a", borderRadius: 8, fontSize: 12 }}
+                      contentStyle={{
+                        background: "#18181b",
+                        border: "1px solid #27272a",
+                        borderRadius: 8,
+                        fontSize: 12,
+                      }}
                       formatter={(v: number) => [v, "orders"]}
                       labelFormatter={(h) => `${h}:00`}
                     />
@@ -132,7 +180,10 @@ function SellerAnalytics() {
                           </span>
                         </div>
                         <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
-                          <div className="h-full bg-primary rounded-full" style={{ width: `${pct}%` }} />
+                          <div
+                            className="h-full bg-primary rounded-full"
+                            style={{ width: `${pct}%` }}
+                          />
                         </div>
                       </div>
                     );
@@ -164,8 +215,11 @@ function SellerAnalytics() {
                   <span className="text-right font-mono">{usdt(p.revenue)}</span>
                   <span className="text-right font-mono">{p.orders}</span>
                   <span className="text-right font-mono text-muted-foreground">{p.views}</span>
-                  <span className={`text-right font-mono ${Number(conv) >= 5 ? "text-accent" : "text-muted-foreground"}`}>
-                    {conv}{p.views > 0 ? "%" : ""}
+                  <span
+                    className={`text-right font-mono ${Number(conv) >= 5 ? "text-accent" : "text-muted-foreground"}`}
+                  >
+                    {conv}
+                    {p.views > 0 ? "%" : ""}
                   </span>
                 </div>
               );

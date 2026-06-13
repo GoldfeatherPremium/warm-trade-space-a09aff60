@@ -37,10 +37,7 @@ export function AiShoppingAssistant() {
   const ask = useMutation({
     mutationFn: (q: string) => aiShoppingAssistant({ data: { query: q } }),
     onSuccess: (res) => {
-      setTurns((t) => [
-        ...t,
-        { role: "assistant", text: res.reply, picks: res.picks as Pick[] },
-      ]);
+      setTurns((t) => [...t, { role: "assistant", text: res.reply, picks: res.picks as Pick[] }]);
     },
     onError: (e: Error) => {
       toast.error(e.message || "Assistant unavailable");
@@ -97,9 +94,7 @@ export function AiShoppingAssistant() {
                 </div>
                 <div>
                   <p className="text-sm font-bold leading-tight">Shopping Assistant</p>
-                  <p className="text-[10px] text-muted-foreground">
-                    AI-powered product search
-                  </p>
+                  <p className="text-[10px] text-muted-foreground">AI-powered product search</p>
                 </div>
               </div>
               <button
@@ -116,8 +111,8 @@ export function AiShoppingAssistant() {
               {turns.length === 0 && (
                 <div className="space-y-3">
                   <p className="text-sm text-foreground/85">
-                    Tell me what you're shopping for — I'll match you with the best
-                    trusted listings in the marketplace.
+                    Tell me what you're shopping for — I'll match you with the best trusted listings
+                    in the marketplace.
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {SUGGESTIONS.map((s) => (

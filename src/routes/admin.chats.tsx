@@ -54,9 +54,7 @@ function AdminChatsPage() {
             <p className="p-4 text-xs text-muted-foreground text-center">Loading conversations…</p>
           )}
           {data?.conversations.length === 0 && (
-            <p className="p-4 text-xs text-muted-foreground text-center">
-              No conversations match.
-            </p>
+            <p className="p-4 text-xs text-muted-foreground text-center">No conversations match.</p>
           )}
           {data?.conversations.map((c) => {
             const id = c.id as string;
@@ -73,7 +71,8 @@ function AdminChatsPage() {
               >
                 <div className="flex items-center gap-2 text-xs">
                   <span className="font-bold truncate flex-1">
-                    {c.buyer_name as string} <span className="text-muted-foreground font-normal">↔</span>{" "}
+                    {c.buyer_name as string}{" "}
+                    <span className="text-muted-foreground font-normal">↔</span>{" "}
                     {c.seller_name as string}
                   </span>
                   {flaggedCount > 0 && (

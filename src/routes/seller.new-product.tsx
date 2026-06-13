@@ -1,7 +1,16 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, BookOpen, ListChecks, Search, Send, Sparkles, Upload, X } from "lucide-react";
+import {
+  AlertTriangle,
+  BookOpen,
+  ListChecks,
+  Search,
+  Send,
+  Sparkles,
+  Upload,
+  X,
+} from "lucide-react";
 import { generateProductContent } from "@/lib/api/ai";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -27,15 +36,57 @@ export const Route = createFileRoute("/seller/new-product")({
 
 // Common country list for region targeting
 const COUNTRIES = [
-  "United States", "United Kingdom", "Canada", "Australia", "Germany", "France",
-  "Spain", "Italy", "Netherlands", "Sweden", "Norway", "Denmark", "Finland",
-  "Poland", "Portugal", "Ireland", "Belgium", "Austria", "Switzerland",
-  "Brazil", "Mexico", "Argentina", "Chile", "Colombia",
-  "Japan", "South Korea", "China", "Singapore", "Hong Kong", "Taiwan",
-  "India", "Pakistan", "Bangladesh", "Indonesia", "Philippines", "Vietnam", "Thailand", "Malaysia",
-  "Turkey", "Saudi Arabia", "UAE", "Egypt", "Israel",
-  "South Africa", "Nigeria", "Kenya",
-  "Russia", "Ukraine", "Czech Republic", "Romania", "Greece",
+  "United States",
+  "United Kingdom",
+  "Canada",
+  "Australia",
+  "Germany",
+  "France",
+  "Spain",
+  "Italy",
+  "Netherlands",
+  "Sweden",
+  "Norway",
+  "Denmark",
+  "Finland",
+  "Poland",
+  "Portugal",
+  "Ireland",
+  "Belgium",
+  "Austria",
+  "Switzerland",
+  "Brazil",
+  "Mexico",
+  "Argentina",
+  "Chile",
+  "Colombia",
+  "Japan",
+  "South Korea",
+  "China",
+  "Singapore",
+  "Hong Kong",
+  "Taiwan",
+  "India",
+  "Pakistan",
+  "Bangladesh",
+  "Indonesia",
+  "Philippines",
+  "Vietnam",
+  "Thailand",
+  "Malaysia",
+  "Turkey",
+  "Saudi Arabia",
+  "UAE",
+  "Egypt",
+  "Israel",
+  "South Africa",
+  "Nigeria",
+  "Kenya",
+  "Russia",
+  "Ukraine",
+  "Czech Republic",
+  "Romania",
+  "Greece",
   "New Zealand",
 ];
 
@@ -133,7 +184,11 @@ function ProductForm() {
         // Hydrate dynamic category attrs (admin-defined per-category fields)
         const attrs = p.category_attrs as string | null;
         if (attrs) {
-          try { setCategoryAttrs(JSON.parse(attrs) as Record<string, string>); } catch { /* ignore */ }
+          try {
+            setCategoryAttrs(JSON.parse(attrs) as Record<string, string>);
+          } catch {
+            /* ignore */
+          }
         }
         listMyProductImages({ data: { productId: edit } })
           .then((r) => setImageIds(r.images.map((i) => i.id)))
@@ -405,11 +460,7 @@ function ProductForm() {
       {sellerFields.length > 0 && (
         <div className="bg-primary/5 border border-primary/30 rounded-lg p-3 space-y-2">
           <p className="text-xs font-bold text-primary">Required for this category</p>
-          <DynamicFields
-            fields={sellerFields}
-            values={categoryAttrs}
-            onChange={setCategoryAttrs}
-          />
+          <DynamicFields fields={sellerFields} values={categoryAttrs} onChange={setCategoryAttrs} />
         </div>
       )}
 
@@ -470,7 +521,10 @@ function ProductForm() {
         <Label className="text-xs">Product images (up to 8, max 2 MB each)</Label>
         <div className="flex gap-2 flex-wrap">
           {imageIds.map((id) => (
-            <div key={id} className="relative size-20 rounded-md overflow-hidden border border-border">
+            <div
+              key={id}
+              className="relative size-20 rounded-md overflow-hidden border border-border"
+            >
               <img src={`/api/public/img/${id}`} alt="" className="w-full h-full object-cover" />
               <button
                 type="button"
@@ -746,7 +800,12 @@ function AiGenerator({
   const gen = useMutation({
     mutationFn: () =>
       generateProductContent({
-        data: { itemName, categoryName: categoryName || undefined, hint: hint || undefined, field: "all" },
+        data: {
+          itemName,
+          categoryName: categoryName || undefined,
+          hint: hint || undefined,
+          field: "all",
+        },
       }),
     onSuccess: (r) => {
       onApply({ title: r.title, description: r.description });

@@ -13,7 +13,10 @@ export const Route = createFileRoute("/legal/buyer-protection")({
     ],
   }),
   component: () => (
-    <LegalPage title="Buyer protection" intro="What you're entitled to as a buyer — and how to use it.">
+    <LegalPage
+      title="Buyer protection"
+      intro="What you're entitled to as a buyer — and how to use it."
+    >
       <h2>Warranty window</h2>
       <p>
         Every listing has a warranty window. If credentials stop working or delivery is wrong, open
@@ -21,13 +24,16 @@ export const Route = createFileRoute("/legal/buyer-protection")({
       </p>
       <h2>Insurance days</h2>
       <p>
-        Premium listings include extra insurance days beyond warranty. We cover replacement or refund
-        within that period even if the seller is unresponsive.
+        Premium listings include extra insurance days beyond warranty. We cover replacement or
+        refund within that period even if the seller is unresponsive.
       </p>
       <h2>Refund-to-credit</h2>
       <p>
-        Refunds default to instant <a className="underline" href="/legal/credits">store credit</a> so
-        you can keep shopping without waiting for the network. You can withdraw credit to your
+        Refunds default to instant{" "}
+        <a className="underline" href="/legal/credits">
+          store credit
+        </a>{" "}
+        so you can keep shopping without waiting for the network. You can withdraw credit to your
         original payment method at any time.
       </p>
       <h2>What to do when something is wrong</h2>

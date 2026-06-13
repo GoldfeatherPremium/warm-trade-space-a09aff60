@@ -14,7 +14,15 @@ export const Route = createFileRoute("/admin/disputes")({
   component: AdminDisputes,
 });
 
-function SlaBadge({ openedAt, slaHours, resolved }: { openedAt: number; slaHours: number; resolved: boolean }) {
+function SlaBadge({
+  openedAt,
+  slaHours,
+  resolved,
+}: {
+  openedAt: number;
+  slaHours: number;
+  resolved: boolean;
+}) {
   if (resolved) return null;
   const deadline = openedAt + slaHours * 3600_000;
   const remaining = deadline - Date.now();
@@ -23,7 +31,11 @@ function SlaBadge({ openedAt, slaHours, resolved }: { openedAt: number; slaHours
   return (
     <span
       className={`text-[9px] font-bold px-2 py-0.5 rounded inline-flex items-center gap-1 ${
-        overdue ? "bg-destructive/90 text-white" : remaining < 12 * 3600_000 ? "bg-amber-500/90 text-black" : "bg-secondary text-foreground/80"
+        overdue
+          ? "bg-destructive/90 text-white"
+          : remaining < 12 * 3600_000
+            ? "bg-amber-500/90 text-black"
+            : "bg-secondary text-foreground/80"
       }`}
       title={`SLA target ${slaHours}h from open`}
     >
@@ -118,7 +130,10 @@ function AdminDisputes() {
               <b>Seller:</b> {dd.seller_response}
             </p>
           )}
-          <AiAssist orderId={dd.order_id as string} onCopy={(reply) => setNote(reply.slice(0, 200))} />
+          <AiAssist
+            orderId={dd.order_id as string}
+            onCopy={(reply) => setNote(reply.slice(0, 200))}
+          />
           {dd.status !== "resolved" ? (
             resolving === dd.id ? (
               <div className="flex gap-2 flex-wrap items-center pt-1">
@@ -238,7 +253,9 @@ function AiAssist({ orderId, onCopy }: { orderId: string; onCopy: (reply: string
       {result && (
         <div className="space-y-1 text-[11px]">
           <p className="text-muted-foreground">{result.summary}</p>
-          <div className="bg-secondary/60 rounded p-2 whitespace-pre-wrap">{result.suggestedReply}</div>
+          <div className="bg-secondary/60 rounded p-2 whitespace-pre-wrap">
+            {result.suggestedReply}
+          </div>
           <button
             type="button"
             className="text-[10px] text-primary font-bold"

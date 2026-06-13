@@ -231,8 +231,8 @@ function AdminSettings() {
               <option value="flag">Flag only — let it through, mark for staff review</option>
             </select>
             <p className="text-[10px] text-muted-foreground">
-              Controls what happens when a buyer↔seller message trips an automod pattern (PII, off-platform
-              payment, external links).
+              Controls what happens when a buyer↔seller message trips an automod pattern (PII,
+              off-platform payment, external links).
             </p>
           </div>
         </TabsContent>

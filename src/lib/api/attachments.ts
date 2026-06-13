@@ -55,7 +55,10 @@ export const addOrderAttachment = createServerFn({ method: "POST" })
       orderId: z.string(),
       mime: z.string().min(3).max(40),
       kind: z.enum(KINDS),
-      dataBase64: z.string().min(16).max(Math.ceil((MAX_BYTES_HARD_CAP * 4) / 3) + 1024),
+      dataBase64: z
+        .string()
+        .min(16)
+        .max(Math.ceil((MAX_BYTES_HARD_CAP * 4) / 3) + 1024),
       note: z.string().max(500).optional(),
     }),
   )
@@ -71,16 +74,22 @@ export const addOrderAttachment = createServerFn({ method: "POST" })
     if (approxBytes > maxBytes) fail(`File is too large (${settings.attachment_max_mb} MB max).`);
     const staff = isStaff(user);
     const o = await assertAccess(data.orderId, user.id, staff);
-    const role = staff
-      ? "staff"
-      : o.buyer_id === user.id
-        ? "buyer"
-        : "seller";
+    const role = staff ? "staff" : o.buyer_id === user.id ? "buyer" : "seller";
     const id = uid();
     await run(
       `insert into order_attachments (id, order_id, uploader_id, uploader_role, kind, mime, data, note, created_at)
        values (?,?,?,?,?,?,?,?,?)`,
-      [id, data.orderId, user.id, role, data.kind as Kind, data.mime, data.dataBase64, data.note ?? null, now()],
+      [
+        id,
+        data.orderId,
+        user.id,
+        role,
+        data.kind as Kind,
+        data.mime,
+        data.dataBase64,
+        data.note ?? null,
+        now(),
+      ],
     );
     await audit(user.id, "order.attachment_add", "order", data.orderId, {
       kind: data.kind,

@@ -276,12 +276,7 @@ export function txCreditGrant(
 }
 
 /** Spend credits (checkout). Returns the new balance. */
-export function txCreditSpend(
-  userId: string,
-  amountCents: number,
-  orderId: string,
-  note: string,
-) {
+export function txCreditSpend(userId: string, amountCents: number, orderId: string, note: string) {
   return tx(async () => {
     const c = await getBuyerCredits(userId);
     if (c.balance_cents < amountCents) fail("Insufficient credits balance.");
@@ -347,4 +342,3 @@ export function txRefundToCredits(
     }
   });
 }
-

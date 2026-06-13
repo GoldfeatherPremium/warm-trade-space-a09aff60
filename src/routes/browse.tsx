@@ -103,9 +103,7 @@ function FacetButton({
     <button
       onClick={onClick}
       className={`w-full flex items-center justify-between gap-2 px-2 py-1 rounded text-[11px] transition-colors ${
-        active
-          ? "bg-primary/20 text-primary font-bold"
-          : "hover:bg-secondary text-foreground/80"
+        active ? "bg-primary/20 text-primary font-bold" : "hover:bg-secondary text-foreground/80"
       }`}
     >
       <span className="truncate text-left">{label}</span>
@@ -143,7 +141,16 @@ function BrowsePage() {
 
   const { data: facets } = useQuery({
     placeholderData: keepPreviousData,
-    queryKey: ["browseFacets", search.q, search.category, search.item, search.delivery, search.inStock, search.minPrice, search.maxPrice],
+    queryKey: [
+      "browseFacets",
+      search.q,
+      search.category,
+      search.item,
+      search.delivery,
+      search.inStock,
+      search.minPrice,
+      search.maxPrice,
+    ],
     queryFn: () =>
       browseFacets({
         data: {
@@ -402,28 +409,27 @@ function BrowsePage() {
               ))}
             </FacetGroup>
           )}
-          {facets?.tiers && facets.tiers.filter((t) => t.verification_tier !== "unverified").length > 0 && (
-            <FacetGroup title="Seller tier">
-              {facets.tiers.map((t) => (
-                <div
-                  key={t.verification_tier}
-                  className="flex items-center justify-between text-[11px] py-0.5"
-                >
-                  <span className="capitalize text-muted-foreground">{t.verification_tier}</span>
-                  <span className="font-mono text-muted-foreground">{t.c}</span>
-                </div>
-              ))}
-            </FacetGroup>
-          )}
+          {facets?.tiers &&
+            facets.tiers.filter((t) => t.verification_tier !== "unverified").length > 0 && (
+              <FacetGroup title="Seller tier">
+                {facets.tiers.map((t) => (
+                  <div
+                    key={t.verification_tier}
+                    className="flex items-center justify-between text-[11px] py-0.5"
+                  >
+                    <span className="capitalize text-muted-foreground">{t.verification_tier}</span>
+                    <span className="font-mono text-muted-foreground">{t.c}</span>
+                  </div>
+                ))}
+              </FacetGroup>
+            )}
           {facets?.items && facets.items.length > 0 && (
             <FacetGroup title="Game / Item">
               {facets.items.slice(0, 12).map((it) => (
                 <FacetButton
                   key={it.id}
                   active={search.item === it.id}
-                  onClick={() =>
-                    setSearch({ item: search.item === it.id ? undefined : it.id })
-                  }
+                  onClick={() => setSearch({ item: search.item === it.id ? undefined : it.id })}
                   label={it.name}
                   count={it.c}
                 />
@@ -436,7 +442,10 @@ function BrowsePage() {
           {isLoading ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-3">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="bg-card border border-border rounded-lg h-56 animate-pulse" />
+                <div
+                  key={i}
+                  className="bg-card border border-border rounded-lg h-56 animate-pulse"
+                />
               ))}
             </div>
           ) : data?.items.length === 0 ? (
@@ -449,7 +458,6 @@ function BrowsePage() {
                 <ProductCard key={p.id} product={p} priority={i < 6} />
               ))}
             </div>
-
           )}
         </div>
       </div>
@@ -480,4 +488,3 @@ function BrowsePage() {
     </PageShell>
   );
 }
-

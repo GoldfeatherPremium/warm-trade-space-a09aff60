@@ -110,7 +110,11 @@ export function ProductCard({ product, priority }: { product: PublicProduct; pri
             <div className="flex items-center gap-1 text-[10px] text-muted-foreground truncate">
               <span className="size-1.5 rounded-full bg-accent inline-block" />
               <span className="truncate">{product.seller.username}</span>
-              <VerificationBadge tier={product.seller.verification_tier} size="xs" showLabel={false} />
+              <VerificationBadge
+                tier={product.seller.verification_tier}
+                size="xs"
+                showLabel={false}
+              />
               <span className="flex items-center gap-0.5 text-yellow-400">
                 <Star className="size-2.5 fill-current" />
                 {product.seller.rating > 0 ? product.seller.rating.toFixed(1) : "new"}

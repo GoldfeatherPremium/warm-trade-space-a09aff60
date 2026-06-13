@@ -218,8 +218,6 @@ function AccountHub() {
 
         <LocaleSwitcher />
 
-
-
         {me && (
           <button
             onClick={() => doLogout.mutate()}
@@ -271,4 +269,3 @@ function LocaleSwitcher() {
     </div>
   );
 }
-

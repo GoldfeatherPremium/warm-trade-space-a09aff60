@@ -49,7 +49,9 @@ function AffiliatePage() {
             </div>
             <div className="text-right text-[11px]">
               <p className="font-mono">{usdt(loyalty.spend_cents)} spent</p>
-              <p className="text-muted-foreground">{loyalty.orders} orders · {loyalty.referrals} referrals</p>
+              <p className="text-muted-foreground">
+                {loyalty.orders} orders · {loyalty.referrals} referrals
+              </p>
             </div>
           </div>
           {loyalty.nextTier && (
@@ -91,8 +93,13 @@ function AffiliatePage() {
           <Button
             size="sm"
             onClick={() => {
-              if (typeof navigator !== "undefined" && typeof (navigator as Navigator).share === "function") {
-                (navigator as Navigator).share({ title: "Join X-VAULT", url: link }).catch(() => {});
+              if (
+                typeof navigator !== "undefined" &&
+                typeof (navigator as Navigator).share === "function"
+              ) {
+                (navigator as Navigator)
+                  .share({ title: "Join X-VAULT", url: link })
+                  .catch(() => {});
               } else {
                 navigator.clipboard?.writeText(link).catch(() => {});
                 toast.success("Link copied");
@@ -106,10 +113,22 @@ function AffiliatePage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <StatCard icon={<MousePointerClick className="size-4" />} label="Clicks" value={r.click_count} />
+        <StatCard
+          icon={<MousePointerClick className="size-4" />}
+          label="Clicks"
+          value={r.click_count}
+        />
         <StatCard icon={<Users className="size-4" />} label="Sign-ups" value={r.signup_count} />
-        <StatCard icon={<ShoppingBag className="size-4" />} label="Purchases" value={r.purchase_count} />
-        <StatCard icon={<Wallet className="size-4" />} label="Earned" value={usdt(r.earnings_cents)} />
+        <StatCard
+          icon={<ShoppingBag className="size-4" />}
+          label="Purchases"
+          value={r.purchase_count}
+        />
+        <StatCard
+          icon={<Wallet className="size-4" />}
+          label="Earned"
+          value={usdt(r.earnings_cents)}
+        />
       </div>
 
       {/* Recent clicks */}
@@ -132,7 +151,15 @@ function AffiliatePage() {
   );
 }
 
-function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | number }) {
+function StatCard({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+}) {
   return (
     <div className="rounded-lg border border-border bg-card p-3 space-y-1">
       <div className="flex items-center gap-1.5 text-[10px] uppercase text-muted-foreground">

@@ -47,7 +47,6 @@ function DisputeCenter() {
               key={d.id as string}
               to="/disputes/$orderId"
               params={{ orderId: d.order_id as string }}
-
               className="bg-card border border-border rounded-lg p-3 flex items-center gap-3 flex-wrap hover:border-primary/50"
             >
               <div className="flex-1 min-w-0">
@@ -70,20 +69,21 @@ function DisputeCenter() {
               >
                 {(d.status as string).replaceAll("_", " ").toUpperCase()}
               </span>
-              {d.status !== "resolved" && (() => {
-                const deadline = (d.created_at as number) + slaHours * 3600_000;
-                const remaining = deadline - Date.now();
-                const overdue = remaining < 0;
-                const hours = Math.round(Math.abs(remaining) / 3600_000);
-                return (
-                  <span
-                    className={`text-[9px] font-bold px-2 py-1 rounded ${overdue ? "bg-destructive/90 text-white" : "bg-secondary text-foreground/80"}`}
-                    title={`Staff target ${slaHours}h from open`}
-                  >
-                    {overdue ? `SLA +${hours}h` : `SLA ${hours}h left`}
-                  </span>
-                );
-              })()}
+              {d.status !== "resolved" &&
+                (() => {
+                  const deadline = (d.created_at as number) + slaHours * 3600_000;
+                  const remaining = deadline - Date.now();
+                  const overdue = remaining < 0;
+                  const hours = Math.round(Math.abs(remaining) / 3600_000);
+                  return (
+                    <span
+                      className={`text-[9px] font-bold px-2 py-1 rounded ${overdue ? "bg-destructive/90 text-white" : "bg-secondary text-foreground/80"}`}
+                      title={`Staff target ${slaHours}h from open`}
+                    >
+                      {overdue ? `SLA +${hours}h` : `SLA ${hours}h left`}
+                    </span>
+                  );
+                })()}
               <span className="font-mono text-accent text-sm">{usdt(d.total_cents as number)}</span>
             </Link>
           );

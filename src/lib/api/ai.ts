@@ -89,7 +89,8 @@ export const aiAssistDispute = createServerFn({ method: "POST" })
        order by created_at asc limit 30`,
       [dispute!.id],
     );
-    const transcript = messages.map((m) => `[${m.author_role}] ${m.body}`).join("\n") || "(no messages)";
+    const transcript =
+      messages.map((m) => `[${m.author_role}] ${m.body}`).join("\n") || "(no messages)";
 
     type Out = {
       category: string;
@@ -324,7 +325,6 @@ export const listOptimizationCandidates = createServerFn({ method: "GET" }).hand
   };
 });
 
-
 // ---------------------------------------------------------------------------
 // AI Shopping Assistant — natural-language product discovery
 // Public (guest-friendly), rate-limited. Two-stage: LLM intent → SQL search
@@ -401,7 +401,8 @@ Return JSON: {
       where.push("c.slug = ?");
       params.push(intent.categorySlug);
     }
-    const maxCents = intent.maxPriceCents ?? (data.budgetUsd ? Math.round(data.budgetUsd * 100) : 0);
+    const maxCents =
+      intent.maxPriceCents ?? (data.budgetUsd ? Math.round(data.budgetUsd * 100) : 0);
     if (maxCents > 0) {
       where.push("p.price_cents <= ?");
       params.push(maxCents);

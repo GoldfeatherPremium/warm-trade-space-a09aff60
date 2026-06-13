@@ -114,22 +114,16 @@ export const addDisputeEvidence = createServerFn({ method: "POST" })
     await run(
       `insert into dispute_evidence (id, dispute_id, author_id, author_role, kind, title, body, url, created_at)
        values (?,?,?,?,?,?,?,?,?)`,
-      [
-        uid(),
-        d!.id,
-        user.id,
-        role,
-        data.kind,
-        data.title,
-        data.body ?? null,
-        data.url ?? null,
-        t,
-      ],
+      [uid(), d!.id, user.id, role, data.kind, data.title, data.body ?? null, data.url ?? null, t],
     );
     await run(`update disputes set last_activity_at = ? where id = ?`, [t, d!.id]);
     // notify counterparties
     const targets =
-      role === "buyer" ? [o.seller_id] : role === "seller" ? [o.buyer_id] : [o.buyer_id, o.seller_id];
+      role === "buyer"
+        ? [o.seller_id]
+        : role === "seller"
+          ? [o.buyer_id]
+          : [o.buyer_id, o.seller_id];
     for (const uid_ of targets) {
       await notify(
         uid_,

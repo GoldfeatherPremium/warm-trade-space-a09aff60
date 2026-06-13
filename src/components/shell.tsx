@@ -269,7 +269,8 @@ export function SiteFooter() {
           ))}
         </div>
         <p className="text-[10px] text-muted-foreground text-center pt-6 border-t border-border/60 tracking-wide">
-          © 2026 X-VAULT MARKETPLACE · Escrow-protected digital goods · All chats are monitored — never share personal info off-platform.
+          © 2026 X-VAULT MARKETPLACE · Escrow-protected digital goods · All chats are monitored —
+          never share personal info off-platform.
         </p>
       </div>
     </footer>

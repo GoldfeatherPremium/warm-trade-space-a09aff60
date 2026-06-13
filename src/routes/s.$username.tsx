@@ -33,7 +33,8 @@ export const Route = createFileRoute("/s/$username")({
       };
     }
     const title = `${s.username} — Trusted seller on X-VAULT`;
-    const desc = (s.store_description ||
+    const desc = (
+      s.store_description ||
       `${s.username} on X-VAULT: ${s.total_sales.toLocaleString()} sales, ${s.rating > 0 ? s.rating.toFixed(1) + "★" : "new seller"}, escrow protected. Browse listings & buy with USDT.`
     )
       .replace(/\s+/g, " ")
@@ -89,7 +90,6 @@ export const Route = createFileRoute("/s/$username")({
 
 // Social icons removed — buyer-facing storefront never exposes seller off-platform links.
 
-
 function SellerStorePage() {
   const { username } = Route.useParams();
   const { data, isLoading } = useQuery({
@@ -117,8 +117,6 @@ function SellerStorePage() {
   const visibleProducts = s.vacation_mode ? [] : data.products;
   const featured = [...visibleProducts].sort((a, b) => b.sold_count - a.sold_count).slice(0, 4);
   const latest = [...visibleProducts].slice(0, 8);
-  
-  
 
   return (
     <PageShell>
@@ -152,7 +150,11 @@ function SellerStorePage() {
               <FollowSellerButton sellerId={s.id} />
             </div>
             <div className="mt-2 flex items-center gap-1.5 flex-wrap">
-              <SellerBadge tier={s.verification_tier} level={s.seller_level} score={s.trust_score} />
+              <SellerBadge
+                tier={s.verification_tier}
+                level={s.seller_level}
+                score={s.trust_score}
+              />
               <TrustSparkline userId={s.id} currentScore={s.trust_score} />
               {s.vacation_mode ? (
                 <span className="text-[10px] bg-yellow-500/15 text-yellow-400 px-2 py-0.5 rounded-full border border-yellow-500/40 font-bold">
@@ -166,8 +168,6 @@ function SellerStorePage() {
               </p>
             )}
             {/* External social links intentionally hidden from buyers — all comms stay on X-VAULT. */}
-
-
           </div>
         </div>
 
@@ -187,7 +187,10 @@ function SellerStorePage() {
           />
           <Metric
             label="Member since"
-            value={new Date(s.created_at).toLocaleDateString(undefined, { year: "numeric", month: "short" })}
+            value={new Date(s.created_at).toLocaleDateString(undefined, {
+              year: "numeric",
+              month: "short",
+            })}
           />
         </div>
       </div>
@@ -221,7 +224,8 @@ function SellerStorePage() {
         <h2 className="font-display text-2xl mb-3">All listings ({visibleProducts.length})</h2>
         {s.vacation_mode ? (
           <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-6 text-center text-sm text-yellow-200/90 mb-8">
-            This seller is currently on vacation. Their listings are temporarily hidden and not accepting new orders. Follow them to be notified when they reopen.
+            This seller is currently on vacation. Their listings are temporarily hidden and not
+            accepting new orders. Follow them to be notified when they reopen.
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-8">
@@ -275,7 +279,9 @@ function SellerStorePage() {
 function Metric({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
     <div className="bg-secondary/60 rounded-lg p-2.5">
-      <p className="text-[9px] font-bold tracking-widest text-muted-foreground">{label.toUpperCase()}</p>
+      <p className="text-[9px] font-bold tracking-widest text-muted-foreground">
+        {label.toUpperCase()}
+      </p>
       <p className="font-mono text-sm mt-0.5">{value}</p>
       {hint && <p className="text-[10px] text-muted-foreground">{hint}</p>}
     </div>

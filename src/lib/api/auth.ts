@@ -2,7 +2,15 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { q1, run } from "../server/db.server";
 import { appContext } from "../server/app.server";
-import { audit, fail, getSettings, hashPassword, now, uid, verifyPassword } from "../server/core.server";
+import {
+  audit,
+  fail,
+  getSettings,
+  hashPassword,
+  now,
+  uid,
+  verifyPassword,
+} from "../server/core.server";
 import { createSession, currentUser, destroySession, requireUser } from "../server/auth.server";
 import { rateLimit } from "../server/rate-limit.server";
 
@@ -52,6 +60,8 @@ export const register = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await appContext();
     const email = data.email.toLowerCase().trim();
+    // Throttle signups per-email to blunt mass account creation / spam.
+    rateLimit({ key: `register:${email}`, limit: 5, windowMs: 60_000 });
     if (await q1(`select 1 as x from users where email = ?`, [email]))
       fail("An account with that email already exists.");
     if (await q1(`select 1 as x from users where lower(username) = lower(?)`, [data.username]))

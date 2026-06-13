@@ -2,10 +2,7 @@ import { BadgeCheck, Building2, Crown, ShieldCheck, Sparkles } from "lucide-reac
 
 type Tier = "unverified" | "verified" | "business" | "premium";
 
-const TIERS: Record<
-  Tier,
-  { label: string; cls: string; Icon: typeof BadgeCheck }
-> = {
+const TIERS: Record<Tier, { label: string; cls: string; Icon: typeof BadgeCheck }> = {
   unverified: {
     label: "Unverified",
     cls: "bg-muted text-muted-foreground border-border",
@@ -61,13 +58,7 @@ export function VerificationBadge({
   );
 }
 
-export function LevelBadge({
-  level,
-  size = "sm",
-}: {
-  level: number;
-  size?: "xs" | "sm";
-}) {
+export function LevelBadge({ level, size = "sm" }: { level: number; size?: "xs" | "sm" }) {
   const meta = LEVELS[Math.min(5, Math.max(1, level))] ?? LEVELS[1];
   const pad = size === "xs" ? "px-1.5 py-0.5 text-[9px]" : "px-2 py-0.5 text-[10px]";
   return (

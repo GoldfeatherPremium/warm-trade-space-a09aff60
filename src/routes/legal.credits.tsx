@@ -13,7 +13,10 @@ export const Route = createFileRoute("/legal/credits")({
     ],
   }),
   component: () => (
-    <LegalPage title="Credits & refunds" intro="Refunds in seconds — credits keep you shopping without waiting for the blockchain.">
+    <LegalPage
+      title="Credits & refunds"
+      intro="Refunds in seconds — credits keep you shopping without waiting for the blockchain."
+    >
       <h2>Why credits-first</h2>
       <p>
         Crypto refunds can take 5–30 minutes and cost network fees. Store credit refunds are
@@ -32,8 +35,12 @@ export const Route = createFileRoute("/legal/credits")({
       </p>
       <h2>Withdrawing credit to USDT</h2>
       <p>
-        Open <a className="underline" href="/wallet">Wallet</a> and request a withdrawal. A small
-        processing fee applies and the request is reviewed by finance staff before payout.
+        Open{" "}
+        <a className="underline" href="/wallet">
+          Wallet
+        </a>{" "}
+        and request a withdrawal. A small processing fee applies and the request is reviewed by
+        finance staff before payout.
       </p>
     </LegalPage>
   ),

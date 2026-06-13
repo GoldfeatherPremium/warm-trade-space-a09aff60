@@ -183,6 +183,7 @@ export const getPresence = createServerFn({ method: "POST" })
   .inputValidator(z.object({ userIds: z.array(z.string()).max(50) }))
   .handler(async ({ data }) => {
     await appContext();
+    await requireUser();
     if (data.userIds.length === 0) return { presence: {} as Record<string, number> };
     const placeholders = data.userIds.map(() => "?").join(",");
     const rows = await q<{ id: string; last_seen_at: number }>(
