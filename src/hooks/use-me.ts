@@ -37,8 +37,8 @@ export function useMe() {
       return data;
     },
     initialData: readCache,
-    staleTime: 10_000,
-    refetchInterval: 30_000,
+    staleTime: 60_000,
+    refetchInterval: 90_000,
   });
 
   // Lightweight presence ping while a signed-in user has the tab open.
