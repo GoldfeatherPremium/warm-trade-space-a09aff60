@@ -218,12 +218,18 @@ function SellerStorePage() {
 
       {/* Latest / All */}
       <section className="pt-8">
-        <h2 className="font-display text-2xl mb-3">All listings ({data.products.length})</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-8">
-          {latest.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
+        <h2 className="font-display text-2xl mb-3">All listings ({visibleProducts.length})</h2>
+        {s.vacation_mode ? (
+          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-6 text-center text-sm text-yellow-200/90 mb-8">
+            This seller is currently on vacation. Their listings are temporarily hidden and not accepting new orders. Follow them to be notified when they reopen.
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-8">
+            {latest.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="pt-2">
