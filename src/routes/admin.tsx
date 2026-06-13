@@ -43,6 +43,7 @@ const GROUPS: NavGroup[] = [
     label: "Finance",
     items: [
       { to: "/admin/finance", label: "Finance", hint: "Withdrawals & ledger" },
+      { to: "/admin/credits", label: "Buyer credits", hint: "Balances & grants" },
       { to: "/admin/fx", label: "FX & currency", hint: "Rates & base currency" },
     ],
   },
