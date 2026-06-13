@@ -676,6 +676,9 @@ async function migrate(e: Engine): Promise<void> {
     `alter table users add column loyalty_tier_at ${big}`,
     // --- Phase 2: presence (online dots in chat) ---
     `alter table users add column last_seen_at ${big} not null default 0`,
+    // --- Phase 5: buyer credits (refunds + promos go here, not into wallet cash) ---
+    `alter table orders add column credits_applied_cents ${big} not null default 0`,
+    `alter table withdrawals add column from_credits integer not null default 0`,
   ];
   for (const stmt of addColumns) {
     await e.exec(stmt).catch(() => {}); // already exists
