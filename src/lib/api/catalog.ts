@@ -686,9 +686,9 @@ export const searchSuggest = createServerFn({ method: "GET" })
     const term = data.q.trim().toLowerCase();
     if (term.length < 2) return { suggestions: [] as string[] };
     const rows = await q<{ s: string }>(
-      `select distinct lower(title) s from products
-         where status = 'active' and lower(title) like ?
-         order by sold_count desc limit 8`,
+      `select distinct lower(p.title) s from products p join users u on u.id = p.seller_id
+         where p.status = 'active' and ${PUBLIC_SELLER_COND} and lower(p.title) like ?
+         order by p.sold_count desc limit 8`,
       [`%${term}%`],
     );
     return { suggestions: rows.map((r) => r.s) };
