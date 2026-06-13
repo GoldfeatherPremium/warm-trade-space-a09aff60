@@ -18,3 +18,10 @@ CREATE INDEX IF NOT EXISTS idx_reviews_product_rating ON public.reviews (product
 CREATE INDEX IF NOT EXISTS idx_orders_created ON public.orders (created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_orders_paid ON public.orders (paid_at DESC);
 CREATE INDEX IF NOT EXISTS idx_users_created ON public.users (created_at DESC);
+
+-- Full-text search acceleration. Product search uses `lower(col) LIKE '%term%'`,
+-- which a btree can't serve (leading wildcard). pg_trgm GIN indexes let the
+-- planner satisfy those LIKE scans from an index instead of a table scan.
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE INDEX IF NOT EXISTS idx_products_title_trgm ON public.products USING gin (lower(title) gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_products_desc_trgm ON public.products USING gin (lower(description) gin_trgm_ops);

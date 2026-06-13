@@ -32,7 +32,38 @@ const SITE = "https://warm-trade-space.lovable.app";
 export const Route = createFileRoute("/browse")({
   validateSearch: searchSchema,
   loaderDeps: ({ search }) => ({ search }),
-  loader: ({ deps }) => ({ search: deps.search }),
+  // SSR the product grid: prime the results + category data on the server so
+  // the listing renders in the initial HTML (fast LCP) instead of after a
+  // client fetch. Keys mirror the component's useQuery keys exactly so the
+  // dehydrated cache is reused with no refetch flash.
+  loader: async ({ deps, context }) => {
+    const s = deps.search;
+    await Promise.all([
+      context.queryClient
+        .ensureQueryData({ queryKey: ["home"], queryFn: () => getHomeData() })
+        .catch(() => {}),
+      context.queryClient
+        .ensureQueryData({
+          queryKey: ["browse", s],
+          queryFn: () =>
+            browseProducts({
+              data: {
+                category: s.category,
+                item: s.item,
+                q: s.q,
+                delivery: s.delivery,
+                sort: s.sort ?? "popular",
+                inStock: s.inStock,
+                minPrice: s.minPrice,
+                maxPrice: s.maxPrice,
+                page: s.page ?? 1,
+              },
+            }),
+        })
+        .catch(() => {}),
+    ]);
+    return { search: deps.search };
+  },
   head: ({ loaderData }) => {
     const s = (loaderData?.search ?? {}) as z.infer<typeof searchSchema>;
     const parts: string[] = [];
