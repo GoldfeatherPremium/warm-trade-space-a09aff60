@@ -70,36 +70,44 @@ function AdminProducts() {
                 {usdtShort(p.price_cents as number)} · {dateTime(p.created_at as number)}
               </p>
               <p className="text-[11px] text-muted-foreground line-clamp-2">{p.description}</p>
-              <div className="flex items-center gap-2">
-              {p.status === "pending_review" && (
-                <div className="flex gap-2 items-center pt-1">
-                  <Input
-                    placeholder="Rejection reason"
-                    className="max-w-xs h-8 text-xs"
-                    value={reasons[p.id as string] ?? ""}
-                    onChange={(e) => setReasons({ ...reasons, [p.id as string]: e.target.value })}
-                  />
-                  <Button
-                    size="sm"
-                    onClick={() => review.mutate({ productId: p.id as string, approve: true })}
-                    disabled={review.isPending}
-                  >
-                    Approve
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    disabled={review.isPending}
-                    onClick={() => {
-                      const reason = reasons[p.id as string];
-                      if (!reason) return toast.error("A rejection reason is required.");
-                      review.mutate({ productId: p.id as string, approve: false, reason });
-                    }}
-                  >
-                    Reject
-                  </Button>
-                </div>
-              )}
+              <div className="flex items-center gap-2 flex-wrap pt-1">
+                <Link
+                  to="/admin/products/$id/edit"
+                  params={{ id: p.id as string }}
+                  className="text-[10px] font-bold text-primary hover:underline"
+                >
+                  ✎ Edit / SEO
+                </Link>
+                {p.status === "pending_review" && (
+                  <>
+                    <Input
+                      placeholder="Rejection reason"
+                      className="max-w-xs h-8 text-xs"
+                      value={reasons[p.id as string] ?? ""}
+                      onChange={(e) => setReasons({ ...reasons, [p.id as string]: e.target.value })}
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => review.mutate({ productId: p.id as string, approve: true })}
+                      disabled={review.isPending}
+                    >
+                      Approve
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      disabled={review.isPending}
+                      onClick={() => {
+                        const reason = reasons[p.id as string];
+                        if (!reason) return toast.error("A rejection reason is required.");
+                        review.mutate({ productId: p.id as string, approve: false, reason });
+                      }}
+                    >
+                      Reject
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         );
