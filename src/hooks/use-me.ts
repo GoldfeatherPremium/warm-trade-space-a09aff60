@@ -42,9 +42,9 @@ export function useMe() {
   });
 
   // Lightweight presence ping while a signed-in user has the tab open.
-  // Powers green "online" dots in chat. Throttled to ~60s and paused while
-  // the document is hidden so background tabs don't keep users "online".
+  // Throttled per admin-configured interval; paused while tab hidden.
   const loggedIn = !!q.data?.user;
+  const pingMs = Math.max(15, q.data?.banner?.presencePingSeconds ?? 60) * 1000;
   useEffect(() => {
     if (!loggedIn || typeof window === "undefined") return;
     let active = true;
@@ -56,7 +56,7 @@ export function useMe() {
       });
     };
     tick();
-    const id = window.setInterval(tick, 60_000);
+    const id = window.setInterval(tick, pingMs);
     const onVis = () => {
       if (!document.hidden) tick();
     };
@@ -66,13 +66,13 @@ export function useMe() {
       window.clearInterval(id);
       document.removeEventListener("visibilitychange", onVis);
     };
-  }, [loggedIn]);
+  }, [loggedIn, pingMs]);
 
   return {
     me: q.data?.user ?? null,
     unreadNotifications: q.data?.unreadNotifications ?? 0,
     unreadMessages: q.data?.unreadMessages ?? 0,
-    banner: q.data?.banner ?? { announcement: null, maintenance: false },
+    banner: q.data?.banner ?? { announcement: null, maintenance: false, presencePingSeconds: 60 },
     isLoading: q.isLoading,
   };
 }
