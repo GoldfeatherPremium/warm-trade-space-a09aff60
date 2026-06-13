@@ -695,6 +695,25 @@ export const searchSuggest = createServerFn({ method: "GET" })
   });
 
 /**
+ * Returns only those slugs whose product is currently purchasable: active
+ * status, seller not banned, seller not on vacation. Used to scrub the
+ * client-side "recently viewed" rail so unavailable items disappear.
+ */
+export const filterAvailableSlugs = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ slugs: z.array(z.string().max(160)).max(24) }))
+  .handler(async ({ data }) => {
+    await appContext();
+    if (data.slugs.length === 0) return { slugs: [] as string[] };
+    const placeholders = data.slugs.map(() => "?").join(",");
+    const rows = await q<{ slug: string }>(
+      `select p.slug from products p join users u on u.id = p.seller_id
+        where p.slug in (${placeholders}) and p.status = 'active' and ${PUBLIC_SELLER_COND}`,
+      data.slugs,
+    );
+    return { slugs: rows.map((r) => r.slug) };
+  });
+
+/**
  * Frequently Bought Together — true co-purchase signal from order history.
  *
  * For the given product, find buyers who purchased it, then surface the
