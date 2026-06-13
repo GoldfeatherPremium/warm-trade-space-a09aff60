@@ -81,6 +81,12 @@ const productSelect = `
   join users u on u.id = p.seller_id
   left join catalog_items ci on ci.id = p.item_id`;
 
+// Reusable WHERE fragment to keep listings hygienic across every public
+// surface: only show products from non-banned, non-vacationing sellers.
+// Stock-count gating happens via the lifecycle sweep flipping status to
+// 'out_of_stock' for auto-delivery products with zero available stock.
+export const PUBLIC_SELLER_COND = `u.vacation_mode = 0 and u.is_banned = 0`;
+
 function mapProduct(r: Record<string, unknown>): PublicProduct {
   const {
     s_id,
