@@ -127,6 +127,7 @@ export const adminSetBaseCurrency = createServerFn({ method: "POST" })
     const row = await q1(`select 1 as x from fx_rates where currency = ?`, [data.currency]);
     if (!row) fail("Currency not in rate table.");
     await run(`update site_settings set base_currency = ? where id = 1`, [data.currency]);
+    clearSettingsCache();
     await audit(user.id, "fx.set_base", "site_settings", data.currency);
     return { ok: true };
   });
