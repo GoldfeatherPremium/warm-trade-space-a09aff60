@@ -111,9 +111,13 @@ function ProductForm() {
     priceUsdt: "" as string,
     minQty: 1,
     maxQty: 50,
+    maxOrdersAtOnce: 10,
+    subscriptionDuration: "" as "" | "7d" | "14d" | "1m" | "3m" | "6m" | "12m" | "lifetime",
+    manualStock: "" as string,
     platform: "",
     requiredInfo: "",
   });
+
   const [regionMode, setRegionMode] = useState<"global" | "country">("global");
   const [regionCountry, setRegionCountry] = useState<string>("");
   const [agreed, setAgreed] = useState(false);
