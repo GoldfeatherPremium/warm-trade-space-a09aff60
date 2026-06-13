@@ -514,6 +514,29 @@ export const removeStockItem = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const setManualStock = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ productId: z.string(), manualStock: z.number().int().min(0).max(100000) }))
+  .handler(async ({ data }) => {
+    await appContext();
+    const user = await requireSeller();
+    const p = await q1<{ seller_id: string; delivery_kind: string }>(
+      `select p.seller_id, coalesce(c.delivery_kind, 'code') as delivery_kind
+       from products p left join categories c on c.id = p.category_id where p.id = ?`,
+      [data.productId],
+    );
+    if (!p || p.seller_id !== user.id) fail("Product not found.");
+    if (p!.delivery_kind !== "invite" && p!.delivery_kind !== "manual_text")
+      fail("Manual stock only applies to invite / manual-text delivery products.");
+    await run(`update products set manual_stock = ?, stock_count = ? where id = ?`, [
+      data.manualStock,
+      data.manualStock,
+      data.productId,
+    ]);
+    return { ok: true };
+  });
+
+
+
 // ---------------------------------------------------------------------------
 // Dashboard overview + wallet
 // ---------------------------------------------------------------------------
