@@ -249,9 +249,19 @@ export const saveProduct = createServerFn({ method: "POST" })
           : null,
         data.productId,
       ]);
+      await run(
+        `update products set subscription_duration = ?, max_orders_at_once = ?, manual_stock = ? where id = ?`,
+        [
+          data.subscriptionDuration ?? null,
+          data.maxOrdersAtOnce,
+          data.manualStock ?? null,
+          data.productId,
+        ],
+      );
       await audit(user.id, "product.update", "product", data.productId);
       return { productId: data.productId };
     }
+
 
     const activeCount = (await q1<{ c: number }>(
       `select count(*) c from products where seller_id = ? and status in ('active','pending_review','out_of_stock')`,
