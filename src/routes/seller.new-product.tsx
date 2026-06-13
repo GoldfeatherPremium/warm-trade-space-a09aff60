@@ -401,6 +401,18 @@ function ProductForm() {
         )}
       </div>
 
+      {/* Per-category dynamic fields (admin-configured) */}
+      {sellerFields.length > 0 && (
+        <div className="bg-primary/5 border border-primary/30 rounded-lg p-3 space-y-2">
+          <p className="text-xs font-bold text-primary">Required for this category</p>
+          <DynamicFields
+            fields={sellerFields}
+            values={categoryAttrs}
+            onChange={setCategoryAttrs}
+          />
+        </div>
+      )}
+
       {/* Product details */}
       <h2 className="text-sm font-bold flex items-center gap-2 pt-1">
         <BookOpen className="size-4 text-primary" /> 4. Product details
