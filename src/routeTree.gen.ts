@@ -78,6 +78,7 @@ import { Route as AccountFollowingRouteImport } from './routes/account.following
 import { Route as AccountCreditsRouteImport } from './routes/account.credits'
 import { Route as AccountAffiliateRouteImport } from './routes/account.affiliate'
 import { Route as SellerStockProductIdRouteImport } from './routes/seller.stock.$productId'
+import { Route as ApiPublicPromoteAdminRouteImport } from './routes/api/public/promote-admin'
 import { Route as ApiPublicImgIdRouteImport } from './routes/api/public/img.$id'
 import { Route as ApiPublicCronFollowDigestRouteImport } from './routes/api/public/cron/follow-digest'
 import { Route as AdminProductsIdEditRouteImport } from './routes/admin.products_.$id.edit'
@@ -427,6 +428,11 @@ const SellerStockProductIdRoute = SellerStockProductIdRouteImport.update({
   path: '/stock/$productId',
   getParentRoute: () => SellerRoute,
 } as any)
+const ApiPublicPromoteAdminRoute = ApiPublicPromoteAdminRouteImport.update({
+  id: '/api/public/promote-admin',
+  path: '/api/public/promote-admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicImgIdRoute = ApiPublicImgIdRouteImport.update({
   id: '/api/public/img/$id',
   path: '/api/public/img/$id',
@@ -513,6 +519,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/orders/': typeof OrdersIndexRoute
   '/seller/': typeof SellerIndexRoute
+  '/api/public/promote-admin': typeof ApiPublicPromoteAdminRoute
   '/seller/stock/$productId': typeof SellerStockProductIdRoute
   '/admin/products/$id/edit': typeof AdminProductsIdEditRoute
   '/api/public/cron/follow-digest': typeof ApiPublicCronFollowDigestRoute
@@ -585,6 +592,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/orders': typeof OrdersIndexRoute
   '/seller': typeof SellerIndexRoute
+  '/api/public/promote-admin': typeof ApiPublicPromoteAdminRoute
   '/seller/stock/$productId': typeof SellerStockProductIdRoute
   '/admin/products/$id/edit': typeof AdminProductsIdEditRoute
   '/api/public/cron/follow-digest': typeof ApiPublicCronFollowDigestRoute
@@ -660,6 +668,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/orders/': typeof OrdersIndexRoute
   '/seller/': typeof SellerIndexRoute
+  '/api/public/promote-admin': typeof ApiPublicPromoteAdminRoute
   '/seller/stock/$productId': typeof SellerStockProductIdRoute
   '/admin/products_/$id/edit': typeof AdminProductsIdEditRoute
   '/api/public/cron/follow-digest': typeof ApiPublicCronFollowDigestRoute
@@ -736,6 +745,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/orders/'
     | '/seller/'
+    | '/api/public/promote-admin'
     | '/seller/stock/$productId'
     | '/admin/products/$id/edit'
     | '/api/public/cron/follow-digest'
@@ -808,6 +818,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/orders'
     | '/seller'
+    | '/api/public/promote-admin'
     | '/seller/stock/$productId'
     | '/admin/products/$id/edit'
     | '/api/public/cron/follow-digest'
@@ -882,6 +893,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/orders/'
     | '/seller/'
+    | '/api/public/promote-admin'
     | '/seller/stock/$productId'
     | '/admin/products_/$id/edit'
     | '/api/public/cron/follow-digest'
@@ -921,6 +933,7 @@ export interface RootRouteChildren {
   RCodeRoute: typeof RCodeRoute
   SUsernameRoute: typeof SUsernameRoute
   OrdersIndexRoute: typeof OrdersIndexRoute
+  ApiPublicPromoteAdminRoute: typeof ApiPublicPromoteAdminRoute
   ApiPublicCronFollowDigestRoute: typeof ApiPublicCronFollowDigestRoute
   ApiPublicImgIdRoute: typeof ApiPublicImgIdRoute
 }
@@ -1410,6 +1423,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SellerStockProductIdRouteImport
       parentRoute: typeof SellerRoute
     }
+    '/api/public/promote-admin': {
+      id: '/api/public/promote-admin'
+      path: '/api/public/promote-admin'
+      fullPath: '/api/public/promote-admin'
+      preLoaderRoute: typeof ApiPublicPromoteAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/img/$id': {
       id: '/api/public/img/$id'
       path: '/api/public/img/$id'
@@ -1579,19 +1599,10 @@ const rootRouteChildren: RootRouteChildren = {
   RCodeRoute: RCodeRoute,
   SUsernameRoute: SUsernameRoute,
   OrdersIndexRoute: OrdersIndexRoute,
+  ApiPublicPromoteAdminRoute: ApiPublicPromoteAdminRoute,
   ApiPublicCronFollowDigestRoute: ApiPublicCronFollowDigestRoute,
   ApiPublicImgIdRoute: ApiPublicImgIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
