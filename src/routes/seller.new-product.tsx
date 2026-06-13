@@ -69,6 +69,7 @@ function ProductForm() {
   const [variants, setVariants] = useState<Array<{ title: string; priceUsdt: string }>>([]);
   const [expiresInDays, setExpiresInDays] = useState(0);
   const [insuranceDays, setInsuranceDays] = useState(0);
+  const [categoryAttrs, setCategoryAttrs] = useState<Record<string, string>>({});
 
   // Item picker (searchable)
   const [itemId, setItemId] = useState("");
