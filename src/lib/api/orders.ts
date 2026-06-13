@@ -383,11 +383,25 @@ export const getOrder = createServerFn({ method: "GET" })
       payload:
         isBuyer || isStaff(user) ? del.payload : del.payload ? "•••• (visible to buyer)" : null,
     }));
-    let snapshot: Record<string, unknown> | null = null;
+    type Snap = {
+      product_id?: string;
+      title?: string;
+      image_key?: string | null;
+      delivery_type?: string;
+      delivery_sla_minutes?: number;
+      warranty_hours?: number;
+      region?: string | null;
+      platform?: string | null;
+      required_info?: string | null;
+      unit_price_cents?: number;
+      variant_title?: string | null;
+      captured_at?: number;
+    };
+    let snapshot: Snap | null = null;
     const snapRaw = (o as unknown as { product_snapshot?: string | null }).product_snapshot;
     if (snapRaw) {
       try {
-        snapshot = JSON.parse(snapRaw);
+        snapshot = JSON.parse(snapRaw) as Snap;
       } catch {
         snapshot = null;
       }
