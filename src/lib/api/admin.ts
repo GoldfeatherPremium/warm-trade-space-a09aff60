@@ -832,6 +832,11 @@ export const adminUpdateProduct = createServerFn({ method: "POST" })
       adminSeoDescription: z.string().max(8000).optional(),
       categoryAttrs: z.record(z.string(), z.string().max(2000)).optional(),
       status: z.enum(["active", "paused", "rejected", "out_of_stock", "pending_review"]).optional(),
+      // Phase 13 overrides
+      subscriptionDuration: z
+        .enum(["7d", "14d", "1m", "3m", "6m", "12m", "lifetime", ""])
+        .optional(),
+      maxOrdersAtOnce: z.number().int().min(1).max(1000).optional(),
     }),
   )
   .handler(async ({ data }) => {
@@ -858,7 +863,7 @@ export const adminUpdateProduct = createServerFn({ method: "POST" })
     await run(
       `update products set title = ?, description = ?, category_id = ?, item_id = ?, price_cents = ?, warranty_hours = ?,
          min_qty = ?, max_qty = ?, region = ?, platform = ?, required_info = ?,
-         admin_seo_description = ?, category_attrs = ?${data.status ? ", status = ?" : ""}
+         admin_seo_description = ?, category_attrs = ?, subscription_duration = ?, max_orders_at_once = ?${data.status ? ", status = ?" : ""}
        where id = ?`,
       [
         data.title,
@@ -876,13 +881,18 @@ export const adminUpdateProduct = createServerFn({ method: "POST" })
         data.categoryAttrs && Object.keys(data.categoryAttrs).length > 0
           ? JSON.stringify(data.categoryAttrs)
           : null,
+        data.subscriptionDuration && data.subscriptionDuration !== "" ? data.subscriptionDuration : null,
+        data.maxOrdersAtOnce ?? 10,
         ...(data.status ? [data.status] : []),
         data.productId,
       ],
     );
     await audit(staff.id, "product.admin_edit", "product", data.productId);
+    invalidateCache("home:v1");
+    invalidateCache("catalog-items:v1");
     return { ok: true };
   });
+
 
 // ---------------------------------------------------------------------------
 // Settings + audit + moderation
