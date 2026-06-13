@@ -175,17 +175,30 @@ function ProductPage() {
   });
 
   const buy = useMutation({
-    mutationFn: () =>
-      createOrder({
+    mutationFn: () => {
+      // Combine free-text buyer info with admin-configured buyer fields
+      // into a single JSON payload the seller / order page can render.
+      const buyerFieldsCfg = data?.product?.submission_schema?.buyerFields ?? [];
+      let info: string | undefined = buyerInfo || undefined;
+      if (buyerFieldsCfg.length) {
+        for (const f of buyerFieldsCfg) {
+          if (f.required && !buyerExtra[f.key]?.trim()) {
+            throw new Error(`Please fill in "${f.label}".`);
+          }
+        }
+        info = JSON.stringify({ note: buyerInfo || undefined, fields: buyerExtra });
+      }
+      return createOrder({
         data: {
           productId: data!.product!.id,
           qty,
-          buyerInfo: buyerInfo || undefined,
+          buyerInfo: info,
           network: "TRC20",
           couponCode: coupon?.code,
           variantId: variantId ?? undefined,
         },
-      }),
+      });
+    },
     onSuccess: (r) => navigate({ to: "/pay/$orderId", params: { orderId: r.orderId } }),
     onError: (e: Error) => toast.error(e.message),
   });
