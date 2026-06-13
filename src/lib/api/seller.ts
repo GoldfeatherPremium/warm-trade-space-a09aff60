@@ -393,15 +393,20 @@ export const getProductStock = createServerFn({ method: "GET" })
       title: string;
       delivery_type: string;
       stock_count: number;
-    }>(`select id, seller_id, title, delivery_type, stock_count from products where id = ?`, [
-      data.productId,
-    ]);
+      delivery_kind: string;
+      manual_stock: number | null;
+    }>(
+      `select p.id, p.seller_id, p.title, p.delivery_type, p.stock_count,
+              coalesce(c.delivery_kind, 'code') as delivery_kind,
+              p.manual_stock
+       from products p left join categories c on c.id = p.category_id where p.id = ?`,
+      [data.productId],
+    );
     if (!p || p.seller_id !== user.id) fail("Product not found.");
     const counts = await q<{ status: string; c: number }>(
       `select status, count(*) c from stock_items where product_id = ? group by status`,
       [data.productId],
     );
-    // codes themselves are never returned — encrypted at rest, revealed only to buyers on delivery
     const items = await q<{
       id: string;
       status: string;
@@ -413,6 +418,7 @@ export const getProductStock = createServerFn({ method: "GET" })
     );
     return { product: p!, counts, items };
   });
+
 
 export const uploadStock = createServerFn({ method: "POST" })
   .inputValidator(z.object({ productId: z.string(), codes: z.string().min(1).max(200_000) }))
