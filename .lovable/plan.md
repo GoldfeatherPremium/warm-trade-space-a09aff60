@@ -45,13 +45,9 @@ This is a large batch (19 items). I'll group them into phases so each ships veri
 - ✅ Demo account block removed from `auth.tsx`; replaced bottom area with a clean Terms/Privacy link line.
 - ✅ Footer rebuilt in `shell.tsx` as a 4-column link grid: Marketplace, Trust & safety, Money, Company — all wired to existing legal stub routes.
 
-## Phase 8 — "Make everything configurable" sweep ✅ DONE (round 1)
-- ✅ Added 6 new tunable columns to `site_settings`: `credit_withdrawal_fee_pct`, `credit_withdrawal_min_fee_cents`, `attachment_max_mb`, `presence_ping_seconds`, `low_stock_threshold`, `dispute_sla_hours`.
-- ✅ Wired `credits.requestCreditWithdrawal` to settings (replaces hardcoded 2% / $1 floor).
-- ✅ Wired `attachments.addOrderAttachment` to settings (per-file MB cap) with a 50 MB hard ceiling.
-- ✅ Presence ping interval now comes from `getMe().banner.presencePingSeconds`; `useMe` reschedules dynamically.
-- ✅ Rebuilt `/admin/settings` as a 5-tab panel (General · Fees · Escrow · Credits · Chat & Listings) covering every tunable.
-- Round 2 (future): expose `low_stock_threshold` in product cards, dispute SLA in dispute lists, and add automod severity / chat rate-limit knobs.
+## Phase 8 — "Make everything configurable" sweep ✅ DONE
+- ✅ Round 1: 6 new tunable columns (`credit_withdrawal_fee_pct`, `credit_withdrawal_min_fee_cents`, `attachment_max_mb`, `presence_ping_seconds`, `low_stock_threshold`, `dispute_sla_hours`), all wired into credits/attachments/presence, 5-tab admin settings panel.
+- ✅ Round 2: Added `chat_rate_limit_per_min` + `automod_severity` columns. `chat.sendMessage` now reads both — rate cap is configurable, and admins can flip automod between **block** (hard-reject PII/off-platform attempts) and **flag-only** (let through but mark for staff review). `low_stock_threshold` + `dispute_sla_hours` now exposed via `getMe().banner` and rendered as live UI affordances: amber "ONLY N LEFT" badge on product cards, and SLA countdown / overdue badges on `/disputes` and `/admin/disputes`.
 
 ---
 

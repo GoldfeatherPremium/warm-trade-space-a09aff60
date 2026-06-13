@@ -99,18 +99,20 @@ export const sendMessage = createServerFn({ method: "POST" })
     const user = await requireUser();
     const c = await canAccessConversation(user.id, data.conversationId, isStaff(user));
     if (!c) fail("Conversation not found.");
-    // basic rate limit: max 20 messages/minute per user
+    const { getSettings } = await import("../server/core.server");
+    const settings = await getSettings();
+    const limit = Math.max(1, settings.chat_rate_limit_per_min ?? 20);
     const recent = (await q1<{ cnt: number }>(
       `select count(*) cnt from messages where sender_id = ? and created_at > ?`,
       [user.id, now() - 60_000],
     ))!.cnt;
-    if (recent >= 20) fail("You're sending messages too quickly.");
+    if (recent >= limit) fail("You're sending messages too quickly.");
 
     const flagReason = automodCheck(data.body);
     const senderIsStaff = isStaff(user);
-    // Hard-reject PII / off-platform attempts between buyer and seller.
-    // Staff are exempt so they can quote violations back to users.
-    if (flagReason && !senderIsStaff) {
+    const hardBlock = (settings.automod_severity ?? "block") === "block";
+    // Staff are exempt; otherwise apply configured severity.
+    if (flagReason && !senderIsStaff && hardBlock) {
       fail(
         `Message blocked: sharing ${flagReason} is strictly prohibited. All trades, payments and chat must stay on X-VAULT — violations forfeit escrow and result in a permanent ban.`,
       );

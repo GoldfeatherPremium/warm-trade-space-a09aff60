@@ -72,7 +72,13 @@ export function useMe() {
     me: q.data?.user ?? null,
     unreadNotifications: q.data?.unreadNotifications ?? 0,
     unreadMessages: q.data?.unreadMessages ?? 0,
-    banner: q.data?.banner ?? { announcement: null, maintenance: false, presencePingSeconds: 60 },
+    banner: q.data?.banner ?? {
+      announcement: null,
+      maintenance: false,
+      presencePingSeconds: 60,
+      lowStockThreshold: 5,
+      disputeSlaHours: 72,
+    },
     isLoading: q.isLoading,
   };
 }

@@ -127,6 +127,8 @@ export interface SiteSettings {
   presence_ping_seconds: number;
   low_stock_threshold: number;
   dispute_sla_hours: number;
+  chat_rate_limit_per_min: number;
+  automod_severity: string;
 }
 
 export async function getSettings(): Promise<SiteSettings> {

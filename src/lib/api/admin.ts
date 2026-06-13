@@ -856,6 +856,8 @@ export const updateAdminSettings = createServerFn({ method: "POST" })
       presencePingSeconds: z.number().int().min(15).max(600),
       lowStockThreshold: z.number().int().min(0).max(1000),
       disputeSlaHours: z.number().int().min(1).max(720),
+      chatRateLimitPerMin: z.number().int().min(1).max(600),
+      automodSeverity: z.enum(["block", "flag"]),
     }),
   )
   .handler(async ({ data }) => {
@@ -865,7 +867,8 @@ export const updateAdminSettings = createServerFn({ method: "POST" })
       `update site_settings set default_commission_pct = ?, withdrawal_fee_cents = ?, min_withdrawal_cents = ?,
          auto_confirm_hours = ?, payment_window_minutes = ?, maintenance_mode = ?, announcement = ?,
          credit_withdrawal_fee_pct = ?, credit_withdrawal_min_fee_cents = ?, attachment_max_mb = ?,
-         presence_ping_seconds = ?, low_stock_threshold = ?, dispute_sla_hours = ? where id = 1`,
+         presence_ping_seconds = ?, low_stock_threshold = ?, dispute_sla_hours = ?,
+         chat_rate_limit_per_min = ?, automod_severity = ? where id = 1`,
       [
         data.defaultCommissionPct,
         Math.round(data.withdrawalFeeUsdt * 100),
@@ -880,6 +883,8 @@ export const updateAdminSettings = createServerFn({ method: "POST" })
         data.presencePingSeconds,
         data.lowStockThreshold,
         data.disputeSlaHours,
+        data.chatRateLimitPerMin,
+        data.automodSeverity,
       ],
     );
     await audit(staff.id, "settings.update", "site_settings", "1", data);

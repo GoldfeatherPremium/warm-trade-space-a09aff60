@@ -52,6 +52,8 @@ export function FavoriteButton({
 }
 
 export function ProductCard({ product, priority }: { product: PublicProduct; priority?: boolean }) {
+  const { banner } = useMe();
+  const lowStockThreshold = banner?.lowStockThreshold ?? 5;
   return (
     <Link
       to="/p/$slug"
@@ -92,6 +94,13 @@ export function ProductCard({ product, priority }: { product: PublicProduct; pri
             OUT OF STOCK
           </span>
         )}
+        {product.delivery_type === "auto" &&
+          product.stock_count > 0 &&
+          product.stock_count <= lowStockThreshold && (
+            <span className="absolute top-2 right-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/90 text-black">
+              ONLY {product.stock_count} LEFT
+            </span>
+          )}
       </div>
       <div className="p-3 flex-1 flex flex-col gap-1.5">
         <h3 className="text-xs font-bold leading-tight line-clamp-2">{product.title}</h3>

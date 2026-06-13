@@ -12,7 +12,8 @@ export const Route = createFileRoute("/disputes")({
 });
 
 function DisputeCenter() {
-  const { me, isLoading } = useMe();
+  const { me, isLoading, banner } = useMe();
+  const slaHours = banner?.disputeSlaHours ?? 72;
   const { data } = useQuery({
     queryKey: ["myDisputes"],
     queryFn: () => listMyDisputes(),
@@ -69,6 +70,20 @@ function DisputeCenter() {
               >
                 {(d.status as string).replaceAll("_", " ").toUpperCase()}
               </span>
+              {d.status !== "resolved" && (() => {
+                const deadline = (d.created_at as number) + slaHours * 3600_000;
+                const remaining = deadline - Date.now();
+                const overdue = remaining < 0;
+                const hours = Math.round(Math.abs(remaining) / 3600_000);
+                return (
+                  <span
+                    className={`text-[9px] font-bold px-2 py-1 rounded ${overdue ? "bg-destructive/90 text-white" : "bg-secondary text-foreground/80"}`}
+                    title={`Staff target ${slaHours}h from open`}
+                  >
+                    {overdue ? `SLA +${hours}h` : `SLA ${hours}h left`}
+                  </span>
+                );
+              })()}
               <span className="font-mono text-accent text-sm">{usdt(d.total_cents as number)}</span>
             </Link>
           );

@@ -28,6 +28,8 @@ interface FormShape {
   presencePingSeconds: number;
   lowStockThreshold: number;
   disputeSlaHours: number;
+  chatRateLimitPerMin: number;
+  automodSeverity: "block" | "flag";
 }
 
 const DEFAULTS: FormShape = {
@@ -44,6 +46,8 @@ const DEFAULTS: FormShape = {
   presencePingSeconds: 60,
   lowStockThreshold: 5,
   disputeSlaHours: 72,
+  chatRateLimitPerMin: 20,
+  automodSeverity: "block",
 };
 
 function AdminSettings() {
@@ -68,6 +72,8 @@ function AdminSettings() {
       presencePingSeconds: (s.presence_ping_seconds as number) ?? 60,
       lowStockThreshold: (s.low_stock_threshold as number) ?? 5,
       disputeSlaHours: (s.dispute_sla_hours as number) ?? 72,
+      chatRateLimitPerMin: (s.chat_rate_limit_per_min as number) ?? 20,
+      automodSeverity: ((s.automod_severity as string) ?? "block") === "flag" ? "flag" : "block",
     });
   }, [data]);
 
@@ -206,6 +212,29 @@ function AdminSettings() {
             hint: "Products with stock at or below this number show a low-stock badge.",
             step: "1",
           })}
+          {num({
+            key: "chatRateLimitPerMin",
+            label: "Chat rate limit (messages / minute / user)",
+            hint: "Hard cap to stop spam. 20 is a sane default.",
+            step: "1",
+          })}
+          <div className="space-y-1.5">
+            <Label className="text-xs">Automod severity</Label>
+            <select
+              value={form.automodSeverity}
+              onChange={(e) =>
+                setForm({ ...form, automodSeverity: e.target.value as "block" | "flag" })
+              }
+              className="w-full h-9 rounded-md border border-border bg-background px-2 text-xs"
+            >
+              <option value="block">Block — hard-reject violating messages</option>
+              <option value="flag">Flag only — let it through, mark for staff review</option>
+            </select>
+            <p className="text-[10px] text-muted-foreground">
+              Controls what happens when a buyer↔seller message trips an automod pattern (PII, off-platform
+              payment, external links).
+            </p>
+          </div>
         </TabsContent>
       </Tabs>
 
