@@ -1014,6 +1014,14 @@ async function migrate(e: Engine): Promise<void> {
     .exec(`create index if not exists idx_reviews_product_rating on reviews(product_id, rating)`)
     .catch(() => {});
 
+  // --- Phase D (perf audit): time-range scans on the homepage pulse,
+  // admin/seller order & user listings, and analytics roll-ups ---
+  await e
+    .exec(`create index if not exists idx_orders_created on orders(created_at)`)
+    .catch(() => {});
+  await e.exec(`create index if not exists idx_orders_paid on orders(paid_at)`).catch(() => {});
+  await e.exec(`create index if not exists idx_users_created on users(created_at)`).catch(() => {});
+
   // seed a sane default set if empty
   const seeded = await e.q<{ c: number }>(`select count(*) as c from fx_rates`);
   if (!seeded[0] || Number(seeded[0].c) === 0) {
