@@ -72,6 +72,8 @@ function AdminSettings() {
       presencePingSeconds: (s.presence_ping_seconds as number) ?? 60,
       lowStockThreshold: (s.low_stock_threshold as number) ?? 5,
       disputeSlaHours: (s.dispute_sla_hours as number) ?? 72,
+      chatRateLimitPerMin: (s.chat_rate_limit_per_min as number) ?? 20,
+      automodSeverity: ((s.automod_severity as string) ?? "block") === "flag" ? "flag" : "block",
     });
   }, [data]);
 
