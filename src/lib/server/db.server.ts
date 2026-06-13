@@ -727,7 +727,37 @@ async function migrate(e: Engine): Promise<void> {
     )
     .catch(() => {});
 
-  // --- Phase 7: FX rates relative to site base currency ---
+  // --- Phase 5: Buyer credit balances + ledger ---
+  await e
+    .exec(
+      `create table if not exists buyer_credits (
+        user_id text primary key references users(id),
+        balance_cents ${big} not null default 0,
+        updated_at ${big} not null default 0
+      )`,
+    )
+    .catch(() => {});
+  await e
+    .exec(
+      `create table if not exists credit_ledger (
+        id ${dialect === "postgres" ? "bigint generated always as identity primary key" : "integer primary key autoincrement"},
+        user_id text not null,
+        order_id text,
+        type text not null,
+        amount_cents ${big} not null,
+        balance_after_cents ${big} not null,
+        source text,
+        note text,
+        actor_id text,
+        created_at ${big} not null
+      )`,
+    )
+    .catch(() => {});
+  await e
+    .exec(`create index if not exists idx_credit_ledger_user on credit_ledger(user_id, created_at)`)
+    .catch(() => {});
+
+
   await e
     .exec(
       `create table if not exists fx_rates (
