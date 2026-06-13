@@ -26,14 +26,13 @@ This is a large batch (19 items). I'll group them into phases so each ships veri
 - **SEO description override**: add `products.admin_seo_description` (long-form, admin-only) — rendered on `/p/$slug` below seller description, used in `<meta description>` and JSON-LD.
 - **Per-category commission %**: add `categories.commission_bps` (basis points). Order creation reads category override first, falls back to global `platform_fee_bps`. Admin UI in `admin.categories.tsx`.
 
-## Phase 5 — Credit system rebuild (item 16)
-This is the biggest change. New architecture:
-- New table `buyer_credits` (`user_id`, `balance_cents`, `source` enum: refund/promo/loyalty/topup, `expires_at` nullable).
-- New ledger `credit_ledger` for audit trail.
-- **Refund flow change** (`money.server.ts` `txRefund`): refund destination becomes `buyer_credits` by default, not wallet cash. Buyer can request "withdraw to original payment method" → creates a `withdrawal` against credits with admin approval (fee configurable).
-- **Checkout** (`pay.$orderId.tsx`): show "Credits available: X USDT" with toggle "Apply credits". If applied, deduct from credits first, charge remainder via USDT. Order records `credits_applied_cents`.
-- New `/account/credits` page: balance, history, withdrawal request button.
-- Admin: `/admin/credits` to manually grant/revoke + view all balances.
+## Phase 5 — Credit system rebuild (item 16) ✅ DONE
+- ✅ New tables `buyer_credits` + `credit_ledger` (audit trail with source/actor); `orders.credits_applied_cents` + `withdrawals.from_credits` flags.
+- ✅ `lifecycle.refundOrder` now credits buyer-side refunds into `buyer_credits` via new `txRefundToCredits` (seller wallet logic unchanged). Notifications redirect buyers to `/account/credits`.
+- ✅ New `src/lib/api/credits.ts`: `getMyCredits`, `payWithCredits` (full-cover instant checkout), `requestCreditWithdrawal` (2%/min $1 fee), plus admin `adminListCredits` / `adminGetUserCredits` / `adminAdjustCredits` (grant or revoke with audit reason).
+- ✅ New buyer route `/account/credits` (balance card, withdrawal form, ledger history) + admin route `/admin/credits` (search, drill-down, adjust).
+- ✅ Pay page (`pay.$orderId.tsx`) surfaces credit balance; full-cover "Pay with store credits" button, partial-cover info banner.
+- ✅ Header user menu links to "Store credits" right under Wallet.
 
 ## Phase 6 — Order snapshot + delivery proof (items 17, 18)
 - **Snapshot on order create**: in `orders.ts` checkout, freeze `products` row JSON into `orders.product_snapshot` (title, description, image, attrs, price, delivery_terms). Show on `/orders/$orderId` and `/disputes/$orderId` as "what was sold". Read-only proof.
