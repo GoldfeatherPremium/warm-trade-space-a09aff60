@@ -136,6 +136,13 @@ function VerificationRow({
           <Field label="Registration #">{row.business_registration}</Field>
         )}
         {row.id_doc_ref && <Field label="ID document ref">{row.id_doc_ref}</Field>}
+        {row.contact_phone && <Field label="Phone (staff-only)">{row.contact_phone}</Field>}
+        {row.contact_whatsapp && (
+          <Field label="WhatsApp (staff-only)">{row.contact_whatsapp}</Field>
+        )}
+        {row.contact_telegram && (
+          <Field label="Telegram (staff-only)">{row.contact_telegram}</Field>
+        )}
         {row.notes && <Field label="Notes">{row.notes}</Field>}
         {row.admin_note && <Field label="Admin note">{row.admin_note}</Field>}
       </dl>
