@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { q, q1, run } from "../server/db.server";
 import { appContext } from "../server/app.server";
-import { audit, fail, now } from "../server/core.server";
+import { audit, clearSettingsCache, fail, now } from "../server/core.server";
 import { requireStaff, requireUser } from "../server/auth.server";
 
 export interface FxRate {
@@ -127,6 +127,7 @@ export const adminSetBaseCurrency = createServerFn({ method: "POST" })
     const row = await q1(`select 1 as x from fx_rates where currency = ?`, [data.currency]);
     if (!row) fail("Currency not in rate table.");
     await run(`update site_settings set base_currency = ? where id = 1`, [data.currency]);
+    clearSettingsCache();
     await audit(user.id, "fx.set_base", "site_settings", data.currency);
     return { ok: true };
   });

@@ -2,21 +2,15 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { q1, run } from "../server/db.server";
 import { appContext } from "../server/app.server";
-import { audit, fail, hashPassword, now, uid, verifyPassword } from "../server/core.server";
+import { audit, fail, getSettings, hashPassword, now, uid, verifyPassword } from "../server/core.server";
 import { createSession, currentUser, destroySession, requireUser } from "../server/auth.server";
 import { rateLimit } from "../server/rate-limit.server";
 
 export const getMe = createServerFn({ method: "GET" }).handler(async () => {
   await appContext();
-  const settings = await q1<{
-    announcement: string | null;
-    maintenance_mode: number;
-    presence_ping_seconds: number;
-    low_stock_threshold: number;
-    dispute_sla_hours: number;
-  }>(
-    `select announcement, maintenance_mode, presence_ping_seconds, low_stock_threshold, dispute_sla_hours from site_settings where id = 1`,
-  );
+  // getSettings is cached in-isolate (30s TTL) — this avoids a DB roundtrip
+  // on every poll of the header banner / unread badges.
+  const settings = await getSettings();
   const banner = {
     announcement: settings?.announcement ?? null,
     maintenance: !!settings?.maintenance_mode,

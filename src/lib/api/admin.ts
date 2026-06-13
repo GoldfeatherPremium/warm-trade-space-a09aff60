@@ -4,6 +4,7 @@ import { q, q1, run } from "../server/db.server";
 import { appContext } from "../server/app.server";
 import {
   audit,
+  clearSettingsCache,
   fail,
   getOrCreateOrderConversation,
   notify,
@@ -909,6 +910,7 @@ export const updateAdminSettings = createServerFn({ method: "POST" })
       ],
     );
     await audit(staff.id, "settings.update", "site_settings", "1", data);
+    clearSettingsCache();
     return { ok: true };
   });
 

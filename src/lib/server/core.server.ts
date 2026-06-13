@@ -131,8 +131,24 @@ export interface SiteSettings {
   automod_severity: string;
 }
 
+// Settings are read on nearly every server function (banner, getMe, money,
+// chat rate-limit). Cache in-isolate for 30s to avoid round-tripping a small
+// constant row on every request — admin updates clear it via clearSettingsCache().
+let _settingsCache: { v: SiteSettings; at: number } | null = null;
+const SETTINGS_TTL_MS = 30_000;
+
 export async function getSettings(): Promise<SiteSettings> {
-  return (await q1<SiteSettings>(`select * from site_settings where id = 1`))!;
+  const now_ = Date.now();
+  if (_settingsCache && now_ - _settingsCache.at < SETTINGS_TTL_MS) {
+    return _settingsCache.v;
+  }
+  const v = (await q1<SiteSettings>(`select * from site_settings where id = 1`))!;
+  _settingsCache = { v, at: now_ };
+  return v;
+}
+
+export function clearSettingsCache() {
+  _settingsCache = null;
 }
 
 // ---------- chat helpers ----------
