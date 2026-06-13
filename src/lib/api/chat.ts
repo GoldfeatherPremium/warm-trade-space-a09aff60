@@ -79,10 +79,17 @@ export const getMessages = createServerFn({ method: "GET" })
           : null;
     if (col)
       await run(`update conversations set ${col} = ? where id = ?`, [now(), data.conversationId]);
-    const other = (await q1<{ username: string }>(`select username from users where id = ?`, [
-      c!.buyer_id === user.id ? c!.seller_id : c!.buyer_id,
-    ]))!;
-    return { messages, myId: user.id, otherName: other.username, orderId: c!.order_id };
+    const other = (await q1<{ username: string; last_seen_at: number }>(
+      `select username, coalesce(last_seen_at,0) as last_seen_at from users where id = ?`,
+      [c!.buyer_id === user.id ? c!.seller_id : c!.buyer_id],
+    ))!;
+    return {
+      messages,
+      myId: user.id,
+      otherName: other.username,
+      otherLastSeenAt: other.last_seen_at,
+      orderId: c!.order_id,
+    };
   });
 
 export const sendMessage = createServerFn({ method: "POST" })
