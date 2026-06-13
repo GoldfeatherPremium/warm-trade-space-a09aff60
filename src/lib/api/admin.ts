@@ -755,6 +755,9 @@ export const adminSaveCategory = createServerFn({ method: "POST" })
       );
     }
     await audit(staff.id, "category.save", "category", data.categoryId ?? data.slug);
+    // Reflect taxonomy edits immediately on home + catalog surfaces
+    invalidateCache("home:v1");
+    invalidateCache("catalog-items:v1");
     return { ok: true };
   });
 
@@ -1102,6 +1105,7 @@ export const adminSaveItem = createServerFn({ method: "POST" })
     }
     await audit(staff.id, "catalog_item.save", "catalog_item", id);
     invalidateCache("catalog-items:v1"); // reflect taxonomy edits immediately
+    invalidateCache("home:v1");
     return { itemId: id };
   });
 
@@ -1149,5 +1153,9 @@ export const reviewItemSuggestion = createServerFn({ method: "POST" })
       "/seller/new-product",
     );
     await audit(staff.id, `item_suggestion.${status}`, "item_suggestion", data.suggestionId);
+    if (data.approve) {
+      invalidateCache("catalog-items:v1");
+      invalidateCache("home:v1");
+    }
     return { ok: true };
   });
