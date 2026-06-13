@@ -164,13 +164,14 @@ async function deliverAutoStock(orderId: string): Promise<void> {
   const codes = reserved.map((r) => decryptStock(r.content_encrypted));
   const t = now();
   await run(
-    `update stock_items set status = 'delivered', delivered_at = ? where order_id = ? and status = 'reserved'`,
-    [t, orderId],
+    `update stock_items set status = 'delivered', delivered_at = ?, locked_at = ? where order_id = ? and status = 'reserved'`,
+    [t, t, orderId],
   );
   await run(
-    `insert into order_deliveries (id, order_id, type, payload, delivered_by, created_at) values (?,?, 'auto', ?, null, ?)`,
-    [uid(), orderId, codes.join("\n"), t],
+    `insert into order_deliveries (id, order_id, type, payload, delivered_by, created_at, locked_at) values (?,?, 'auto', ?, null, ?, ?)`,
+    [uid(), orderId, codes.join("\n"), t, t],
   );
+
 
   const settings = await getSettings();
   const autoConfirmAt = t + settings.auto_confirm_hours * 3600_000;
