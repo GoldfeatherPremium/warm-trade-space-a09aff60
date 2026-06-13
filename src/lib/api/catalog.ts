@@ -61,7 +61,24 @@ export interface PublicProduct {
   expires_at: number | null;
   featured_until: number | null;
   is_promoted: boolean;
+  category_attrs: Record<string, string> | null;
+  admin_seo_description: string | null;
+  submission_schema: CategorySubmissionSchema | null;
   seller: PublicSeller;
+}
+
+export interface CategorySubmissionField {
+  key: string;
+  label: string;
+  type: "text" | "textarea" | "select" | "number";
+  options?: string[];
+  required?: boolean;
+  help?: string;
+}
+export interface CategorySubmissionSchema {
+  sellerFields?: CategorySubmissionField[];
+  buyerFields?: CategorySubmissionField[];
+  deliveryMethods?: Array<{ value: string; label: string }>;
 }
 
 const productSelect = `
@@ -69,7 +86,8 @@ const productSelect = `
          coalesce(p.warranty_hours, c.default_warranty_hours) as warranty_hours,
          p.price_cents, p.min_qty, p.max_qty, p.stock_count, p.region, p.platform, p.required_info,
          p.sold_count, p.views, p.status, p.category_id, c.name as category_name, c.slug as category_slug,
-         c.risk_tier,
+         c.risk_tier, c.submission_schema as category_submission_schema,
+         p.category_attrs, p.admin_seo_description,
          u.id as s_id, u.username as s_username, u.seller_level as s_level, u.rating as s_rating,
          u.rating_count as s_rating_count, u.total_sales as s_total_sales,
          u.completion_rate as s_completion, u.vacation_mode as s_vacation, u.created_at as s_created,
