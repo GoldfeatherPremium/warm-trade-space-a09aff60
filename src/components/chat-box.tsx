@@ -43,7 +43,15 @@ export function ChatBox({
     <div
       className={`flex flex-col bg-card border border-border rounded-lg overflow-hidden ${className ?? ""}`}
     >
+      <div className="bg-destructive/15 border-b border-destructive/30 text-destructive px-3 py-2 text-[10px] font-bold flex items-start gap-2">
+        <ShieldAlert className="size-3.5 shrink-0 mt-0.5" />
+        <span className="leading-relaxed">
+          NEVER share phone, email, Telegram/Discord/WhatsApp, payment links, wallet addresses or account credentials here.
+          All chats are monitored and logged. Violations forfeit escrow + permanent ban for both parties.
+        </span>
+      </div>
       <div className="flex-1 overflow-y-auto p-3 space-y-2 min-h-48 max-h-96">
+
         {data?.messages.length === 0 && (
           <p className="text-xs text-muted-foreground text-center py-6">
             No messages yet. Say hi 👋
