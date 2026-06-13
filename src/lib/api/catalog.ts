@@ -156,20 +156,22 @@ export const getHomeData = createServerFn({ method: "GET" }).handler(async () =>
       product_count: number;
     }>(
       `select c.id, c.name, c.slug, c.icon, c.default_warranty_hours, c.commission_pct, c.risk_tier,
-              (select count(*) from products p where p.category_id = c.id and p.status = 'active') as product_count
+              (select count(*) from products p join users u on u.id = p.seller_id
+                 where p.category_id = c.id and p.status = 'active'
+                   and u.vacation_mode = 0 and u.is_banned = 0) as product_count
        from categories c where c.is_active = 1 order by c.sort`,
     ),
     q(
-      `${productSelect} where p.status = 'active'
+      `${productSelect} where p.status = 'active' and ${PUBLIC_SELLER_COND}
        order by (case when p.featured_until is not null and p.featured_until > ? then 0 else 1 end),
                 p.sold_count desc, p.views desc limit 8`,
       [Date.now()],
     ),
-    q(`${productSelect} where p.status = 'active' order by p.created_at desc limit 8`),
+    q(`${productSelect} where p.status = 'active' and ${PUBLIC_SELLER_COND} order by p.created_at desc limit 8`),
     q<PublicSeller>(
       `select id, username, seller_level, rating, rating_count, total_sales, completion_rate, vacation_mode, created_at,
               verification_tier, trust_score
-       from users where seller_status = 'approved' and is_banned = 0 order by trust_score desc, total_sales desc limit 6`,
+       from users where seller_status = 'approved' and is_banned = 0 and vacation_mode = 0 order by trust_score desc, total_sales desc limit 6`,
     ),
     q<{ product_title: string; total_cents: number; created_at: number; buyer: string }>(
       `select o.product_title, o.total_cents, o.created_at, u.username as buyer
