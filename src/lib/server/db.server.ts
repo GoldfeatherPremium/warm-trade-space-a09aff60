@@ -679,6 +679,8 @@ async function migrate(e: Engine): Promise<void> {
     // --- Phase 5: buyer credits (refunds + promos go here, not into wallet cash) ---
     `alter table orders add column credits_applied_cents ${big} not null default 0`,
     `alter table withdrawals add column from_credits integer not null default 0`,
+    // --- Phase 6: frozen product snapshot for order proof ---
+    `alter table orders add column product_snapshot text`,
   ];
   for (const stmt of addColumns) {
     await e.exec(stmt).catch(() => {}); // already exists
