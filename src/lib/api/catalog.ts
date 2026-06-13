@@ -357,7 +357,7 @@ export const getRelatedProducts = createServerFn({ method: "GET" })
     // Prefer same catalog item, then same category. Exclude self & out-of-stock.
     const rows = await q(
       `${productSelect}
-       where p.status = 'active' and p.id <> ?
+       where p.status = 'active' and ${PUBLIC_SELLER_COND} and p.id <> ?
          and (p.item_id = ? or p.category_id = ?)
        order by (case when p.item_id = ? then 0 else 1 end),
                 p.sold_count desc, u.rating desc
