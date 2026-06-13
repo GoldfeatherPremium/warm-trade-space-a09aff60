@@ -289,6 +289,12 @@ export const saveProduct = createServerFn({ method: "POST" })
       );
     }
     await attachImagesToProduct(id, user.id, data.imageIds);
+    await run(`update products set category_attrs = ? where id = ?`, [
+      data.categoryAttrs && Object.keys(data.categoryAttrs).length > 0
+        ? JSON.stringify(data.categoryAttrs)
+        : null,
+      id,
+    ]);
     await audit(user.id, "product.create", "product", id);
     return { productId: id };
   });
