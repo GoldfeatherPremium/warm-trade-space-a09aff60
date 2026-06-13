@@ -82,6 +82,7 @@ function AdminProductEdit() {
           title: form.title,
           description: form.description,
           categoryId: form.categoryId,
+          itemId: form.itemId || null,
           priceUsdt: parseFloat(form.priceUsdt),
           warrantyHours: form.warrantyHours ? Number(form.warrantyHours) : null,
           minQty: Number(form.minQty),
