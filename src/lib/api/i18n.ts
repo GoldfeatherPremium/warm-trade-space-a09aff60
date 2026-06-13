@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { q, q1, run } from "../server/db.server";
 import { appContext } from "../server/app.server";
-import { audit, fail, now } from "../server/core.server";
+import { audit, clearSettingsCache, fail, now } from "../server/core.server";
 import { requireStaff, requireUser } from "../server/auth.server";
 
 export interface FxRate {
