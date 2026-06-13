@@ -2,12 +2,12 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { q, q1, run } from "../server/db.server";
 import { appContext } from "../server/app.server";
-import { audit, fail, now, uid } from "../server/core.server";
+import { audit, fail, getSettings, now, uid } from "../server/core.server";
 import { isStaff, requireUser } from "../server/auth.server";
 import { rateLimit } from "../server/rate-limit.server";
 import { getOrderRow } from "../server/lifecycle.server";
 
-const MAX_BYTES = 5 * 1024 * 1024; // 5 MB raw
+const MAX_BYTES_HARD_CAP = 50 * 1024 * 1024; // 50 MB absolute ceiling
 const ALLOWED_MIME = [
   "image/png",
   "image/jpeg",
