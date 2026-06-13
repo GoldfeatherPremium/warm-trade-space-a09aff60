@@ -160,9 +160,8 @@ function SellerStorePage() {
                 {s.store_description}
               </p>
             )}
-            {/* External social links are intentionally hidden from buyers.
-                X-VAULT keeps all communication on-platform for safety + escrow. */}
-            {socials.length > 0 && false && null}
+            {/* External social links intentionally hidden from buyers — all comms stay on X-VAULT. */}
+
 
           </div>
         </div>
