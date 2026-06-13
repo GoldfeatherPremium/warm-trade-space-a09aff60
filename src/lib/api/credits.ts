@@ -96,8 +96,11 @@ export const requestCreditWithdrawal = createServerFn({ method: "POST" })
     const user = await requireUser();
     rateLimit({ key: `creditwd:${user.id}`, limit: 5, windowMs: 60_000 });
     const c = await getBuyerCredits(user.id);
-    // configurable fee: flat 200 cents for now, surface in /admin/settings later
-    const feeCents = Math.max(100, Math.round(data.amountCents * 0.02));
+    const settings = await getSettings();
+    const feeCents = Math.max(
+      settings.credit_withdrawal_min_fee_cents,
+      Math.round(data.amountCents * (settings.credit_withdrawal_fee_pct / 100)),
+    );
     if (c.balance_cents < data.amountCents + feeCents)
       fail(
         `Insufficient credits to cover amount + ${(feeCents / 100).toFixed(2)} USDT fee.`,
