@@ -12,13 +12,17 @@ export const getMe = createServerFn({ method: "GET" }).handler(async () => {
     announcement: string | null;
     maintenance_mode: number;
     presence_ping_seconds: number;
+    low_stock_threshold: number;
+    dispute_sla_hours: number;
   }>(
-    `select announcement, maintenance_mode, presence_ping_seconds from site_settings where id = 1`,
+    `select announcement, maintenance_mode, presence_ping_seconds, low_stock_threshold, dispute_sla_hours from site_settings where id = 1`,
   );
   const banner = {
     announcement: settings?.announcement ?? null,
     maintenance: !!settings?.maintenance_mode,
     presencePingSeconds: settings?.presence_ping_seconds ?? 60,
+    lowStockThreshold: settings?.low_stock_threshold ?? 5,
+    disputeSlaHours: settings?.dispute_sla_hours ?? 72,
   };
   const user = await currentUser();
   if (!user) return { user: null, unreadNotifications: 0, unreadMessages: 0, banner };

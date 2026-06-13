@@ -692,6 +692,9 @@ async function migrate(e: Engine): Promise<void> {
     `alter table site_settings add column presence_ping_seconds integer not null default 60`,
     `alter table site_settings add column low_stock_threshold integer not null default 5`,
     `alter table site_settings add column dispute_sla_hours integer not null default 72`,
+    // --- Phase 8 round 2: automod severity + chat rate limit knob ---
+    `alter table site_settings add column chat_rate_limit_per_min integer not null default 20`,
+    `alter table site_settings add column automod_severity text not null default 'block'`,
   ];
   for (const stmt of addColumns) {
     await e.exec(stmt).catch(() => {}); // already exists
