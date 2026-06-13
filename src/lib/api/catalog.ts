@@ -192,13 +192,19 @@ export const getHomeData = createServerFn({ method: "GET" }).handler(async () =>
         commission_pct: number;
         risk_tier: string;
         product_count: number;
+        requires_subscription: number;
+        allowed_durations: string;
+        admin_description: string | null;
+        delivery_kind: string;
       }>(
         `select c.id, c.name, c.slug, c.icon, c.default_warranty_hours, c.commission_pct, c.risk_tier,
+              c.requires_subscription, c.allowed_durations, c.admin_description, c.delivery_kind,
               (select count(*) from products p join users u on u.id = p.seller_id
                  where p.category_id = c.id and p.status = 'active'
                    and u.vacation_mode = 0 and u.is_banned = 0) as product_count
        from categories c where c.is_active = 1 order by c.sort`,
       ),
+
       q(
         `${productSelect} where p.status = 'active' and ${PUBLIC_SELLER_COND}
        order by (case when p.featured_until is not null and p.featured_until > ? then 0 else 1 end),
@@ -586,11 +592,29 @@ export const getCategorySchema = createServerFn({ method: "GET" })
   .inputValidator(z.object({ categoryId: z.string() }))
   .handler(async ({ data }) => {
     await appContext();
-    const c = await q1<{ id: string; name: string; submission_schema: string | null }>(
-      `select id, name, submission_schema from categories where id = ?`,
+    const c = await q1<{
+      id: string;
+      name: string;
+      submission_schema: string | null;
+      requires_subscription: number;
+      allowed_durations: string;
+      admin_description: string | null;
+      delivery_kind: string;
+    }>(
+      `select id, name, submission_schema, requires_subscription, allowed_durations,
+              admin_description, delivery_kind from categories where id = ?`,
       [data.categoryId],
     );
-    if (!c) return { schema: null as CategorySubmissionSchema | null };
+    if (!c)
+      return {
+        schema: null as CategorySubmissionSchema | null,
+        config: null as null | {
+          requiresSubscription: boolean;
+          allowedDurations: string[];
+          adminDescription: string | null;
+          deliveryKind: string;
+        },
+      };
     let schema: CategorySubmissionSchema | null = null;
     if (c.submission_schema) {
       try {
@@ -599,8 +623,20 @@ export const getCategorySchema = createServerFn({ method: "GET" })
         /* ignore */
       }
     }
-    return { schema };
+    return {
+      schema,
+      config: {
+        requiresSubscription: !!c.requires_subscription,
+        allowedDurations: (c.allowed_durations || "")
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+        adminDescription: c.admin_description ?? null,
+        deliveryKind: c.delivery_kind || "code",
+      },
+    };
   });
+
 
 export const quickSearch = createServerFn({ method: "GET" })
   .inputValidator(z.object({ q: z.string().max(100) }))

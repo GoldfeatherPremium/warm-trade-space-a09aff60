@@ -109,7 +109,14 @@ const productInput = z.object({
   subscriptionSeatsTotal: z.number().int().min(1).max(50).default(1),
   downloadSizeMb: z.number().int().min(0).max(50_000).default(0),
   categoryAttrs: z.record(z.string(), z.string().max(2000)).optional(),
+  subscriptionDuration: z
+    .enum(["7d", "14d", "1m", "3m", "6m", "12m", "lifetime"])
+    .nullable()
+    .optional(),
+  maxOrdersAtOnce: z.number().int().min(1).max(1000).default(10),
+  manualStock: z.number().int().min(0).max(1_000_000).nullable().optional(),
 });
+
 
 const MAX_ACTIVE_LISTINGS: Record<number, number> = { 1: 10, 2: 25, 3: 60, 4: 150, 5: 100_000 };
 
@@ -147,10 +154,26 @@ export const saveProduct = createServerFn({ method: "POST" })
     await appContext();
     const user = await requireSeller();
     if (data.minQty > data.maxQty) fail("Min quantity can't exceed max quantity.");
-    const cat = await q1(`select id from categories where id = ? and is_active = 1`, [
-      data.categoryId,
-    ]);
+    const cat = await q1<{
+      id: string;
+      requires_subscription: number;
+      allowed_durations: string;
+    }>(
+      `select id, requires_subscription, allowed_durations from categories where id = ? and is_active = 1`,
+      [data.categoryId],
+    );
     if (!cat) fail("Invalid category.");
+    if (cat!.requires_subscription) {
+      const allowed = (cat!.allowed_durations || "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (!data.subscriptionDuration)
+        fail("This category requires you to pick a subscription duration.");
+      if (allowed.length > 0 && !allowed.includes(data.subscriptionDuration as string))
+        fail("Selected subscription duration is not allowed for this category.");
+    }
+
     let itemId: string | null = null;
     if (data.itemId) {
       const item = await q1(`select id from catalog_items where id = ? and is_active = 1`, [
@@ -226,9 +249,19 @@ export const saveProduct = createServerFn({ method: "POST" })
           : null,
         data.productId,
       ]);
+      await run(
+        `update products set subscription_duration = ?, max_orders_at_once = ?, manual_stock = ? where id = ?`,
+        [
+          data.subscriptionDuration ?? null,
+          data.maxOrdersAtOnce,
+          data.manualStock ?? null,
+          data.productId,
+        ],
+      );
       await audit(user.id, "product.update", "product", data.productId);
       return { productId: data.productId };
     }
+
 
     const activeCount = (await q1<{ c: number }>(
       `select count(*) c from products where seller_id = ? and status in ('active','pending_review','out_of_stock')`,
@@ -295,7 +328,17 @@ export const saveProduct = createServerFn({ method: "POST" })
         : null,
       id,
     ]);
+    await run(
+      `update products set subscription_duration = ?, max_orders_at_once = ?, manual_stock = ? where id = ?`,
+      [
+        data.subscriptionDuration ?? null,
+        data.maxOrdersAtOnce,
+        data.manualStock ?? null,
+        id,
+      ],
+    );
     await audit(user.id, "product.create", "product", id);
+
     return { productId: id };
   });
 
@@ -434,12 +477,21 @@ export const removeStockItem = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await appContext();
     const user = await requireSeller();
-    const s = await q1<{ id: string; status: string; product_id: string; seller_id: string }>(
-      `select s.id, s.status, s.product_id, p.seller_id from stock_items s join products p on p.id = s.product_id where s.id = ?`,
+    const s = await q1<{
+      id: string;
+      status: string;
+      product_id: string;
+      seller_id: string;
+      locked_at: number | null;
+    }>(
+      `select s.id, s.status, s.product_id, p.seller_id, s.locked_at from stock_items s join products p on p.id = s.product_id where s.id = ?`,
       [data.stockItemId],
     );
     if (!s || s.seller_id !== user.id) fail("Stock item not found.");
+    if (s!.locked_at)
+      fail("This item was already delivered to a buyer and can no longer be modified.");
     if (s!.status !== "available") fail("Only unsold codes can be removed.");
+
     await run(`update stock_items set status = 'invalid' where id = ?`, [data.stockItemId]);
     await run(
       `update products set stock_count = (select count(*) from stock_items where product_id = ? and status = 'available') where id = ?`,

@@ -34,12 +34,15 @@ function AdminProductEdit() {
     warrantyHours: "",
     minQty: 1,
     maxQty: 50,
+    maxOrdersAtOnce: 10,
+    subscriptionDuration: "" as "" | "7d" | "14d" | "1m" | "3m" | "6m" | "12m" | "lifetime",
     region: "",
     platform: "",
     requiredInfo: "",
     adminSeoDescription: "",
     status: "active" as "active" | "paused" | "rejected" | "out_of_stock" | "pending_review",
   });
+
   const [categoryAttrs, setCategoryAttrs] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -54,12 +57,15 @@ function AdminProductEdit() {
       warrantyHours: p.warranty_hours ? String(p.warranty_hours) : "",
       minQty: (p.min_qty as number) ?? 1,
       maxQty: (p.max_qty as number) ?? 50,
+      maxOrdersAtOnce: (p.max_orders_at_once as number) ?? 10,
+      subscriptionDuration: ((p.subscription_duration as string) ?? "") as never,
       region: (p.region as string) ?? "",
       platform: (p.platform as string) ?? "",
       requiredInfo: (p.required_info as string) ?? "",
       adminSeoDescription: (p.admin_seo_description as string) ?? "",
       status: (p.status as never) ?? "active",
     });
+
     if (p.category_attrs) {
       try {
         setCategoryAttrs(JSON.parse(p.category_attrs as string) as Record<string, string>);
@@ -89,6 +95,8 @@ function AdminProductEdit() {
           warrantyHours: form.warrantyHours ? Number(form.warrantyHours) : null,
           minQty: Number(form.minQty),
           maxQty: Number(form.maxQty),
+          maxOrdersAtOnce: Number(form.maxOrdersAtOnce),
+          subscriptionDuration: form.subscriptionDuration ? form.subscriptionDuration : null,
           region: form.region || undefined,
           platform: form.platform || undefined,
           requiredInfo: form.requiredInfo || undefined,
@@ -96,6 +104,7 @@ function AdminProductEdit() {
           categoryAttrs: Object.keys(categoryAttrs).length ? categoryAttrs : undefined,
           status: form.status,
         },
+
       }),
     onSuccess: () => {
       toast.success("Product updated.");
@@ -294,7 +303,36 @@ function AdminProductEdit() {
             onChange={(e) => setForm({ ...form, maxQty: Number(e.target.value) })}
           />
         </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Max orders per single checkout</Label>
+          <Input
+            type="number"
+            min={1}
+            value={form.maxOrdersAtOnce}
+            onChange={(e) => setForm({ ...form, maxOrdersAtOnce: Number(e.target.value) })}
+          />
+        </div>
+        {schema?.config?.requiresSubscription && (
+          <div className="space-y-1.5">
+            <Label className="text-xs">Subscription duration</Label>
+            <select
+              value={form.subscriptionDuration}
+              onChange={(e) =>
+                setForm({ ...form, subscriptionDuration: e.target.value as never })
+              }
+              className="w-full bg-secondary border border-border rounded-md px-2 py-2 text-xs h-9"
+            >
+              <option value="">— Use seller's pick —</option>
+              {(schema?.config?.allowedDurations ?? []).map((d) => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
+
 
       <Button type="submit" disabled={save.isPending}>
         {save.isPending ? "Saving…" : "Save changes"}
