@@ -29,6 +29,16 @@ const SCHEMA_EXAMPLE = `{
   ]
 }`;
 
+const DURATION_OPTIONS = ["7d", "14d", "1m", "3m", "6m", "12m", "lifetime"] as const;
+type Duration = (typeof DURATION_OPTIONS)[number];
+const DELIVERY_KINDS = [
+  { value: "code", label: "Code / gift card code (bulk codes)" },
+  { value: "credentials", label: "Account credentials (email + password)" },
+  { value: "invite", label: "Invite sent to buyer email" },
+  { value: "giftcard_image", label: "Gift card image upload" },
+  { value: "manual_text", label: "Manual text delivery (per-order)" },
+] as const;
+
 const EMPTY = {
   categoryId: undefined as string | undefined,
   name: "",
@@ -39,7 +49,12 @@ const EMPTY = {
   riskTier: "normal" as "normal" | "high",
   isActive: true,
   submissionSchema: "",
+  requiresSubscription: false,
+  allowedDurations: [] as Duration[],
+  adminDescription: "",
+  deliveryKind: "code" as (typeof DELIVERY_KINDS)[number]["value"],
 };
+
 
 function AdminCategories() {
   const qc = useQueryClient();
