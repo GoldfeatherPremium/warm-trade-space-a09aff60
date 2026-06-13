@@ -704,6 +704,15 @@ export const adminSaveCategory = createServerFn({ method: "POST" })
       riskTier: z.enum(["normal", "high"]),
       isActive: z.boolean(),
       submissionSchema: z.string().max(20_000).optional(),
+      // Phase 13 — admin-configurable category surface
+      requiresSubscription: z.boolean().default(false),
+      allowedDurations: z.array(z.enum(["7d", "14d", "1m", "3m", "6m", "12m", "lifetime"]))
+        .max(7)
+        .default([]),
+      adminDescription: z.string().max(8000).optional(),
+      deliveryKind: z
+        .enum(["code", "credentials", "invite", "giftcard_image", "manual_text"])
+        .default("code"),
     }),
   )
   .handler(async ({ data }) => {
@@ -720,9 +729,13 @@ export const adminSaveCategory = createServerFn({ method: "POST" })
         fail("Submission schema must be valid JSON.");
       }
     }
+    const allowedCsv = data.allowedDurations.join(",");
+    const adminDesc = data.adminDescription?.trim() || null;
     if (data.categoryId) {
       await run(
-        `update categories set name = ?, slug = ?, icon = ?, default_warranty_hours = ?, commission_pct = ?, risk_tier = ?, is_active = ?, submission_schema = ? where id = ?`,
+        `update categories set name = ?, slug = ?, icon = ?, default_warranty_hours = ?, commission_pct = ?, risk_tier = ?, is_active = ?, submission_schema = ?,
+           requires_subscription = ?, allowed_durations = ?, admin_description = ?, delivery_kind = ?
+         where id = ?`,
         [
           data.name,
           data.slug,
@@ -732,6 +745,10 @@ export const adminSaveCategory = createServerFn({ method: "POST" })
           data.riskTier,
           data.isActive ? 1 : 0,
           schema,
+          data.requiresSubscription ? 1 : 0,
+          allowedCsv,
+          adminDesc,
+          data.deliveryKind,
           data.categoryId,
         ],
       );
@@ -739,8 +756,9 @@ export const adminSaveCategory = createServerFn({ method: "POST" })
       if (await q1(`select 1 as x from categories where slug = ?`, [data.slug]))
         fail("Slug already exists.");
       await run(
-        `insert into categories (id, name, slug, icon, sort, default_warranty_hours, commission_pct, risk_tier, is_active, submission_schema)
-         values (?,?,?,?, (select coalesce(max(sort),0)+1 from categories), ?,?,?,?,?)`,
+        `insert into categories (id, name, slug, icon, sort, default_warranty_hours, commission_pct, risk_tier, is_active, submission_schema,
+           requires_subscription, allowed_durations, admin_description, delivery_kind)
+         values (?,?,?,?, (select coalesce(max(sort),0)+1 from categories), ?,?,?,?,?,?,?,?,?)`,
         [
           uid(),
           data.name,
@@ -751,6 +769,10 @@ export const adminSaveCategory = createServerFn({ method: "POST" })
           data.riskTier,
           data.isActive ? 1 : 0,
           schema,
+          data.requiresSubscription ? 1 : 0,
+          allowedCsv,
+          adminDesc,
+          data.deliveryKind,
         ],
       );
     }
@@ -758,6 +780,7 @@ export const adminSaveCategory = createServerFn({ method: "POST" })
     // Reflect taxonomy edits immediately on home + catalog surfaces
     invalidateCache("home:v1");
     invalidateCache("catalog-items:v1");
+
     return { ok: true };
   });
 
