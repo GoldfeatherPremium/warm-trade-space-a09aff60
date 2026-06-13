@@ -271,7 +271,7 @@ export const browseProducts = createServerFn({ method: "GET" })
   )
   .handler(async ({ data }) => {
     await appContext();
-    const where: string[] = [`p.status = 'active'`];
+    const where: string[] = [`p.status = 'active'`, PUBLIC_SELLER_COND];
     const params: Array<string | number> = [];
     if (data.category) {
       where.push(`c.slug = ?`);
