@@ -111,8 +111,13 @@ function SellerStorePage() {
     );
 
   const s = data.seller;
-  const featured = [...data.products].sort((a, b) => b.sold_count - a.sold_count).slice(0, 4);
-  const latest = [...data.products].slice(0, 8);
+  // Hide all listings from buyers while the seller is on vacation. Their
+  // storefront stays reachable (so direct links don't 404) but no products
+  // appear for sale until they toggle vacation mode off.
+  const visibleProducts = s.vacation_mode ? [] : data.products;
+  const featured = [...visibleProducts].sort((a, b) => b.sold_count - a.sold_count).slice(0, 4);
+  const latest = [...visibleProducts].slice(0, 8);
+  
   
 
   return (
