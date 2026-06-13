@@ -203,41 +203,69 @@ export function SiteHeader() {
 }
 
 export function SiteFooter() {
+  const sections: Array<{ heading: string; links: Array<{ label: string; to: string }> }> = [
+    {
+      heading: "Marketplace",
+      links: [
+        { label: "Browse listings", to: "/browse" },
+        { label: "Top sellers", to: "/sellers" },
+        { label: "Become a seller", to: "/sell" },
+      ],
+    },
+    {
+      heading: "Trust & safety",
+      links: [
+        { label: "How escrow works", to: "/legal/escrow" },
+        { label: "Buyer protection", to: "/legal/buyer-protection" },
+        { label: "Prohibited items", to: "/legal/prohibited" },
+        { label: "Dispute resolution", to: "/disputes" },
+      ],
+    },
+    {
+      heading: "Money",
+      links: [
+        { label: "Fees & commissions", to: "/legal/fees" },
+        { label: "Credits & refunds", to: "/legal/credits" },
+        { label: "Payouts & withdrawals", to: "/legal/payouts" },
+      ],
+    },
+    {
+      heading: "Company",
+      links: [
+        { label: "About X-VAULT", to: "/about" },
+        { label: "Contact & support", to: "/contact" },
+        { label: "Terms of service", to: "/legal/terms" },
+        { label: "Privacy policy", to: "/legal/privacy" },
+      ],
+    },
+  ];
   return (
-    <footer className="bg-secondary/20 border-t border-border px-4 py-10 mt-12">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <footer className="bg-secondary/20 border-t border-border px-4 py-12 mt-12">
+      <div className="max-w-6xl mx-auto space-y-8">
         <div className="flex items-center gap-2">
           <ShieldCheck className="size-5 text-accent" />
           <span className="font-display text-2xl">X-VAULT</span>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-8 text-xs text-foreground/70">
-          <div className="space-y-2">
-            <h4 className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">
-              Marketplace
-            </h4>
-            <p>Escrow-protected trades</p>
-            <p>USDT payments (TRC-20 / BEP-20)</p>
-            <p>Instant auto-delivery</p>
-          </div>
-          <div className="space-y-2">
-            <h4 className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">
-              Sellers
-            </h4>
-            <p>8% base commission</p>
-            <p>Seller levels & limits</p>
-            <p>Fast USDT payouts</p>
-          </div>
-          <div className="space-y-2">
-            <h4 className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">
-              Trust
-            </h4>
-            <p>Warranty on every order</p>
-            <p>Dispute resolution team</p>
-            <p>Prohibited items policy enforced</p>
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-xs">
+          {sections.map((s) => (
+            <div key={s.heading} className="space-y-2">
+              <h4 className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">
+                {s.heading}
+              </h4>
+              <ul className="space-y-1.5">
+                {s.links.map((l) => (
+                  <li key={l.to}>
+                    <a href={l.to} className="text-foreground/70 hover:text-foreground transition">
+                      {l.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
         <p className="text-[10px] text-muted-foreground text-center pt-6 border-t border-border/60 tracking-wide">
-          © 2026 X-VAULT MARKETPLACE · DEMO BUILD — USDT PAYMENTS SIMULATED
+          © 2026 X-VAULT MARKETPLACE · Escrow-protected digital goods · All chats are monitored — never share personal info off-platform.
         </p>
       </div>
     </footer>
