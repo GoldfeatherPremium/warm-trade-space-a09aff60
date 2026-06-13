@@ -170,6 +170,10 @@ function VerificationPage() {
             toast.error("Legal name and country are required");
             return;
           }
+          if (!contactPhone || contactPhone.trim().length < 5) {
+            toast.error("A contact phone number is required (staff-only).");
+            return;
+          }
           apply.mutate();
         }}
         className="bg-card border border-border rounded-lg p-4 space-y-3"
@@ -195,6 +199,34 @@ function VerificationPage() {
             onChange={setIdRef}
             placeholder="e.g. upload link, passport number prefix"
           />
+          <div className="rounded-md border border-primary/30 bg-primary/5 p-3 space-y-3">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-primary">
+              Staff-only contact channels
+            </p>
+            <p className="text-[10px] text-muted-foreground -mt-2">
+              Used by X-VAULT trust & safety for compliance / payout verification. Never shown to buyers.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <Input
+                label="Phone *"
+                value={contactPhone}
+                onChange={setContactPhone}
+                placeholder="+1 555 123 4567"
+              />
+              <Input
+                label="WhatsApp"
+                value={contactWhatsapp}
+                onChange={setContactWhatsapp}
+                placeholder="+1 555 123 4567"
+              />
+              <Input
+                label="Telegram"
+                value={contactTelegram}
+                onChange={setContactTelegram}
+                placeholder="@handle"
+              />
+            </div>
+          </div>
           <label className="block">
             <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
               Notes for reviewer
