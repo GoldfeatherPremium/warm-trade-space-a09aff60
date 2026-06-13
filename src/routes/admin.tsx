@@ -25,6 +25,7 @@ const GROUPS: NavGroup[] = [
       { to: "/admin/disputes", label: "Disputes", hint: "Open cases" },
       { to: "/admin/risk", label: "Risk & fraud", hint: "Held orders & velocity rules" },
       { to: "/admin/moderation", label: "Chat moderation", hint: "Flagged messages" },
+      { to: "/admin/chats", label: "Chat monitor", hint: "All conversations" },
     ],
   },
   {
