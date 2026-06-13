@@ -164,6 +164,7 @@ function ProductPage() {
   const { me } = useMe();
   const [qty, setQty] = useState(1);
   const [buyerInfo, setBuyerInfo] = useState("");
+  const [buyerExtra, setBuyerExtra] = useState<Record<string, string>>({});
   const [variantId, setVariantId] = useState<string | null>(null);
   const [couponInput, setCouponInput] = useState("");
   const [coupon, setCoupon] = useState<{ code: string; pctOff: number } | null>(null);
