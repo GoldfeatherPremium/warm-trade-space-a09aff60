@@ -507,6 +507,17 @@ function ProductPage() {
               </div>
             )}
 
+            {(p.submission_schema?.buyerFields?.length ?? 0) > 0 && (
+              <div className="space-y-2 pt-1 border-t border-border">
+                <p className="text-[11px] font-bold">Required at checkout</p>
+                <DynamicFields
+                  fields={p.submission_schema!.buyerFields!}
+                  values={buyerExtra}
+                  onChange={setBuyerExtra}
+                />
+              </div>
+            )}
+
             <div className="flex gap-2">
               <input
                 value={couponInput}
