@@ -4,6 +4,7 @@ import { q, q1, run } from "../server/db.server";
 import { appContext } from "../server/app.server";
 import {
   audit,
+  clearSettingsCache,
   fail,
   getOrCreateOrderConversation,
   notify,
