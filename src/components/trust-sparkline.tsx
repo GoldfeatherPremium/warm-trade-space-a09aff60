@@ -44,11 +44,7 @@ export function TrustSparkline({
   const delta = Math.round((last - first) * 10) / 10;
   const Trend = delta > 0.2 ? TrendingUp : delta < -0.2 ? TrendingDown : Minus;
   const trendCls =
-    delta > 0.2
-      ? "text-emerald-400"
-      : delta < -0.2
-        ? "text-destructive"
-        : "text-muted-foreground";
+    delta > 0.2 ? "text-emerald-400" : delta < -0.2 ? "text-destructive" : "text-muted-foreground";
 
   return (
     <div
@@ -56,9 +52,17 @@ export function TrustSparkline({
       title={`Trust trend over the last ${days} days`}
     >
       <svg width={w} height={h} className="opacity-90">
-        <path d={path} fill="none" stroke="currentColor" strokeWidth={1.5} className="text-primary" />
+        <path
+          d={path}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.5}
+          className="text-primary"
+        />
       </svg>
-      <span className={`inline-flex items-center gap-0.5 text-[10px] font-mono font-bold ${trendCls}`}>
+      <span
+        className={`inline-flex items-center gap-0.5 text-[10px] font-mono font-bold ${trendCls}`}
+      >
         <Trend className="size-3" />
         {delta > 0 ? `+${delta}` : delta}
       </span>

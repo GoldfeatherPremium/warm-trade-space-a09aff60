@@ -155,7 +155,9 @@ function ControlHeader({ onOpenCmd }: { onOpenCmd: () => void }) {
           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-secondary hover:bg-border text-xs font-bold"
         >
           <span>Quick jump</span>
-          <kbd className="text-[9px] px-1.5 py-0.5 rounded bg-background border border-border">⌘K</kbd>
+          <kbd className="text-[9px] px-1.5 py-0.5 rounded bg-background border border-border">
+            ⌘K
+          </kbd>
         </button>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">

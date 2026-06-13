@@ -9,7 +9,6 @@ import { confirmPayment, getOrderRow } from "../server/lifecycle.server";
 import { validateCoupon } from "../server/coupons.server";
 import { rateLimit } from "../server/rate-limit.server";
 
-
 // ---------------------------------------------------------------------------
 // Favorites / wishlist
 // ---------------------------------------------------------------------------
@@ -78,7 +77,6 @@ export const checkCoupon = createServerFn({ method: "POST" })
     const c = await validateCoupon(data.code, Math.round(data.totalUsdt * 100));
     return { code: c.code, pctOff: c.pct_off };
   });
-
 
 // ---------------------------------------------------------------------------
 // Pay with wallet balance (refund credits become instantly spendable)

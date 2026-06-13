@@ -18,11 +18,7 @@ type Tier = "verified" | "business" | "premium";
 const TIER_INFO: Record<Tier, { title: string; bullet: string[] }> = {
   verified: {
     title: "Verified",
-    bullet: [
-      "Government ID confirmed",
-      "Verified badge on every listing",
-      "+5 trust score boost",
-    ],
+    bullet: ["Government ID confirmed", "Verified badge on every listing", "+5 trust score boost"],
   },
   business: {
     title: "Business",
@@ -108,7 +104,9 @@ function VerificationPage() {
       {application && (
         <div className="bg-card border border-border rounded-lg p-4 space-y-2">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[10px] uppercase font-bold text-muted-foreground">Latest application:</span>
+            <span className="text-[10px] uppercase font-bold text-muted-foreground">
+              Latest application:
+            </span>
             <VerificationBadge tier={application.tier_requested} size="xs" />
             <span
               className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
@@ -186,11 +184,7 @@ function VerificationPage() {
           {(tier === "business" || tier === "premium") && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Input label="Business name *" value={businessName} onChange={setBusinessName} />
-              <Input
-                label="Registration number"
-                value={registration}
-                onChange={setRegistration}
-              />
+              <Input label="Registration number" value={registration} onChange={setRegistration} />
             </div>
           )}
           <Input
@@ -204,7 +198,8 @@ function VerificationPage() {
               Staff-only contact channels
             </p>
             <p className="text-[10px] text-muted-foreground -mt-2">
-              Used by X-VAULT trust & safety for compliance / payout verification. Never shown to buyers.
+              Used by X-VAULT trust & safety for compliance / payout verification. Never shown to
+              buyers.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Input

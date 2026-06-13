@@ -20,7 +20,7 @@ export interface LoyaltyTierMeta {
   key: LoyaltyTier;
   label: string;
   minSpendCents: number;
-  perkPct: number;       // % off coupon issued on tier-up
+  perkPct: number; // % off coupon issued on tier-up
   maxPerkOffCents: number; // soft cap on coupon value (min_total controls usage)
   cls: string;
   perks: string[];
@@ -97,7 +97,10 @@ interface UserLoyaltyRow {
  * if the buyer leveled up (in which case we already minted a coupon + sent
  * a notification), otherwise null. Safe to call inside the order tx.
  */
-export async function awardLoyaltySpend(buyerId: string, cents: number): Promise<LoyaltyTier | null> {
+export async function awardLoyaltySpend(
+  buyerId: string,
+  cents: number,
+): Promise<LoyaltyTier | null> {
   if (cents <= 0) return null;
   const row = await q1<UserLoyaltyRow>(
     `select lifetime_spend_cents, loyalty_tier, loyalty_tier_at from users where id = ?`,
@@ -169,7 +172,9 @@ export async function getLoyaltySnapshot(userId: string) {
   const spend = Number(row?.lifetime_spend_cents ?? 0);
   const current = tierFromSpend(spend);
   const next = nextTier(current.key);
-  const progressCents = next ? Math.min(spend - current.minSpendCents, next.minSpendCents - current.minSpendCents) : 0;
+  const progressCents = next
+    ? Math.min(spend - current.minSpendCents, next.minSpendCents - current.minSpendCents)
+    : 0;
   const progressTotal = next ? next.minSpendCents - current.minSpendCents : 0;
   return {
     tier: current.key,

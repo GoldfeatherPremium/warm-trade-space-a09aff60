@@ -116,9 +116,14 @@ function AuthPage() {
 
           <div className="text-[10px] text-muted-foreground leading-relaxed border-t border-border pt-4 text-center">
             By continuing you agree to our{" "}
-            <a href="/legal/terms" className="underline hover:text-foreground">Terms</a>
-            {" "}and{" "}
-            <a href="/legal/privacy" className="underline hover:text-foreground">Privacy Policy</a>.
+            <a href="/legal/terms" className="underline hover:text-foreground">
+              Terms
+            </a>{" "}
+            and{" "}
+            <a href="/legal/privacy" className="underline hover:text-foreground">
+              Privacy Policy
+            </a>
+            .
           </div>
         </div>
       </div>

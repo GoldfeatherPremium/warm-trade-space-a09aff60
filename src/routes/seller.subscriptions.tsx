@@ -61,8 +61,7 @@ function SellerSubscriptions() {
   });
 
   const assignSlot = useMutation({
-    mutationFn: (vars: { slotId: string; orderId: string }) =>
-      sellerAssignSlot({ data: vars }),
+    mutationFn: (vars: { slotId: string; orderId: string }) => sellerAssignSlot({ data: vars }),
     onSuccess: () => {
       toast.success("Buyer assigned");
       refresh();
@@ -152,9 +151,7 @@ function SellerSubscriptions() {
                   slot={s}
                   onUpdate={(action) => updateSlot.mutate({ slotId: s.id, action })}
                   onAssign={(orderId) => assignSlot.mutate({ slotId: s.id, orderId })}
-                  onRefreshCreds={(c) =>
-                    updateSlot.mutate({ slotId: s.id, credentials: c })
-                  }
+                  onRefreshCreds={(c) => updateSlot.mutate({ slotId: s.id, credentials: c })}
                 />
               ))}
             </div>
@@ -203,9 +200,7 @@ function SlotRow({
           {slot.status}
         </span>
         {slot.buyer_username && (
-          <span className="text-[10px] text-muted-foreground">
-            held by {slot.buyer_username}
-          </span>
+          <span className="text-[10px] text-muted-foreground">held by {slot.buyer_username}</span>
         )}
         {slot.expires_at && (
           <span className="text-[10px] text-muted-foreground">

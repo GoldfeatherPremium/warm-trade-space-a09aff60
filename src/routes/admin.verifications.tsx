@@ -40,9 +40,7 @@ function VerificationsAdmin() {
               key={s}
               onClick={() => setStatus(s)}
               className={`px-3 py-1.5 text-[11px] font-bold rounded-md uppercase ${
-                status === s
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary hover:bg-border"
+                status === s ? "bg-primary text-primary-foreground" : "bg-secondary hover:bg-border"
               }`}
             >
               {s}
@@ -63,9 +61,7 @@ function VerificationsAdmin() {
           <VerificationRow
             key={r.id}
             row={r}
-            onReview={(decision, adminNote) =>
-              review.mutate({ id: r.id, decision, adminNote })
-            }
+            onReview={(decision, adminNote) => review.mutate({ id: r.id, decision, adminNote })}
             disabled={review.isPending || r.status !== "pending"}
           />
         ))}
@@ -129,9 +125,7 @@ function VerificationRow({
       </div>
 
       <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
-        {row.business_name && (
-          <Field label="Business">{row.business_name}</Field>
-        )}
+        {row.business_name && <Field label="Business">{row.business_name}</Field>}
         {row.business_registration && (
           <Field label="Registration #">{row.business_registration}</Field>
         )}

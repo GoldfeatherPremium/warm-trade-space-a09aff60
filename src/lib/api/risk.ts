@@ -37,10 +37,9 @@ export const getRiskOverview = createServerFn({ method: "GET" }).handler(async (
     ),
     q1<{ c: number }>(`select count(*) c from risk_events where created_at > ?`, [d1]),
     q1<{ c: number }>(`select count(*) c from risk_events where created_at > ?`, [d7]),
-    q1<{ c: number }>(
-      `select count(*) c from risk_events where band = 'high' and created_at > ?`,
-      [d1],
-    ),
+    q1<{ c: number }>(`select count(*) c from risk_events where band = 'high' and created_at > ?`, [
+      d1,
+    ]),
   ]);
   return {
     heldOrders: held?.c ?? 0,

@@ -11,20 +11,7 @@
 
 import { q } from "./db.server";
 
-const STOP = new Set([
-  "the",
-  "a",
-  "an",
-  "and",
-  "or",
-  "for",
-  "to",
-  "of",
-  "with",
-  "in",
-  "on",
-  "by",
-]);
+const STOP = new Set(["the", "a", "an", "and", "or", "for", "to", "of", "with", "in", "on", "by"]);
 
 export function tokenize(query: string): string[] {
   return query

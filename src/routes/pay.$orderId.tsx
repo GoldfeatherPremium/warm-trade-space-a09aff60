@@ -2,7 +2,16 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Copy, ShieldCheck, Timer, CreditCard, Zap, ShieldHalf, CircleDollarSign, Check } from "lucide-react";
+import {
+  Copy,
+  ShieldCheck,
+  Timer,
+  CreditCard,
+  Zap,
+  ShieldHalf,
+  CircleDollarSign,
+  Check,
+} from "lucide-react";
 import { SellerBadge } from "@/components/seller-badge";
 import { cancelUnpaidOrder, getPayment, simulatePaymentSent } from "@/lib/api/orders";
 import { payWithWallet } from "@/lib/api/extras";
@@ -103,7 +112,9 @@ function PayPage() {
           >
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-[10px] text-muted-foreground tracking-widest font-bold">SELLER</p>
+                <p className="text-[10px] text-muted-foreground tracking-widest font-bold">
+                  SELLER
+                </p>
                 <p className="text-sm font-bold truncate">{data.seller.username}</p>
                 <p className="text-[10px] text-muted-foreground mt-0.5">
                   {data.seller.total_sales.toLocaleString()} sales ·{" "}
@@ -212,8 +223,8 @@ function PayPage() {
               ) : creditsAvailable > 0 ? (
                 <div className="text-[11px] text-muted-foreground bg-secondary/50 rounded-md p-2.5 text-center">
                   You have <b className="text-accent">{usdt(creditsAvailable)}</b> in credits —
-                  short {usdt(deposit.amount_cents - creditsAvailable)} for full coverage. Top up
-                  or pay below.
+                  short {usdt(deposit.amount_cents - creditsAvailable)} for full coverage. Top up or
+                  pay below.
                 </div>
               ) : null}
               {walletAvailable >= deposit.amount_cents && (
@@ -284,10 +295,7 @@ function EscrowTimeline({ warrantyHours }: { warrantyHours: number }) {
         ESCROW TIMELINE — YOUR FUNDS, YOUR CONTROL
       </p>
       <div className="grid grid-cols-4 gap-1 relative">
-        <div
-          aria-hidden
-          className="absolute top-3.5 left-[12%] right-[12%] h-px bg-border"
-        />
+        <div aria-hidden className="absolute top-3.5 left-[12%] right-[12%] h-px bg-border" />
         {steps.map(({ Icon, label, sub, state }) => {
           const isActive = state === "active";
           const isNext = state === "next";

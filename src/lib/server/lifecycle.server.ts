@@ -368,11 +368,7 @@ export function releaseOrder(orderId: string, note?: string): Promise<void> {
  * Admin places an extended hold on an order's escrow — blocks auto-release
  * until cleared. Manual release/refund still possible via admin tooling.
  */
-export function adminEscrowHold(
-  orderId: string,
-  staffId: string,
-  reason: string,
-): Promise<void> {
+export function adminEscrowHold(orderId: string, staffId: string, reason: string): Promise<void> {
   return tx(async () => {
     const o = await getOrderRow(orderId);
     if (!o) return;
@@ -428,10 +424,7 @@ export function adminExtendWarranty(
     const newEnd = o.warranty_ends_at + additionalHours * 3600_000;
     await run(`update orders set warranty_ends_at = ? where id = ?`, [newEnd, orderId]);
     const convId = await getOrCreateOrderConversation(orderId);
-    await systemMessage(
-      convId,
-      `Warranty extended by ${additionalHours}h. Reason: ${reason}`,
-    );
+    await systemMessage(convId, `Warranty extended by ${additionalHours}h. Reason: ${reason}`);
   });
 }
 

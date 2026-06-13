@@ -107,8 +107,7 @@ export const createOrder = createServerFn({ method: "POST" })
         fail("Please set your country in Account settings before buying this product.");
       if (allowed.length && !allowed.includes(buyerCountry!))
         fail("This product is not available in your country.");
-      if (blocked.includes(buyerCountry!))
-        fail("This product is not available in your country.");
+      if (blocked.includes(buyerCountry!)) fail("This product is not available in your country.");
     }
 
     // velocity limit: max 5 open unpaid orders per buyer

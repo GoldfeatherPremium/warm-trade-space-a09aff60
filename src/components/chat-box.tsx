@@ -36,7 +36,9 @@ function clock(ts: number) {
 function initials(name: string | null | undefined) {
   if (!name) return "?";
   const parts = name.trim().split(/\s+/);
-  return ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase() || name.slice(0, 2).toUpperCase();
+  return (
+    ((parts[0]?.[0] ?? "") + (parts[1]?.[0] ?? "")).toUpperCase() || name.slice(0, 2).toUpperCase()
+  );
 }
 
 function relativeSeen(ts: number) {
@@ -177,8 +179,9 @@ export function ChatBox({
       <div className="bg-destructive/15 border-b border-destructive/30 text-destructive px-3 py-2 text-[10px] font-bold flex items-start gap-2">
         <ShieldAlert className="size-3.5 shrink-0 mt-0.5" />
         <span className="leading-relaxed">
-          NEVER share phone, email, Telegram/Discord/WhatsApp, payment links, wallet addresses or account credentials here.
-          All chats are monitored and logged. Violations forfeit escrow + permanent ban for both parties.
+          NEVER share phone, email, Telegram/Discord/WhatsApp, payment links, wallet addresses or
+          account credentials here. All chats are monitored and logged. Violations forfeit escrow +
+          permanent ban for both parties.
         </span>
       </div>
 
@@ -217,7 +220,9 @@ export function ChatBox({
                   {initials(senderName)}
                 </div>
               )}
-              <div className={`flex flex-col gap-0.5 max-w-[78%] ${mine ? "items-end" : "items-start"}`}>
+              <div
+                className={`flex flex-col gap-0.5 max-w-[78%] ${mine ? "items-end" : "items-start"}`}
+              >
                 {!mine && (
                   <p className="text-[9px] font-bold text-muted-foreground px-1">
                     {senderName ?? "staff"}
@@ -232,9 +237,7 @@ export function ChatBox({
                     <div
                       key={m.id}
                       className={`px-3 py-1.5 text-xs leading-relaxed shadow-sm ${
-                        mine
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-secondary text-foreground"
+                        mine ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"
                       } ${radius}`}
                     >
                       <p className="whitespace-pre-wrap break-words">{m.body}</p>

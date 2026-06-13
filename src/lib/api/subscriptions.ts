@@ -50,7 +50,13 @@ export const sellerListSlots = createServerFn({ method: "GET" }).handler(async (
      order by s.product_id, s.created_at desc`,
     [user.id],
   );
-  const products = await q<{ id: string; title: string; subscription_cycle_days: number; subscription_seats_total: number; product_kind: string }>(
+  const products = await q<{
+    id: string;
+    title: string;
+    subscription_cycle_days: number;
+    subscription_seats_total: number;
+    product_kind: string;
+  }>(
     `select id, title, subscription_cycle_days, subscription_seats_total, product_kind
      from products where seller_id = ? and product_kind = 'subscription_slot'
      order by created_at desc`,
@@ -74,10 +80,13 @@ export const sellerCreateSlot = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await appContext();
     const user = await requireSeller();
-    const p = await q1<{ seller_id: string; product_kind: string; subscription_seats_total: number }>(
-      `select seller_id, product_kind, subscription_seats_total from products where id = ?`,
-      [data.productId],
-    );
+    const p = await q1<{
+      seller_id: string;
+      product_kind: string;
+      subscription_seats_total: number;
+    }>(`select seller_id, product_kind, subscription_seats_total from products where id = ?`, [
+      data.productId,
+    ]);
     if (!p || p.seller_id !== user.id) fail("Product not found.");
     if (p!.product_kind !== "subscription_slot")
       fail("This product is not a subscription slot listing.");

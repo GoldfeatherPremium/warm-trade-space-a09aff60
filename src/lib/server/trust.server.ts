@@ -21,10 +21,7 @@ import { q1, run } from "./db.server";
 export type VerificationTier = "unverified" | "verified" | "business" | "premium";
 export type SellerLevel = 1 | 2 | 3 | 4 | 5;
 
-export const TIER_META: Record<
-  VerificationTier,
-  { label: string; bonus: number; cls: string }
-> = {
+export const TIER_META: Record<VerificationTier, { label: string; bonus: number; cls: string }> = {
   unverified: { label: "Unverified", bonus: 0, cls: "bg-muted text-muted-foreground" },
   verified: { label: "Verified", bonus: 5, cls: "bg-blue-500/15 text-blue-400 border-blue-500/40" },
   business: {

@@ -46,9 +46,10 @@ export const Route = createFileRoute("/p/$slug")({
       p.description ||
       `Buy ${p.title} on X-VAULT — escrow-protected, ${p.warranty_hours}h warranty.`;
     const desc = descSrc.replace(/\s+/g, " ").slice(0, 155);
-    const img = p.image_key && !p.image_key.startsWith("upload:")
-      ? `${SITE}${productImage(p.image_key)}`
-      : undefined;
+    const img =
+      p.image_key && !p.image_key.startsWith("upload:")
+        ? `${SITE}${productImage(p.image_key)}`
+        : undefined;
     const jsonLd = {
       "@context": "https://schema.org",
       "@type": "Product",
@@ -326,17 +327,22 @@ function ProductPage() {
                 <ShieldCheck className="size-3" /> ESCROW PROTECTED
               </span>
               <span className="bg-secondary px-2 py-1 rounded inline-flex items-center gap-1">
-                {p.delivery_type === "auto" ? <Zap className="size-3" /> : <Clock className="size-3" />}
+                {p.delivery_type === "auto" ? (
+                  <Zap className="size-3" />
+                ) : (
+                  <Clock className="size-3" />
+                )}
                 {p.delivery_type === "auto" ? "INSTANT" : `~${p.delivery_sla_minutes}MIN`}
               </span>
               <span className="bg-secondary px-2 py-1 rounded">{p.warranty_hours}H WARRANTY</span>
               {p.insurance_days > 0 && (
-                <span className="bg-secondary px-2 py-1 rounded">+{p.insurance_days}D INSURANCE</span>
+                <span className="bg-secondary px-2 py-1 rounded">
+                  +{p.insurance_days}D INSURANCE
+                </span>
               )}
               <span className="bg-secondary px-2 py-1 rounded">REFUND ON FAILURE</span>
             </div>
           </div>
-
 
           <div className="bg-card border border-border rounded-lg p-4">
             <h2 className="text-xs font-bold tracking-widest text-muted-foreground mb-2">
@@ -373,7 +379,6 @@ function ProductPage() {
               </div>
             )}
           </div>
-
 
           <div className="bg-card border border-accent/30 rounded-lg p-4 flex gap-3">
             <ShieldCheck className="size-8 text-accent shrink-0" />
@@ -711,7 +716,6 @@ function SellerStat({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
-
 
 function Sparkle() {
   return <Star className="size-4 text-primary" />;

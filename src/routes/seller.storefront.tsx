@@ -10,7 +10,13 @@ export const Route = createFileRoute("/seller/storefront")({
   component: StorefrontEdit,
 });
 
-type Socials = { website?: string; twitter?: string; discord?: string; telegram?: string; youtube?: string };
+type Socials = {
+  website?: string;
+  twitter?: string;
+  discord?: string;
+  telegram?: string;
+  youtube?: string;
+};
 
 function StorefrontEdit() {
   const qc = useQueryClient();
@@ -45,7 +51,12 @@ function StorefrontEdit() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const socialFields: Array<{ k: keyof Socials; label: string; icon: typeof Globe; placeholder: string }> = [
+  const socialFields: Array<{
+    k: keyof Socials;
+    label: string;
+    icon: typeof Globe;
+    placeholder: string;
+  }> = [
     { k: "website", label: "Website", icon: Globe, placeholder: "https://your-site.com" },
     { k: "twitter", label: "Twitter / X", icon: Twitter, placeholder: "https://x.com/handle" },
     { k: "discord", label: "Discord", icon: MessageCircle, placeholder: "https://discord.gg/..." },
@@ -60,7 +71,8 @@ function StorefrontEdit() {
         <h2 className="font-display text-2xl">Storefront branding</h2>
       </div>
       <p className="text-xs text-muted-foreground -mt-3">
-        How your public store at <span className="font-mono">/s/{data?.username ?? "…"}</span> looks to buyers.
+        How your public store at <span className="font-mono">/s/{data?.username ?? "…"}</span> looks
+        to buyers.
       </p>
 
       {/* Live preview */}
@@ -116,7 +128,10 @@ function StorefrontEdit() {
         />
       </Field>
 
-      <Field label="Store announcement" hint={`${form.announcement.length} / 280 — shown as a banner at the top of your store`}>
+      <Field
+        label="Store announcement"
+        hint={`${form.announcement.length} / 280 — shown as a banner at the top of your store`}
+      >
         <input
           className="w-full bg-secondary border border-border rounded-md px-3 py-2 text-xs"
           maxLength={280}

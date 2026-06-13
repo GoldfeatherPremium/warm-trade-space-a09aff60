@@ -13,13 +13,18 @@ export const Route = createFileRoute("/legal/privacy")({
     ],
   }),
   component: () => (
-    <LegalPage title="Privacy Policy" intro="We collect what we need to run an escrow marketplace safely — nothing more.">
+    <LegalPage
+      title="Privacy Policy"
+      intro="We collect what we need to run an escrow marketplace safely — nothing more."
+    >
       <h2>What we collect</h2>
       <ul>
         <li>Account: email, username, password hash, login IP &amp; user-agent.</li>
         <li>Trades: orders, payments, payouts, withdrawals, ledger entries.</li>
         <li>Chat: every message between buyers, sellers and staff. Monitored for fraud and PII.</li>
-        <li>Verification: legal name, country, ID reference (only when applying for a verified tier).</li>
+        <li>
+          Verification: legal name, country, ID reference (only when applying for a verified tier).
+        </li>
       </ul>
       <h2>Encryption at rest</h2>
       <p>
@@ -28,8 +33,8 @@ export const Route = createFileRoute("/legal/privacy")({
       </p>
       <h2>Chat monitoring</h2>
       <p>
-        All conversations are logged and may be reviewed by trust &amp; safety staff to enforce these
-        terms. By using X-VAULT chat you consent to this monitoring.
+        All conversations are logged and may be reviewed by trust &amp; safety staff to enforce
+        these terms. By using X-VAULT chat you consent to this monitoring.
       </p>
       <h2>Retention</h2>
       <p>

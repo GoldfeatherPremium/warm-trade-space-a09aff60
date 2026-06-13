@@ -134,10 +134,9 @@ export const reviewVerification = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await appContext();
     const staff = await requireStaff(["admin", "support"]);
-    const app = await q1<SellerVerification>(
-      `select * from seller_verifications where id = ?`,
-      [data.id],
-    );
+    const app = await q1<SellerVerification>(`select * from seller_verifications where id = ?`, [
+      data.id,
+    ]);
     if (!app) fail("Application not found.");
     if (app!.status !== "pending") fail("This application was already reviewed.");
 
@@ -198,7 +197,9 @@ export const getSellerTrust = createServerFn({ method: "POST" })
 
 /** Public trust score history for a seller — powers the storefront sparkline. */
 export const getSellerTrustHistory = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ userId: z.string(), days: z.number().int().min(7).max(180).default(30) }))
+  .inputValidator(
+    z.object({ userId: z.string(), days: z.number().int().min(7).max(180).default(30) }),
+  )
   .handler(async ({ data }) => {
     await appContext();
     const points = await getTrustHistory(data.userId, data.days);

@@ -135,9 +135,7 @@ export const getAdminPulse = createServerFn({ method: "GET" }).handler(async () 
       `select coalesce(sum(total_cents),0) s, count(*) c from orders where status = 'refunded' and coalesce(completed_at, paid_at, created_at) > ?`,
       [since],
     ),
-    q1<{ c: number }>(
-      `select count(*) c from orders where escrow_status = 'on_hold'`,
-    ),
+    q1<{ c: number }>(`select count(*) c from orders where escrow_status = 'on_hold'`),
     q1<{ c: number }>(`select count(*) c from users where created_at > ?`, [since]),
     q1<{ c: number }>(`select count(*) c from disputes where status != 'resolved'`),
     q1<{ s: number }>(
@@ -278,10 +276,9 @@ export const reviewProduct = createServerFn({ method: "POST" })
           [p!.seller_id],
         );
         const sellerName = sellerRow?.username ?? "A seller you follow";
-        const productSlug = await q1<{ slug: string }>(
-          `select slug from products where id = ?`,
-          [data.productId],
-        );
+        const productSlug = await q1<{ slug: string }>(`select slug from products where id = ?`, [
+          data.productId,
+        ]);
         const link = productSlug ? `/p/${productSlug.slug}` : "/browse";
         await Promise.all(
           followers.map((f) =>
@@ -794,7 +791,12 @@ export const adminUpdateProduct = createServerFn({ method: "POST" })
       categoryId: z.string(),
       itemId: z.string().optional().nullable(),
       priceUsdt: z.number().min(0.5).max(100_000),
-      warrantyHours: z.number().int().min(1).max(24 * 365).nullable(),
+      warrantyHours: z
+        .number()
+        .int()
+        .min(1)
+        .max(24 * 365)
+        .nullable(),
       minQty: z.number().int().min(1).max(1000),
       maxQty: z.number().int().min(1).max(1000),
       region: z.string().max(40).optional(),
@@ -813,7 +815,9 @@ export const adminUpdateProduct = createServerFn({ method: "POST" })
     if (!exists) fail("Product not found.");
     let itemId: string | null = null;
     if (data.itemId) {
-      const item = await q1(`select id from catalog_items where id = ? and is_active = 1`, [data.itemId]);
+      const item = await q1(`select id from catalog_items where id = ? and is_active = 1`, [
+        data.itemId,
+      ]);
       if (!item) fail("Selected sub-category is not available.");
       const allowed = await q<{ category_id: string }>(
         `select category_id from catalog_item_categories where item_id = ?`,

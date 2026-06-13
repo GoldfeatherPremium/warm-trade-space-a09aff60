@@ -32,10 +32,11 @@ export const toggleFollowSeller = createServerFn({ method: "POST" })
         data.sellerId,
       ]);
     } else {
-      await run(
-        `insert into seller_follows (user_id, seller_id, created_at) values (?,?,?)`,
-        [user.id, data.sellerId, now()],
-      );
+      await run(`insert into seller_follows (user_id, seller_id, created_at) values (?,?,?)`, [
+        user.id,
+        data.sellerId,
+        now(),
+      ]);
     }
     const cnt = await q1<{ c: number }>(
       `select count(*) c from seller_follows where seller_id = ?`,

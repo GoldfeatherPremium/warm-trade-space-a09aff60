@@ -5,11 +5,7 @@ import { appContext } from "../server/app.server";
 import { audit, fail, getSettings, now, uid } from "../server/core.server";
 import { isStaff, requireUser } from "../server/auth.server";
 import { rateLimit } from "../server/rate-limit.server";
-import {
-  getBuyerCredits,
-  txCreditGrant,
-  txCreditSpend,
-} from "../server/money.server";
+import { getBuyerCredits, txCreditGrant, txCreditSpend } from "../server/money.server";
 import { confirmPayment, getOrderRow } from "../server/lifecycle.server";
 
 export interface CreditLedgerRow {
@@ -62,16 +58,11 @@ export const payWithCredits = createServerFn({ method: "POST" })
         `Insufficient credits: ${(c.balance_cents / 100).toFixed(2)} available, ${(o!.total_cents / 100).toFixed(2)} needed.`,
       );
     await tx(async () => {
-      await txCreditSpend(
-        user.id,
+      await txCreditSpend(user.id, o!.total_cents, o!.id, `Credits applied to ${o!.order_no}`);
+      await run(`update orders set credits_applied_cents = ? where id = ?`, [
         o!.total_cents,
         o!.id,
-        `Credits applied to ${o!.order_no}`,
-      );
-      await run(
-        `update orders set credits_applied_cents = ? where id = ?`,
-        [o!.total_cents, o!.id],
-      );
+      ]);
       await run(`update deposits set status = 'confirmed', tx_hash = ? where order_id = ?`, [
         `credits:${uid().slice(0, 18)}`,
         o!.id,
@@ -102,9 +93,7 @@ export const requestCreditWithdrawal = createServerFn({ method: "POST" })
       Math.round(data.amountCents * (settings.credit_withdrawal_fee_pct / 100)),
     );
     if (c.balance_cents < data.amountCents + feeCents)
-      fail(
-        `Insufficient credits to cover amount + ${(feeCents / 100).toFixed(2)} USDT fee.`,
-      );
+      fail(`Insufficient credits to cover amount + ${(feeCents / 100).toFixed(2)} USDT fee.`);
     const wid = uid();
     await tx(async () => {
       await run(

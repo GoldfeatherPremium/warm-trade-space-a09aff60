@@ -72,8 +72,8 @@ function SellersPage() {
           </p>
           <h1 className="font-display text-3xl sm:text-4xl mt-1">TOP TRUSTED SELLERS</h1>
           <p className="text-xs text-muted-foreground max-w-xl mt-1">
-            Ranked by a blended trust score combining verification tier, completed sales,
-            buyer ratings, and dispute history. All transactions are escrow-protected.
+            Ranked by a blended trust score combining verification tier, completed sales, buyer
+            ratings, and dispute history. All transactions are escrow-protected.
           </p>
         </div>
         <div className="flex gap-1 bg-secondary rounded-md p-1 self-start">
@@ -183,9 +183,7 @@ function SellersPage() {
                 <div className="min-w-0">
                   <p className="font-bold truncate">@{s.username}</p>
                   {s.category_name && (
-                    <p className="text-[10px] text-muted-foreground truncate">
-                      {s.category_name}
-                    </p>
+                    <p className="text-[10px] text-muted-foreground truncate">{s.category_name}</p>
                   )}
                 </div>
                 <div className="hidden sm:block">

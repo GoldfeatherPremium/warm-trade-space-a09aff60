@@ -101,9 +101,7 @@ function CreditsPage() {
                 <select
                   className="w-full h-9 rounded-md bg-secondary text-sm px-2"
                   value={wd.network}
-                  onChange={(e) =>
-                    setWd({ ...wd, network: e.target.value as "TRC20" | "BEP20" })
-                  }
+                  onChange={(e) => setWd({ ...wd, network: e.target.value as "TRC20" | "BEP20" })}
                 >
                   <option value="TRC20">TRC20 (Tron)</option>
                   <option value="BEP20">BEP20 (BSC)</option>
@@ -132,8 +130,8 @@ function CreditsPage() {
               <ShieldCheck className="size-4 text-accent" /> Buyer-friendly refunds
             </h2>
             <p className="text-[11px] text-muted-foreground">
-              When an order is refunded, the amount is credited here instantly. You can spend it
-              on your next order with zero gas — or withdraw it.
+              When an order is refunded, the amount is credited here instantly. You can spend it on
+              your next order with zero gas — or withdraw it.
             </p>
             <ul className="text-[11px] text-muted-foreground space-y-1.5 mt-2">
               <li>• Instant checkout — no network confirmations.</li>

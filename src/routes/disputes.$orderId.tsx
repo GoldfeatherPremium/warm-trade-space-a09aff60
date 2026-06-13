@@ -34,14 +34,12 @@ function DisputeVault() {
     refetchInterval: 15_000,
   });
 
-  const refresh = () =>
-    qc.invalidateQueries({ queryKey: ["disputeThread", orderId] });
+  const refresh = () => qc.invalidateQueries({ queryKey: ["disputeThread", orderId] });
 
   const [msg, setMsg] = useState("");
   const [internal, setInternal] = useState(false);
   const postMsg = useMutation({
-    mutationFn: () =>
-      postDisputeMessage({ data: { orderId, body: msg, internal } }),
+    mutationFn: () => postDisputeMessage({ data: { orderId, body: msg, internal } }),
     onSuccess: () => {
       setMsg("");
       refresh();
@@ -49,10 +47,9 @@ function DisputeVault() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const [evKind, setEvKind] =
-    useState<"screenshot" | "log" | "delivery_proof" | "chat_excerpt" | "other">(
-      "screenshot",
-    );
+  const [evKind, setEvKind] = useState<
+    "screenshot" | "log" | "delivery_proof" | "chat_excerpt" | "other"
+  >("screenshot");
   const [evTitle, setEvTitle] = useState("");
   const [evBody, setEvBody] = useState("");
   const [evUrl, setEvUrl] = useState("");
@@ -124,7 +121,8 @@ function DisputeVault() {
             <Shield className="size-5 text-primary" /> {o.order_no}
           </h1>
           <p className="text-[11px] text-muted-foreground truncate max-w-md">
-            {o.product_title} · {usdt(o.total_cents)} · escrow {o.escrow_status.replaceAll("_", " ")}
+            {o.product_title} · {usdt(o.total_cents)} · escrow{" "}
+            {o.escrow_status.replaceAll("_", " ")}
           </p>
         </div>
         <Button
@@ -159,9 +157,7 @@ function DisputeVault() {
               {dateTime(d.last_activity_at || d.created_at)}
             </span>
             {d.staff_owner && (
-              <span className="text-[10px] text-muted-foreground ml-auto">
-                owner: staff
-              </span>
+              <span className="text-[10px] text-muted-foreground ml-auto">owner: staff</span>
             )}
             {d.resolution && (
               <span className="text-[10px] font-bold text-accent ml-auto">
@@ -313,9 +309,7 @@ function DisputeVault() {
               </h2>
               <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
                 {messages.length === 0 && (
-                  <p className="text-xs text-muted-foreground py-4 text-center">
-                    No messages yet.
-                  </p>
+                  <p className="text-xs text-muted-foreground py-4 text-center">No messages yet.</p>
                 )}
                 {messages.map((m) => (
                   <div

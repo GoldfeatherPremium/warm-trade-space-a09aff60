@@ -63,7 +63,9 @@ function AdminProductEdit() {
     if (p.category_attrs) {
       try {
         setCategoryAttrs(JSON.parse(p.category_attrs as string) as Record<string, string>);
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }
   }, [data]);
 
@@ -239,11 +241,7 @@ function AdminProductEdit() {
       {sellerFields.length > 0 && (
         <div className="bg-primary/5 border border-primary/30 rounded-lg p-3 space-y-2">
           <p className="text-xs font-bold text-primary">Category-specific attributes</p>
-          <DynamicFields
-            fields={sellerFields}
-            values={categoryAttrs}
-            onChange={setCategoryAttrs}
-          />
+          <DynamicFields fields={sellerFields} values={categoryAttrs} onChange={setCategoryAttrs} />
         </div>
       )}
 

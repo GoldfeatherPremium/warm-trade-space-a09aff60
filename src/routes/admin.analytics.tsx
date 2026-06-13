@@ -66,7 +66,11 @@ function AdminAnalytics() {
                   : `${data.summary.gmvGrowth >= 0 ? "+" : ""}${data.summary.gmvGrowth.toFixed(1)}% vs prev`
               }
             />
-            <Kpi label="ORDERS" value={String(data.summary.orders)} sub={`${data.summary.aov.toFixed(2)} USDT AOV`} />
+            <Kpi
+              label="ORDERS"
+              value={String(data.summary.orders)}
+              sub={`${data.summary.aov.toFixed(2)} USDT AOV`}
+            />
             <Kpi label="COMMISSION" value={usdt(data.summary.commission)} />
             <Kpi
               label="ACTIVE"
@@ -89,13 +93,34 @@ function AdminAnalytics() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid stroke="#27272a" vertical={false} />
-                  <XAxis dataKey="day" tick={{ fontSize: 10, fill: "#71717a" }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 10, fill: "#71717a" }} tickLine={false} axisLine={false} tickFormatter={(v) => `${(v / 100).toFixed(0)}`} />
+                  <XAxis
+                    dataKey="day"
+                    tick={{ fontSize: 10, fill: "#71717a" }}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 10, fill: "#71717a" }}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(v) => `${(v / 100).toFixed(0)}`}
+                  />
                   <Tooltip
-                    contentStyle={{ background: "#18181b", border: "1px solid #27272a", borderRadius: 8, fontSize: 12 }}
+                    contentStyle={{
+                      background: "#18181b",
+                      border: "1px solid #27272a",
+                      borderRadius: 8,
+                      fontSize: 12,
+                    }}
                     formatter={(v: number) => [`${(v / 100).toFixed(2)} USDT`, "GMV"]}
                   />
-                  <Area type="monotone" dataKey="v" stroke="#22c55e" strokeWidth={2} fill="url(#aa-fill)" />
+                  <Area
+                    type="monotone"
+                    dataKey="v"
+                    stroke="#22c55e"
+                    strokeWidth={2}
+                    fill="url(#aa-fill)"
+                  />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -119,7 +144,10 @@ function AdminAnalytics() {
                           </span>
                         </div>
                         <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
-                          <div className="h-full bg-accent rounded-full" style={{ width: `${pct}%` }} />
+                          <div
+                            className="h-full bg-accent rounded-full"
+                            style={{ width: `${pct}%` }}
+                          />
                         </div>
                       </div>
                     );
@@ -176,7 +204,9 @@ function AdminAnalytics() {
           </Panel>
 
           <div className="grid lg:grid-cols-2 gap-3">
-            <Panel title={`TOP SEARCHES — ${data.search.total} queries · ${data.search.failRate.toFixed(1)}% empty`}>
+            <Panel
+              title={`TOP SEARCHES — ${data.search.total} queries · ${data.search.failRate.toFixed(1)}% empty`}
+            >
               {data.search.top.length === 0 ? (
                 <Empty />
               ) : (
@@ -220,7 +250,10 @@ function AdminAnalytics() {
           <div className="grid grid-cols-3 gap-3">
             <Kpi label="NEW BUYERS" value={String(data.newSignups.buyers ?? 0)} />
             <Kpi label="NEW SELLERS" value={String(data.newSignups.sellers ?? 0)} />
-            <Kpi label="CATALOG CONV." value={`${data.summary.marketplaceConversion.toFixed(2)}%`} />
+            <Kpi
+              label="CATALOG CONV."
+              value={`${data.summary.marketplaceConversion.toFixed(2)}%`}
+            />
           </div>
         </>
       )}
