@@ -161,7 +161,7 @@ function AdminItems() {
             ALLOWED SUB-CATEGORIES (none = all)
           </p>
           <div className="flex flex-wrap gap-2">
-            {home?.categories.map((c) => {
+            {categories.map((c) => {
               const on = form.categoryIds.includes(c.id);
               return (
                 <button
