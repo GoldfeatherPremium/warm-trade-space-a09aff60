@@ -883,7 +883,7 @@ export const adminUpdateProduct = createServerFn({ method: "POST" })
         data.categoryAttrs && Object.keys(data.categoryAttrs).length > 0
           ? JSON.stringify(data.categoryAttrs)
           : null,
-        data.subscriptionDuration && data.subscriptionDuration !== "" ? data.subscriptionDuration : null,
+        data.subscriptionDuration ? data.subscriptionDuration : null,
         data.maxOrdersAtOnce ?? 10,
         ...(data.status ? [data.status] : []),
         data.productId,
