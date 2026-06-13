@@ -741,7 +741,7 @@ async function migrate(e: Engine): Promise<void> {
     .catch(() => {});
   await e
     .exec(
-      `create table if not exists order_attachments (
+      `create table if not exists credit_ledger (
         id ${dialect === "postgres" ? "bigint generated always as identity primary key" : "integer primary key autoincrement"},
         user_id text not null,
         order_id text,
@@ -756,7 +756,7 @@ async function migrate(e: Engine): Promise<void> {
     )
     .catch(() => {});
   await e
-    .exec(`create index if not exists idx_order_attachments_user on order_attachments(user_id, created_at)`)
+    .exec(`create index if not exists idx_credit_ledger_user on credit_ledger(user_id, created_at)`)
     .catch(() => {});
 
   // --- Phase 6: Order attachments (delivery proof, before/after, dispute evidence) ---
