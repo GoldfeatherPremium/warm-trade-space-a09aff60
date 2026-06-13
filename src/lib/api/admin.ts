@@ -834,8 +834,10 @@ export const adminUpdateProduct = createServerFn({ method: "POST" })
       status: z.enum(["active", "paused", "rejected", "out_of_stock", "pending_review"]).optional(),
       // Phase 13 overrides
       subscriptionDuration: z
-        .enum(["7d", "14d", "1m", "3m", "6m", "12m", "lifetime", ""])
+        .enum(["7d", "14d", "1m", "3m", "6m", "12m", "lifetime"])
+        .nullable()
         .optional(),
+
       maxOrdersAtOnce: z.number().int().min(1).max(1000).optional(),
     }),
   )
