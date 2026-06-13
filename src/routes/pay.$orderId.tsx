@@ -34,11 +34,21 @@ function PayPage() {
   });
 
   const { data: walletData } = useQuery({ queryKey: ["wallet"], queryFn: () => getWalletData() });
+  const { data: credits } = useQuery({ queryKey: ["myCredits"], queryFn: () => getMyCredits() });
   const payWallet = useMutation({
     mutationFn: () => payWithWallet({ data: { orderId } }),
     onSuccess: () => {
       qc.invalidateQueries();
       toast.success("Paid from wallet balance!");
+      navigate({ to: "/orders/$orderId", params: { orderId } });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const payCredits = useMutation({
+    mutationFn: () => payWithCredits({ data: { orderId } }),
+    onSuccess: () => {
+      qc.invalidateQueries();
+      toast.success("Paid using store credits!");
       navigate({ to: "/orders/$orderId", params: { orderId } });
     },
     onError: (e: Error) => toast.error(e.message),
