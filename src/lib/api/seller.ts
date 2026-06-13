@@ -109,7 +109,14 @@ const productInput = z.object({
   subscriptionSeatsTotal: z.number().int().min(1).max(50).default(1),
   downloadSizeMb: z.number().int().min(0).max(50_000).default(0),
   categoryAttrs: z.record(z.string(), z.string().max(2000)).optional(),
+  subscriptionDuration: z
+    .enum(["7d", "14d", "1m", "3m", "6m", "12m", "lifetime"])
+    .nullable()
+    .optional(),
+  maxOrdersAtOnce: z.number().int().min(1).max(1000).default(10),
+  manualStock: z.number().int().min(0).max(1_000_000).nullable().optional(),
 });
+
 
 const MAX_ACTIVE_LISTINGS: Record<number, number> = { 1: 10, 2: 25, 3: 60, 4: 150, 5: 100_000 };
 
