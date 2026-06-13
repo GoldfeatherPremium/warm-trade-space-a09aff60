@@ -266,11 +266,14 @@ function ProductForm() {
   });
 
   const selectedCat = home?.categories.find((c) => c.id === form.categoryId);
-  const allowedCategories = home?.categories.filter((c) => {
-    if (!itemId) return true;
-    if (!selectedItem || selectedItem.categoryIds.length === 0) return true;
-    return selectedItem.categoryIds.includes(c.id);
-  });
+  const allCategories = home?.categories ?? [];
+  let allowedCategories = allCategories;
+  if (itemId && selectedItem && selectedItem.categoryIds.length > 0) {
+    const filtered = allCategories.filter((c) => selectedItem.categoryIds.includes(c.id));
+    // Fall back to all active categories if the item's allow-list no longer
+    // matches any active category — never block the seller with an empty picker.
+    allowedCategories = filtered.length > 0 ? filtered : allCategories;
+  }
 
   return (
     <form
