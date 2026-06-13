@@ -104,7 +104,8 @@ export const getFollowedFeed = createServerFn({ method: "GET" }).handler(async (
     `select p.id, p.title, p.slug, p.image_key, p.price_cents, p.delivery_type,
             p.sold_count, p.created_at, p.seller_id, u.username as seller_username
        from products p join users u on u.id = p.seller_id
-      where p.status = 'active' and p.seller_id in (${placeholders})
+      where p.status = 'active' and u.vacation_mode = 0 and u.is_banned = 0
+        and p.seller_id in (${placeholders})
       order by p.created_at desc limit 24`,
     ids,
   );
