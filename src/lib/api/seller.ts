@@ -170,7 +170,7 @@ export const saveProduct = createServerFn({ method: "POST" })
         .filter(Boolean);
       if (!data.subscriptionDuration)
         fail("This category requires you to pick a subscription duration.");
-      if (allowed.length > 0 && !allowed.includes(data.subscriptionDuration))
+      if (allowed.length > 0 && !allowed.includes(data.subscriptionDuration as string))
         fail("Selected subscription duration is not allowed for this category.");
     }
 
