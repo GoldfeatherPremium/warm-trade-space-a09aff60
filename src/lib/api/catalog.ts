@@ -120,16 +120,24 @@ function mapProduct(r: Record<string, unknown>): PublicProduct {
     s_trust,
     s_refunds,
     s_disputes,
+    category_submission_schema,
+    category_attrs,
     ...rest
   } = r;
-  const rest2 = rest as Omit<PublicProduct, "seller" | "is_promoted"> & {
+  const rest2 = rest as Omit<PublicProduct, "seller" | "is_promoted" | "category_attrs" | "submission_schema"> & {
     featured_until?: number | null;
   };
   const featuredUntil = rest2.featured_until == null ? null : Number(rest2.featured_until);
+  const parseJson = <T,>(v: unknown): T | null => {
+    if (!v || typeof v !== "string") return null;
+    try { return JSON.parse(v) as T; } catch { return null; }
+  };
   return {
     ...rest2,
     featured_until: featuredUntil,
     is_promoted: featuredUntil != null && featuredUntil > Date.now(),
+    category_attrs: parseJson<Record<string, string>>(category_attrs),
+    submission_schema: parseJson<CategorySubmissionSchema>(category_submission_schema),
     seller: {
       id: s_id as string,
       username: s_username as string,
