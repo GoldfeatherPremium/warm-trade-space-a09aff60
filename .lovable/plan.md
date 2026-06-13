@@ -19,12 +19,13 @@ This is a large batch (19 items). I'll group them into phases so each ships veri
 - ✅ Public storefront (`s.$username.tsx`) hides all product listings while seller is on vacation and shows a friendly banner instead.
 - ✅ Vacation toggle already lives in `account.tsx` settings; backed by `users.vacation_mode` updates in `auth.ts`.
 
-## Phase 4 — Rich product submission + admin edit + SEO + commission config (items 10, 11, 12, 13, 19)
-- **Per-category dynamic submission form**: extend `categories` with `submission_schema` (JSON) — admin defines required fields (e.g. "Region", "Subscription length", "Delivery method") per category in `admin.categories.tsx`. `seller.new-product.tsx` renders the schema dynamically. Saved in `products.category_attrs` (JSON).
-- **Delivery-method config per category**: same schema engine — admin defines `delivery_methods` (instant/manual/hybrid) and `buyer_required_fields` (e.g. "Game username") per category. Checkout (`pay.$orderId.tsx`) collects these at purchase.
-- **Admin product edit post-approval**: new `/admin/products/$id/edit` — full CRUD on title/desc/category/price/attrs.
-- **SEO description override**: add `products.admin_seo_description` (long-form, admin-only) — rendered on `/p/$slug` below seller description, used in `<meta description>` and JSON-LD.
-- **Per-category commission %**: add `categories.commission_bps` (basis points). Order creation reads category override first, falls back to global `platform_fee_bps`. Admin UI in `admin.categories.tsx`.
+## Phase 4 — Rich product submission + admin edit + SEO + commission config (items 10, 11, 12, 13, 19) ✅ DONE
+- ✅ DB: `categories.submission_schema` (JSON), `products.category_attrs` (JSON), `products.admin_seo_description`.
+- ✅ Admin categories page: JSON schema editor with one-click example template; per-category warranty + commission % already wired into order creation (uses `c.commission_pct` override).
+- ✅ Seller new-product form fetches `getCategorySchema` and renders dynamic seller fields → persists to `products.category_attrs`.
+- ✅ Product page renders dynamic buyer fields at checkout (encoded into `buyer_info` JSON), an admin "More about this listing" SEO panel, and a Specs table from `category_attrs`. `admin_seo_description` overrides meta/OG description.
+- ✅ New admin route `/admin/products/$id/edit` — full CRUD on title/desc/category/price/warranty/qty/region/platform/required_info/status/category_attrs + admin SEO copy. Linked from the approvals queue.
+- ✅ New server fns: `getCategorySchema`, `adminGetProduct`, `adminUpdateProduct`. `adminSaveCategory` extended with `submissionSchema`.
 
 ## Phase 5 — Credit system rebuild (item 16) ✅ DONE
 - ✅ New tables `buyer_credits` + `credit_ledger` (audit trail with source/actor); `orders.credits_applied_cents` + `withdrawals.from_credits` flags.

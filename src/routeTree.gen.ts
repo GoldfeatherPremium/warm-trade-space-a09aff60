@@ -80,6 +80,7 @@ import { Route as AccountAffiliateRouteImport } from './routes/account.affiliate
 import { Route as SellerStockProductIdRouteImport } from './routes/seller.stock.$productId'
 import { Route as ApiPublicImgIdRouteImport } from './routes/api/public/img.$id'
 import { Route as ApiPublicCronFollowDigestRouteImport } from './routes/api/public/cron/follow-digest'
+import { Route as AdminProductsIdEditRouteImport } from './routes/admin.products_.$id.edit'
 
 const WalletRoute = WalletRouteImport.update({
   id: '/wallet',
@@ -437,6 +438,11 @@ const ApiPublicCronFollowDigestRoute =
     path: '/api/public/cron/follow-digest',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AdminProductsIdEditRoute = AdminProductsIdEditRouteImport.update({
+  id: '/products_/$id/edit',
+  path: '/products/$id/edit',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -508,6 +514,7 @@ export interface FileRoutesByFullPath {
   '/orders/': typeof OrdersIndexRoute
   '/seller/': typeof SellerIndexRoute
   '/seller/stock/$productId': typeof SellerStockProductIdRoute
+  '/admin/products/$id/edit': typeof AdminProductsIdEditRoute
   '/api/public/cron/follow-digest': typeof ApiPublicCronFollowDigestRoute
   '/api/public/img/$id': typeof ApiPublicImgIdRoute
 }
@@ -579,6 +586,7 @@ export interface FileRoutesByTo {
   '/orders': typeof OrdersIndexRoute
   '/seller': typeof SellerIndexRoute
   '/seller/stock/$productId': typeof SellerStockProductIdRoute
+  '/admin/products/$id/edit': typeof AdminProductsIdEditRoute
   '/api/public/cron/follow-digest': typeof ApiPublicCronFollowDigestRoute
   '/api/public/img/$id': typeof ApiPublicImgIdRoute
 }
@@ -653,6 +661,7 @@ export interface FileRoutesById {
   '/orders/': typeof OrdersIndexRoute
   '/seller/': typeof SellerIndexRoute
   '/seller/stock/$productId': typeof SellerStockProductIdRoute
+  '/admin/products_/$id/edit': typeof AdminProductsIdEditRoute
   '/api/public/cron/follow-digest': typeof ApiPublicCronFollowDigestRoute
   '/api/public/img/$id': typeof ApiPublicImgIdRoute
 }
@@ -728,6 +737,7 @@ export interface FileRouteTypes {
     | '/orders/'
     | '/seller/'
     | '/seller/stock/$productId'
+    | '/admin/products/$id/edit'
     | '/api/public/cron/follow-digest'
     | '/api/public/img/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -799,6 +809,7 @@ export interface FileRouteTypes {
     | '/orders'
     | '/seller'
     | '/seller/stock/$productId'
+    | '/admin/products/$id/edit'
     | '/api/public/cron/follow-digest'
     | '/api/public/img/$id'
   id:
@@ -872,6 +883,7 @@ export interface FileRouteTypes {
     | '/orders/'
     | '/seller/'
     | '/seller/stock/$productId'
+    | '/admin/products_/$id/edit'
     | '/api/public/cron/follow-digest'
     | '/api/public/img/$id'
   fileRoutesById: FileRoutesById
@@ -1412,6 +1424,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCronFollowDigestRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/products_/$id/edit': {
+      id: '/admin/products_/$id/edit'
+      path: '/products/$id/edit'
+      fullPath: '/admin/products/$id/edit'
+      preLoaderRoute: typeof AdminProductsIdEditRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
@@ -1452,6 +1471,7 @@ interface AdminRouteChildren {
   AdminUsersRoute: typeof AdminUsersRoute
   AdminVerificationsRoute: typeof AdminVerificationsRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminProductsIdEditRoute: typeof AdminProductsIdEditRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
@@ -1474,6 +1494,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminUsersRoute: AdminUsersRoute,
   AdminVerificationsRoute: AdminVerificationsRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminProductsIdEditRoute: AdminProductsIdEditRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)

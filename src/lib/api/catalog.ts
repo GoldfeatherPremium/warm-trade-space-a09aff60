@@ -61,7 +61,24 @@ export interface PublicProduct {
   expires_at: number | null;
   featured_until: number | null;
   is_promoted: boolean;
+  category_attrs: Record<string, string> | null;
+  admin_seo_description: string | null;
+  submission_schema: CategorySubmissionSchema | null;
   seller: PublicSeller;
+}
+
+export interface CategorySubmissionField {
+  key: string;
+  label: string;
+  type: "text" | "textarea" | "select" | "number";
+  options?: string[];
+  required?: boolean;
+  help?: string;
+}
+export interface CategorySubmissionSchema {
+  sellerFields?: CategorySubmissionField[];
+  buyerFields?: CategorySubmissionField[];
+  deliveryMethods?: Array<{ value: string; label: string }>;
 }
 
 const productSelect = `
@@ -69,7 +86,8 @@ const productSelect = `
          coalesce(p.warranty_hours, c.default_warranty_hours) as warranty_hours,
          p.price_cents, p.min_qty, p.max_qty, p.stock_count, p.region, p.platform, p.required_info,
          p.sold_count, p.views, p.status, p.category_id, c.name as category_name, c.slug as category_slug,
-         c.risk_tier,
+         c.risk_tier, c.submission_schema as category_submission_schema,
+         p.category_attrs, p.admin_seo_description,
          u.id as s_id, u.username as s_username, u.seller_level as s_level, u.rating as s_rating,
          u.rating_count as s_rating_count, u.total_sales as s_total_sales,
          u.completion_rate as s_completion, u.vacation_mode as s_vacation, u.created_at as s_created,
@@ -102,16 +120,24 @@ function mapProduct(r: Record<string, unknown>): PublicProduct {
     s_trust,
     s_refunds,
     s_disputes,
+    category_submission_schema,
+    category_attrs,
     ...rest
   } = r;
-  const rest2 = rest as Omit<PublicProduct, "seller" | "is_promoted"> & {
+  const rest2 = rest as Omit<PublicProduct, "seller" | "is_promoted" | "category_attrs" | "submission_schema"> & {
     featured_until?: number | null;
   };
   const featuredUntil = rest2.featured_until == null ? null : Number(rest2.featured_until);
+  const parseJson = <T,>(v: unknown): T | null => {
+    if (!v || typeof v !== "string") return null;
+    try { return JSON.parse(v) as T; } catch { return null; }
+  };
   return {
     ...rest2,
     featured_until: featuredUntil,
     is_promoted: featuredUntil != null && featuredUntil > Date.now(),
+    category_attrs: parseJson<Record<string, string>>(category_attrs),
+    submission_schema: parseJson<CategorySubmissionSchema>(category_submission_schema),
     seller: {
       id: s_id as string,
       username: s_username as string,
@@ -523,6 +549,22 @@ export const listCatalogItems = createServerFn({ method: "GET" }).handler(async 
   for (const m of maps) (byItem[m.item_id] ??= []).push(m.category_id);
   return { items: items.map((i) => ({ ...i, categoryIds: byItem[i.id] ?? [] })) };
 });
+
+export const getCategorySchema = createServerFn({ method: "GET" })
+  .inputValidator(z.object({ categoryId: z.string() }))
+  .handler(async ({ data }) => {
+    await appContext();
+    const c = await q1<{ id: string; name: string; submission_schema: string | null }>(
+      `select id, name, submission_schema from categories where id = ?`,
+      [data.categoryId],
+    );
+    if (!c) return { schema: null as CategorySubmissionSchema | null };
+    let schema: CategorySubmissionSchema | null = null;
+    if (c.submission_schema) {
+      try { schema = JSON.parse(c.submission_schema) as CategorySubmissionSchema; } catch { /* ignore */ }
+    }
+    return { schema };
+  });
 
 export const quickSearch = createServerFn({ method: "GET" })
   .inputValidator(z.object({ q: z.string().max(100) }))

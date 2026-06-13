@@ -15,6 +15,7 @@ import { productImage } from "@/lib/images";
 import { usdt, usdtShort, timeAgo } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { DynamicFields } from "@/components/dynamic-fields";
 
 const SITE = "https://warm-trade-space.lovable.app";
 
@@ -40,9 +41,11 @@ export const Route = createFileRoute("/p/$slug")({
       };
     }
     const title = `${p.title} — ${p.category_name} | X-VAULT`;
-    const desc = (p.description || `Buy ${p.title} on X-VAULT — escrow-protected, ${p.warranty_hours}h warranty.`)
-      .replace(/\s+/g, " ")
-      .slice(0, 155);
+    const descSrc =
+      (p.admin_seo_description && p.admin_seo_description.trim()) ||
+      p.description ||
+      `Buy ${p.title} on X-VAULT — escrow-protected, ${p.warranty_hours}h warranty.`;
+    const desc = descSrc.replace(/\s+/g, " ").slice(0, 155);
     const img = p.image_key && !p.image_key.startsWith("upload:")
       ? `${SITE}${productImage(p.image_key)}`
       : undefined;
@@ -161,6 +164,7 @@ function ProductPage() {
   const { me } = useMe();
   const [qty, setQty] = useState(1);
   const [buyerInfo, setBuyerInfo] = useState("");
+  const [buyerExtra, setBuyerExtra] = useState<Record<string, string>>({});
   const [variantId, setVariantId] = useState<string | null>(null);
   const [couponInput, setCouponInput] = useState("");
   const [coupon, setCoupon] = useState<{ code: string; pctOff: number } | null>(null);
@@ -171,17 +175,30 @@ function ProductPage() {
   });
 
   const buy = useMutation({
-    mutationFn: () =>
-      createOrder({
+    mutationFn: () => {
+      // Combine free-text buyer info with admin-configured buyer fields
+      // into a single JSON payload the seller / order page can render.
+      const buyerFieldsCfg = data?.product?.submission_schema?.buyerFields ?? [];
+      let info: string | undefined = buyerInfo || undefined;
+      if (buyerFieldsCfg.length) {
+        for (const f of buyerFieldsCfg) {
+          if (f.required && !buyerExtra[f.key]?.trim()) {
+            throw new Error(`Please fill in "${f.label}".`);
+          }
+        }
+        info = JSON.stringify({ note: buyerInfo || undefined, fields: buyerExtra });
+      }
+      return createOrder({
         data: {
           productId: data!.product!.id,
           qty,
-          buyerInfo: buyerInfo || undefined,
+          buyerInfo: info,
           network: "TRC20",
           couponCode: coupon?.code,
           variantId: variantId ?? undefined,
         },
-      }),
+      });
+    },
     onSuccess: (r) => navigate({ to: "/pay/$orderId", params: { orderId: r.orderId } }),
     onError: (e: Error) => toast.error(e.message),
   });
@@ -326,7 +343,37 @@ function ProductPage() {
               DESCRIPTION
             </h2>
             <p className="text-sm whitespace-pre-wrap leading-relaxed">{p.description}</p>
+            {p.admin_seo_description && (
+              <div className="mt-4 pt-4 border-t border-border space-y-1">
+                <p className="text-[10px] font-bold tracking-widest text-muted-foreground">
+                  MORE ABOUT THIS LISTING
+                </p>
+                <p className="text-sm whitespace-pre-wrap leading-relaxed text-muted-foreground">
+                  {p.admin_seo_description}
+                </p>
+              </div>
+            )}
+            {p.category_attrs && Object.keys(p.category_attrs).length > 0 && (
+              <div className="mt-4 pt-4 border-t border-border">
+                <p className="text-[10px] font-bold tracking-widest text-muted-foreground mb-2">
+                  SPECS
+                </p>
+                <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+                  {Object.entries(p.category_attrs).map(([k, v]) => {
+                    const label =
+                      p.submission_schema?.sellerFields?.find((f) => f.key === k)?.label ?? k;
+                    return (
+                      <div key={k} className="contents">
+                        <dt className="text-muted-foreground">{label}</dt>
+                        <dd className="font-mono text-foreground">{v as string}</dd>
+                      </div>
+                    );
+                  })}
+                </dl>
+              </div>
+            )}
           </div>
+
 
           <div className="bg-card border border-accent/30 rounded-lg p-4 flex gap-3">
             <ShieldCheck className="size-8 text-accent shrink-0" />
@@ -486,6 +533,17 @@ function ProductPage() {
                   onChange={(e) => setBuyerInfo(e.target.value)}
                   placeholder="Enter the info the seller needs to deliver…"
                   className="text-xs min-h-16"
+                />
+              </div>
+            )}
+
+            {(p.submission_schema?.buyerFields?.length ?? 0) > 0 && (
+              <div className="space-y-2 pt-1 border-t border-border">
+                <p className="text-[11px] font-bold">Required at checkout</p>
+                <DynamicFields
+                  fields={p.submission_schema!.buyerFields!}
+                  values={buyerExtra}
+                  onChange={setBuyerExtra}
                 />
               </div>
             )}

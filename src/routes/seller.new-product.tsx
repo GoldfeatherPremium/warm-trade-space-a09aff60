@@ -5,7 +5,7 @@ import { AlertTriangle, BookOpen, ListChecks, Search, Send, Sparkles, Upload, X 
 import { generateProductContent } from "@/lib/api/ai";
 import { toast } from "sonner";
 import { z } from "zod";
-import { getHomeData, listCatalogItems } from "@/lib/api/catalog";
+import { getCategorySchema, getHomeData, listCatalogItems } from "@/lib/api/catalog";
 import {
   deleteProductImage,
   listMyProductImages,
@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { DynamicFields } from "@/components/dynamic-fields";
 
 export const Route = createFileRoute("/seller/new-product")({
   validateSearch: z.object({ edit: z.string().optional() }),
@@ -68,6 +69,7 @@ function ProductForm() {
   const [variants, setVariants] = useState<Array<{ title: string; priceUsdt: string }>>([]);
   const [expiresInDays, setExpiresInDays] = useState(0);
   const [insuranceDays, setInsuranceDays] = useState(0);
+  const [categoryAttrs, setCategoryAttrs] = useState<Record<string, string>>({});
 
   // Item picker (searchable)
   const [itemId, setItemId] = useState("");
@@ -128,7 +130,11 @@ function ProductForm() {
           setRegionCountry(region);
         }
         setItemId((p.item_id as string) ?? "");
-        // Load existing images
+        // Hydrate dynamic category attrs (admin-defined per-category fields)
+        const attrs = p.category_attrs as string | null;
+        if (attrs) {
+          try { setCategoryAttrs(JSON.parse(attrs) as Record<string, string>); } catch { /* ignore */ }
+        }
         listMyProductImages({ data: { productId: edit } })
           .then((r) => setImageIds(r.images.map((i) => i.id)))
           .catch(() => {});
@@ -160,6 +166,14 @@ function ProductForm() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // Dynamic per-category schema
+  const { data: catSchema } = useQuery({
+    queryKey: ["catSchema", form.categoryId],
+    queryFn: () => getCategorySchema({ data: { categoryId: form.categoryId } }),
+    enabled: !!form.categoryId,
+  });
+  const sellerFields = catSchema?.schema?.sellerFields ?? [];
+
   const save = useMutation({
     mutationFn: () =>
       saveProduct({
@@ -185,6 +199,7 @@ function ProductForm() {
           region: regionMode === "global" ? "Global" : regionCountry || undefined,
           platform: form.platform || undefined,
           requiredInfo: form.requiredInfo || undefined,
+          categoryAttrs: Object.keys(categoryAttrs).length ? categoryAttrs : undefined,
         },
       }),
     onSuccess: () => {
@@ -385,6 +400,18 @@ function ProductForm() {
           </select>
         )}
       </div>
+
+      {/* Per-category dynamic fields (admin-configured) */}
+      {sellerFields.length > 0 && (
+        <div className="bg-primary/5 border border-primary/30 rounded-lg p-3 space-y-2">
+          <p className="text-xs font-bold text-primary">Required for this category</p>
+          <DynamicFields
+            fields={sellerFields}
+            values={categoryAttrs}
+            onChange={setCategoryAttrs}
+          />
+        </div>
+      )}
 
       {/* Product details */}
       <h2 className="text-sm font-bold flex items-center gap-2 pt-1">

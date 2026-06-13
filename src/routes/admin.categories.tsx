@@ -5,10 +5,29 @@ import { toast } from "sonner";
 import { adminListCategories, adminSaveCategory } from "@/lib/api/admin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 export const Route = createFileRoute("/admin/categories")({
   component: AdminCategories,
 });
+
+const SCHEMA_EXAMPLE = `{
+  "sellerFields": [
+    { "key": "subscription_length", "label": "Subscription length", "type": "select",
+      "options": ["1 month", "3 months", "12 months"], "required": true },
+    { "key": "delivery_method", "label": "Delivery method", "type": "select",
+      "options": ["Instant code", "Manual invite", "Shared account"], "required": true }
+  ],
+  "buyerFields": [
+    { "key": "game_username", "label": "Your in-game username", "type": "text", "required": true },
+    { "key": "server_region", "label": "Server region", "type": "select",
+      "options": ["EU", "NA", "Asia"], "required": true }
+  ],
+  "deliveryMethods": [
+    { "value": "instant", "label": "Instant delivery" },
+    { "value": "manual", "label": "Manual delivery" }
+  ]
+}`;
 
 const EMPTY = {
   categoryId: undefined as string | undefined,
@@ -19,6 +38,7 @@ const EMPTY = {
   commissionPct: 8,
   riskTier: "normal" as "normal" | "high",
   isActive: true,
+  submissionSchema: "",
 };
 
 function AdminCategories() {
@@ -42,6 +62,10 @@ function AdminCategories() {
   return (
     <div className="space-y-4">
       <h1 className="font-display text-2xl">CATEGORIES</h1>
+      <p className="text-[11px] text-muted-foreground -mt-2">
+        Per-category commission %, warranty defaults, and a JSON submission schema for dynamic
+        seller / buyer fields and delivery methods.
+      </p>
       <div className="space-y-2">
         {data?.categories.map((c) => (
           <div
@@ -55,6 +79,11 @@ function AdminCategories() {
               warranty {c.default_warranty_hours}h · fee {c.commission_pct}% · {c.product_count}{" "}
               live products
             </span>
+            {c.submission_schema && (
+              <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-primary/15 text-primary">
+                CUSTOM SCHEMA
+              </span>
+            )}
             {c.risk_tier === "high" && (
               <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-yellow-500/15 text-yellow-400">
                 HIGH RISK
@@ -77,6 +106,7 @@ function AdminCategories() {
                   commissionPct: c.commission_pct as number,
                   riskTier: c.risk_tier as never,
                   isActive: !!c.is_active,
+                  submissionSchema: (c.submission_schema as string) ?? "",
                 })
               }
             >
@@ -87,7 +117,7 @@ function AdminCategories() {
       </div>
 
       <form
-        className="bg-card border border-border rounded-lg p-4 space-y-3 max-w-xl"
+        className="bg-card border border-border rounded-lg p-4 space-y-3 max-w-3xl"
         onSubmit={(e) => {
           e.preventDefault();
           save.mutate();
@@ -148,6 +178,31 @@ function AdminCategories() {
           />
           Active (visible to buyers and sellers)
         </label>
+
+        <div className="space-y-1.5 pt-2 border-t border-border">
+          <label className="text-xs font-bold flex items-center justify-between">
+            <span>Submission schema (JSON, optional)</span>
+            <button
+              type="button"
+              className="text-[10px] text-primary"
+              onClick={() => setForm({ ...form, submissionSchema: SCHEMA_EXAMPLE })}
+            >
+              Insert example →
+            </button>
+          </label>
+          <p className="text-[10px] text-muted-foreground">
+            Add custom seller fields, buyer-required fields at checkout, and delivery methods for
+            this category. Leave blank to use the global defaults.
+          </p>
+          <Textarea
+            rows={10}
+            placeholder={SCHEMA_EXAMPLE}
+            value={form.submissionSchema}
+            onChange={(e) => setForm({ ...form, submissionSchema: e.target.value })}
+            className="font-mono text-[11px]"
+          />
+        </div>
+
         <div className="flex gap-2">
           <Button size="sm" type="submit" disabled={save.isPending}>
             {form.categoryId ? "Save changes" : "Create category"}

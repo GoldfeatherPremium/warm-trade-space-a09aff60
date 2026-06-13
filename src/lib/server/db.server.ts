@@ -681,6 +681,10 @@ async function migrate(e: Engine): Promise<void> {
     `alter table withdrawals add column from_credits integer not null default 0`,
     // --- Phase 6: frozen product snapshot for order proof ---
     `alter table orders add column product_snapshot text`,
+    // --- Phase 4: per-category submission schema + product custom attrs + admin SEO copy ---
+    `alter table categories add column submission_schema text`,
+    `alter table products add column category_attrs text`,
+    `alter table products add column admin_seo_description text`,
   ];
   for (const stmt of addColumns) {
     await e.exec(stmt).catch(() => {}); // already exists

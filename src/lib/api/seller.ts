@@ -108,6 +108,7 @@ const productInput = z.object({
   subscriptionCycleDays: z.number().int().min(1).max(365).default(30),
   subscriptionSeatsTotal: z.number().int().min(1).max(50).default(1),
   downloadSizeMb: z.number().int().min(0).max(50_000).default(0),
+  categoryAttrs: z.record(z.string(), z.string().max(2000)).optional(),
 });
 
 const MAX_ACTIVE_LISTINGS: Record<number, number> = { 1: 10, 2: 25, 3: 60, 4: 150, 5: 100_000 };
@@ -219,6 +220,12 @@ export const saveProduct = createServerFn({ method: "POST" })
         );
       }
       await attachImagesToProduct(data.productId, user.id, data.imageIds);
+      await run(`update products set category_attrs = ? where id = ?`, [
+        data.categoryAttrs && Object.keys(data.categoryAttrs).length > 0
+          ? JSON.stringify(data.categoryAttrs)
+          : null,
+        data.productId,
+      ]);
       await audit(user.id, "product.update", "product", data.productId);
       return { productId: data.productId };
     }
@@ -282,6 +289,12 @@ export const saveProduct = createServerFn({ method: "POST" })
       );
     }
     await attachImagesToProduct(id, user.id, data.imageIds);
+    await run(`update products set category_attrs = ? where id = ?`, [
+      data.categoryAttrs && Object.keys(data.categoryAttrs).length > 0
+        ? JSON.stringify(data.categoryAttrs)
+        : null,
+      id,
+    ]);
     await audit(user.id, "product.create", "product", id);
     return { productId: id };
   });
