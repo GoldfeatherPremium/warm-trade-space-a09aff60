@@ -35,6 +35,8 @@ function SlaBadge({ openedAt, slaHours, resolved }: { openedAt: number; slaHours
 
 function AdminDisputes() {
   const qc = useQueryClient();
+  const { banner } = useMe();
+  const slaHours = banner?.disputeSlaHours ?? 72;
   const { data } = useQuery({
     queryKey: ["adminDisputes"],
     queryFn: () => listDisputes(),
@@ -86,6 +88,11 @@ function AdminDisputes() {
             >
               {(dd.status as string).replaceAll("_", " ").toUpperCase()}
             </span>
+            <SlaBadge
+              openedAt={dd.created_at as number}
+              slaHours={slaHours}
+              resolved={dd.status === "resolved"}
+            />
             <Link
               to="/disputes/$orderId"
               params={{ orderId: dd.order_id as string }}
