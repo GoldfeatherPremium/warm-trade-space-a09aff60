@@ -70,6 +70,7 @@ function AdminProducts() {
                 {usdtShort(p.price_cents as number)} · {dateTime(p.created_at as number)}
               </p>
               <p className="text-[11px] text-muted-foreground line-clamp-2">{p.description}</p>
+              <div className="flex items-center gap-2">
               {p.status === "pending_review" && (
                 <div className="flex gap-2 items-center pt-1">
                   <Input
