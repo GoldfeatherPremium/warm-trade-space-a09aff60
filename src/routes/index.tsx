@@ -15,7 +15,7 @@ import {
   UserPlus,
   PackageSearch,
 } from "lucide-react";
-import { getHomeData, getLiveMarketPulse, getMyRecommendations } from "@/lib/api/catalog";
+import { getHomeData, getLiveMarketPulse, getMyRecommendations, filterAvailableSlugs } from "@/lib/api/catalog";
 import { getFollowedFeed } from "@/lib/api/follows";
 import { PageShell } from "@/components/shell";
 import { ProductCard } from "@/components/product-card";
@@ -115,7 +115,27 @@ function Index() {
   const [recent, setRecent] = useState<RecentItem[]>([]);
   useEffect(() => {
     try {
-      setRecent(JSON.parse(localStorage.getItem("xv_recent") ?? "[]"));
+      const raw: RecentItem[] = JSON.parse(localStorage.getItem("xv_recent") ?? "[]");
+      if (raw.length === 0) {
+        setRecent([]);
+        return;
+      }
+      // Scrub against the server: drop items whose product is no longer
+      // active, whose seller is banned, or whose seller is on vacation.
+      filterAvailableSlugs({ data: { slugs: raw.map((r) => r.slug).slice(0, 24) } })
+        .then(({ slugs }) => {
+          const allowed = new Set(slugs);
+          const kept = raw.filter((r) => allowed.has(r.slug));
+          setRecent(kept);
+          if (kept.length !== raw.length) {
+            try {
+              localStorage.setItem("xv_recent", JSON.stringify(kept));
+            } catch {
+              /* ignore */
+            }
+          }
+        })
+        .catch(() => setRecent(raw));
     } catch {
       /* ignore */
     }

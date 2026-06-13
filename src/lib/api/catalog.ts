@@ -81,6 +81,12 @@ const productSelect = `
   join users u on u.id = p.seller_id
   left join catalog_items ci on ci.id = p.item_id`;
 
+// Reusable WHERE fragment to keep listings hygienic across every public
+// surface: only show products from non-banned, non-vacationing sellers.
+// Stock-count gating happens via the lifecycle sweep flipping status to
+// 'out_of_stock' for auto-delivery products with zero available stock.
+export const PUBLIC_SELLER_COND = `u.vacation_mode = 0 and u.is_banned = 0`;
+
 function mapProduct(r: Record<string, unknown>): PublicProduct {
   const {
     s_id,
@@ -150,20 +156,22 @@ export const getHomeData = createServerFn({ method: "GET" }).handler(async () =>
       product_count: number;
     }>(
       `select c.id, c.name, c.slug, c.icon, c.default_warranty_hours, c.commission_pct, c.risk_tier,
-              (select count(*) from products p where p.category_id = c.id and p.status = 'active') as product_count
+              (select count(*) from products p join users u on u.id = p.seller_id
+                 where p.category_id = c.id and p.status = 'active'
+                   and u.vacation_mode = 0 and u.is_banned = 0) as product_count
        from categories c where c.is_active = 1 order by c.sort`,
     ),
     q(
-      `${productSelect} where p.status = 'active'
+      `${productSelect} where p.status = 'active' and ${PUBLIC_SELLER_COND}
        order by (case when p.featured_until is not null and p.featured_until > ? then 0 else 1 end),
                 p.sold_count desc, p.views desc limit 8`,
       [Date.now()],
     ),
-    q(`${productSelect} where p.status = 'active' order by p.created_at desc limit 8`),
+    q(`${productSelect} where p.status = 'active' and ${PUBLIC_SELLER_COND} order by p.created_at desc limit 8`),
     q<PublicSeller>(
       `select id, username, seller_level, rating, rating_count, total_sales, completion_rate, vacation_mode, created_at,
               verification_tier, trust_score
-       from users where seller_status = 'approved' and is_banned = 0 order by trust_score desc, total_sales desc limit 6`,
+       from users where seller_status = 'approved' and is_banned = 0 and vacation_mode = 0 order by trust_score desc, total_sales desc limit 6`,
     ),
     q<{ product_title: string; total_cents: number; created_at: number; buyer: string }>(
       `select o.product_title, o.total_cents, o.created_at, u.username as buyer
@@ -263,7 +271,7 @@ export const browseProducts = createServerFn({ method: "GET" })
   )
   .handler(async ({ data }) => {
     await appContext();
-    const where: string[] = [`p.status = 'active'`];
+    const where: string[] = [`p.status = 'active'`, PUBLIC_SELLER_COND];
     const params: Array<string | number> = [];
     if (data.category) {
       where.push(`c.slug = ?`);
@@ -349,7 +357,7 @@ export const getRelatedProducts = createServerFn({ method: "GET" })
     // Prefer same catalog item, then same category. Exclude self & out-of-stock.
     const rows = await q(
       `${productSelect}
-       where p.status = 'active' and p.id <> ?
+       where p.status = 'active' and ${PUBLIC_SELLER_COND} and p.id <> ?
          and (p.item_id = ? or p.category_id = ?)
        order by (case when p.item_id = ? then 0 else 1 end),
                 p.sold_count desc, u.rating desc
@@ -387,7 +395,7 @@ export const getMyRecommendations = createServerFn({ method: "GET" })
     const cats = Array.from(new Set(signals.map((s) => s.category_id).filter(Boolean))) as string[];
     const items = Array.from(new Set(signals.map((s) => s.item_id).filter(Boolean))) as string[];
     const owned = Array.from(new Set(signals.map((s) => s.product_id)));
-    const where: string[] = [`p.status = 'active'`];
+    const where: string[] = [`p.status = 'active'`, PUBLIC_SELLER_COND];
     const params: Array<string | number> = [];
     if (owned.length) {
       where.push(`p.id not in (${owned.map(() => "?").join(",")})`);
@@ -534,14 +542,15 @@ export const quickSearch = createServerFn({ method: "GET" })
         delivery_type: string;
       }>(
         `select p.id, p.title, p.slug, p.image_key, p.price_cents, c.name as category_name, p.delivery_type
-         from products p join categories c on c.id = p.category_id
-         where p.status = 'active' and (lower(p.title) like ? or lower(p.description) like ? or lower(coalesce(p.platform,'')) like ?)
+         from products p join categories c on c.id = p.category_id join users u on u.id = p.seller_id
+         where p.status = 'active' and ${PUBLIC_SELLER_COND}
+           and (lower(p.title) like ? or lower(p.description) like ? or lower(coalesce(p.platform,'')) like ?)
          order by p.sold_count desc, p.views desc limit 6`,
         [like, like, like],
       ),
       q<{ id: string; username: string; rating: number; total_sales: number }>(
         `select id, username, rating, total_sales from users
-         where seller_status = 'approved' and is_banned = 0 and lower(username) like ?
+         where seller_status = 'approved' and is_banned = 0 and vacation_mode = 0 and lower(username) like ?
          order by total_sales desc limit 4`,
         [like],
       ),
@@ -581,7 +590,7 @@ export const browseFacets = createServerFn({ method: "GET" })
     await appContext();
     // Build a shared WHERE excluding the facet being counted, so the user
     // can switch between categories without losing the option list.
-    const baseConds: string[] = [`p.status = 'active'`];
+    const baseConds: string[] = [`p.status = 'active'`, PUBLIC_SELLER_COND];
     const baseParams: Array<string | number> = [];
     if (data.q) {
       const tokens = tokenize(data.q);
@@ -677,12 +686,31 @@ export const searchSuggest = createServerFn({ method: "GET" })
     const term = data.q.trim().toLowerCase();
     if (term.length < 2) return { suggestions: [] as string[] };
     const rows = await q<{ s: string }>(
-      `select distinct lower(title) s from products
-         where status = 'active' and lower(title) like ?
-         order by sold_count desc limit 8`,
+      `select distinct lower(p.title) s from products p join users u on u.id = p.seller_id
+         where p.status = 'active' and ${PUBLIC_SELLER_COND} and lower(p.title) like ?
+         order by p.sold_count desc limit 8`,
       [`%${term}%`],
     );
     return { suggestions: rows.map((r) => r.s) };
+  });
+
+/**
+ * Returns only those slugs whose product is currently purchasable: active
+ * status, seller not banned, seller not on vacation. Used to scrub the
+ * client-side "recently viewed" rail so unavailable items disappear.
+ */
+export const filterAvailableSlugs = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ slugs: z.array(z.string().max(160)).max(24) }))
+  .handler(async ({ data }) => {
+    await appContext();
+    if (data.slugs.length === 0) return { slugs: [] as string[] };
+    const placeholders = data.slugs.map(() => "?").join(",");
+    const rows = await q<{ slug: string }>(
+      `select p.slug from products p join users u on u.id = p.seller_id
+        where p.slug in (${placeholders}) and p.status = 'active' and ${PUBLIC_SELLER_COND}`,
+      data.slugs,
+    );
+    return { slugs: rows.map((r) => r.slug) };
   });
 
 /**
@@ -706,11 +734,12 @@ export const getFrequentlyBoughtTogether = createServerFn({ method: "GET" })
          join orders b on b.buyer_id = a.buyer_id and b.product_id <> a.product_id
                        and abs(b.created_at - a.created_at) < ${30 * 86_400_000}
          join products p on p.id = b.product_id
+         join users u on u.id = p.seller_id
         where a.product_id = ?
           and a.created_at >= ?
           and a.status in ('completed','released','delivered')
           and b.status in ('completed','released','delivered')
-          and p.status = 'active'
+          and p.status = 'active' and ${PUBLIC_SELLER_COND}
         group by p.id
         order by pairs desc
         limit ?`,
@@ -725,10 +754,11 @@ export const getFrequentlyBoughtTogether = createServerFn({ method: "GET" })
       if (seed) {
         const excludes = [data.productId, ...ids];
         const fillers = await q<{ id: string }>(
-          `select id from products
-            where status = 'active' and id not in (${excludes.map(() => "?").join(",")})
-              and category_id = ? and seller_id <> ?
-            order by sold_count desc limit ?`,
+          `select p.id from products p join users u on u.id = p.seller_id
+            where p.status = 'active' and ${PUBLIC_SELLER_COND}
+              and p.id not in (${excludes.map(() => "?").join(",")})
+              and p.category_id = ? and p.seller_id <> ?
+            order by p.sold_count desc limit ?`,
           [...excludes, seed.category_id, seed.seller_id, data.limit - ids.length],
         );
         ids = ids.concat(fillers.map((f) => f.id));
@@ -804,7 +834,7 @@ export const getSellerLeaderboard = createServerFn({ method: "GET" })
                  where p.seller_id = u.id and p.status = 'active'
                  group by c.id, c.name order by sum(p.sold_count) desc limit 1) as category_name
          from users u
-        where u.seller_status = 'approved' and u.is_banned = 0 and u.total_sales > 0
+        where u.seller_status = 'approved' and u.is_banned = 0 and u.vacation_mode = 0 and u.total_sales > 0
         order by (u.trust_score * 0.7 + (case when u.total_sales < 500 then u.total_sales else 500 end) * 0.3) desc, u.total_sales desc
         limit ?`,
       [since, since, data.limit],

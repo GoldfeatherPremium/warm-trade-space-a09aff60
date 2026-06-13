@@ -13,9 +13,11 @@ This is a large batch (19 items). I'll group them into phases so each ships veri
 - **Online presence**: add `users.last_seen_at`, ping every 30s from `<Shell/>` via a `pingPresence` server fn; green dot if `now - last_seen_at < 90s`, grey otherwise. Show in chat list, product seller card, storefront.
 - **Admin chat monitor**: new `/admin/chats` page — searchable conversation list across whole platform, click to view full transcript (read-only), filter by flagged. Already have `canAccessConversation(staff=true)` — just expose UI.
 
-## Phase 3 — Vacation mode + listing hygiene (items 3, 4)
-- Filter `browse`, search, recently-viewed, recommendations, storefront public view: exclude products where `status != 'active'` OR `seller.vacation_mode = 1` OR `stock_count = 0`. Already partial — audit `catalog.ts`, `extras.ts` recently-viewed query, `growth.ts`.
-- Add `users.vacation_mode` toggle in `seller.index.tsx` settings if not present.
+## Phase 3 — Vacation mode + listing hygiene (items 3, 4) ✅ DONE
+- ✅ All public catalog surfaces now filter on `u.vacation_mode = 0 and u.is_banned = 0`: browseProducts, browseFacets, getMyRecommendations, getRelatedProducts, getFrequentlyBoughtTogether, getHomeData (trending/newest/topSellers/category counts), searchProducts, searchSuggest, getSellerLeaderboard, getFollowedFeed.
+- ✅ New `filterAvailableSlugs` server fn; `index.tsx` recently-viewed rail now scrubs the localStorage cache against the server so removed/vacation/banned-seller products disappear from "Recently viewed".
+- ✅ Public storefront (`s.$username.tsx`) hides all product listings while seller is on vacation and shows a friendly banner instead.
+- ✅ Vacation toggle already lives in `account.tsx` settings; backed by `users.vacation_mode` updates in `auth.ts`.
 
 ## Phase 4 — Rich product submission + admin edit + SEO + commission config (items 10, 11, 12, 13, 19)
 - **Per-category dynamic submission form**: extend `categories` with `submission_schema` (JSON) — admin defines required fields (e.g. "Region", "Subscription length", "Delivery method") per category in `admin.categories.tsx`. `seller.new-product.tsx` renders the schema dynamically. Saved in `products.category_attrs` (JSON).
