@@ -162,6 +162,14 @@ function ProductForm() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  // Dynamic per-category schema
+  const { data: catSchema } = useQuery({
+    queryKey: ["catSchema", form.categoryId],
+    queryFn: () => getCategorySchema({ data: { categoryId: form.categoryId } }),
+    enabled: !!form.categoryId,
+  });
+  const sellerFields = catSchema?.schema?.sellerFields ?? [];
+
   const save = useMutation({
     mutationFn: () =>
       saveProduct({
@@ -187,6 +195,7 @@ function ProductForm() {
           region: regionMode === "global" ? "Global" : regionCountry || undefined,
           platform: form.platform || undefined,
           requiredInfo: form.requiredInfo || undefined,
+          categoryAttrs: Object.keys(categoryAttrs).length ? categoryAttrs : undefined,
         },
       }),
     onSuccess: () => {
