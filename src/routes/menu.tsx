@@ -51,6 +51,23 @@ function AccountHub() {
   const doLogout = useMutation({
     mutationFn: () => logout(),
     onSuccess: () => {
+      try {
+        window.localStorage.removeItem("xv_me_cache_v1");
+      } catch {
+        /* noop */
+      }
+      qc.setQueryData(["me"], {
+        user: null,
+        unreadNotifications: 0,
+        unreadMessages: 0,
+        banner: {
+          announcement: null,
+          maintenance: false,
+          presencePingSeconds: 60,
+          lowStockThreshold: 5,
+          disputeSlaHours: 72,
+        },
+      });
       qc.invalidateQueries();
       navigate({ to: "/" });
     },
