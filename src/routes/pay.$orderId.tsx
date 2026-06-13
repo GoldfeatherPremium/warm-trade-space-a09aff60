@@ -78,6 +78,7 @@ function PayPage() {
   }, [data?.order.status]);
 
   const walletAvailable = walletData?.wallet.available_cents ?? 0;
+  const creditsAvailable = credits?.balance ?? 0;
 
   if (!data)
     return (
