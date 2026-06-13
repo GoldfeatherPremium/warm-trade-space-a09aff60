@@ -692,30 +692,63 @@ function ProductForm() {
           </div>
         )}
       </div>
-      {catSchema?.config?.requiresSubscription && (
-        <div className="space-y-1.5 bg-primary/5 border border-primary/30 rounded-lg p-3">
-          <Label className="text-xs font-bold text-primary">Subscription duration *</Label>
-          <select
-            required
-            value={form.subscriptionDuration}
-            onChange={(e) =>
-              setForm({ ...form, subscriptionDuration: e.target.value as never })
-            }
-            className="w-full bg-secondary border border-border rounded-md px-2 py-2 text-xs h-9"
-          >
-            <option value="">Select…</option>
-            {(catSchema?.config?.allowedDurations ?? []).map((d) => (
-              <option key={d} value={d}>
-                {d}
-              </option>
-            ))}
-          </select>
-          <p className="text-[10px] text-muted-foreground">
-            Admin has marked this category as subscription-based. Buyers will see the duration on
-            the product card.
-          </p>
-        </div>
-      )}
+      {(() => {
+        const requires = !!catSchema?.config?.requiresSubscription;
+        const allowed =
+          (catSchema?.config?.allowedDurations ?? []).length > 0
+            ? catSchema!.config!.allowedDurations!
+            : (["7d", "14d", "1m", "3m", "6m", "12m", "lifetime"] as readonly string[]);
+        return (
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5 bg-primary/5 border border-primary/30 rounded-lg p-3">
+              <Label className="text-xs font-bold text-primary">
+                Subscription duration {requires ? "*" : "(optional)"}
+              </Label>
+              <select
+                required={requires}
+                value={form.subscriptionDuration}
+                onChange={(e) =>
+                  setForm({ ...form, subscriptionDuration: e.target.value as never })
+                }
+                className="w-full bg-secondary border border-border rounded-md px-2 py-2 text-xs h-9"
+              >
+                <option value="">{requires ? "Select…" : "Not a subscription"}</option>
+                {allowed.map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
+              <p className="text-[10px] text-muted-foreground">
+                Drives buyer-facing labels and future funds-release schedules tied to subscription
+                length.
+              </p>
+            </div>
+            <div className="space-y-1.5 bg-accent/5 border border-accent/30 rounded-lg p-3">
+              <Label className="text-xs font-bold text-accent">Insurance period</Label>
+              <div className="flex gap-1.5 flex-wrap">
+                {[0, 7, 15, 30, 60, 90].map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => setInsuranceDays(d)}
+                    className={`px-2.5 py-1.5 rounded-md text-[11px] font-bold border ${
+                      insuranceDays === d
+                        ? "border-accent bg-accent/15 text-accent"
+                        : "border-border bg-secondary hover:bg-border"
+                    }`}
+                  >
+                    {d === 0 ? "None" : `${d}d`}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Extends buyer warranty; longer insurance = later funds release but higher ranking.
+              </p>
+            </div>
+          </div>
+        );
+      })()}
 
 
       <div className="space-y-1.5">
@@ -803,28 +836,6 @@ function ProductForm() {
           </div>
           <p className="text-[10px] text-muted-foreground">
             Expired listings pause automatically; edit & resubmit to relist.
-          </p>
-        </div>
-        <div className="space-y-1.5">
-          <Label className="text-xs">🛡 Insurance program</Label>
-          <div className="flex gap-2 flex-wrap">
-            {[0, 7, 15, 30].map((d) => (
-              <button
-                key={d}
-                type="button"
-                onClick={() => setInsuranceDays(d)}
-                className={`px-3 py-2 rounded-md text-xs font-bold border ${
-                  insuranceDays === d
-                    ? "border-accent bg-accent/15 text-accent"
-                    : "border-border bg-secondary hover:bg-border"
-                }`}
-              >
-                {d === 0 ? "Do not join" : `${d} Days`}
-              </button>
-            ))}
-          </div>
-          <p className="text-[10px] text-muted-foreground">
-            Extends buyer warranty by the chosen days; insured listings rank first in browse.
           </p>
         </div>
       </div>
