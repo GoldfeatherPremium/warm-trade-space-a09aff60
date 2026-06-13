@@ -542,14 +542,15 @@ export const quickSearch = createServerFn({ method: "GET" })
         delivery_type: string;
       }>(
         `select p.id, p.title, p.slug, p.image_key, p.price_cents, c.name as category_name, p.delivery_type
-         from products p join categories c on c.id = p.category_id
-         where p.status = 'active' and (lower(p.title) like ? or lower(p.description) like ? or lower(coalesce(p.platform,'')) like ?)
+         from products p join categories c on c.id = p.category_id join users u on u.id = p.seller_id
+         where p.status = 'active' and ${PUBLIC_SELLER_COND}
+           and (lower(p.title) like ? or lower(p.description) like ? or lower(coalesce(p.platform,'')) like ?)
          order by p.sold_count desc, p.views desc limit 6`,
         [like, like, like],
       ),
       q<{ id: string; username: string; rating: number; total_sales: number }>(
         `select id, username, rating, total_sales from users
-         where seller_status = 'approved' and is_banned = 0 and lower(username) like ?
+         where seller_status = 'approved' and is_banned = 0 and vacation_mode = 0 and lower(username) like ?
          order by total_sales desc limit 4`,
         [like],
       ),
