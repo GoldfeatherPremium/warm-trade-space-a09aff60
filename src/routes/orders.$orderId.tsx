@@ -441,6 +441,45 @@ function OrderPage() {
               </Button>
             </div>
           )}
+
+          <OrderAttachments orderId={orderId} canUpload={viewerIsBuyer || viewerIsSeller} />
+
+          {data.productSnapshot && (
+            <div className="bg-card border border-border rounded-lg p-4 space-y-2">
+              <h2 className="text-xs font-bold tracking-widest text-muted-foreground flex items-center gap-1.5">
+                <FileText className="size-4" /> WHAT WAS SOLD (FROZEN AT PURCHASE)
+              </h2>
+              <dl className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px]">
+                <Snap label="Title" value={data.productSnapshot.title} />
+                <Snap label="Unit price" value={usdt(data.productSnapshot.unit_price_cents ?? 0)} />
+                <Snap label="Delivery" value={data.productSnapshot.delivery_type} />
+                <Snap label="Warranty" value={`${data.productSnapshot.warranty_hours ?? 0}h`} />
+                {data.productSnapshot.region && (
+                  <Snap label="Region" value={data.productSnapshot.region} />
+                )}
+                {data.productSnapshot.platform && (
+                  <Snap label="Platform" value={data.productSnapshot.platform} />
+                )}
+                {data.productSnapshot.variant_title && (
+                  <Snap label="Variant" value={data.productSnapshot.variant_title} />
+                )}
+                {data.productSnapshot.required_info && (
+                  <div className="col-span-2 mt-1">
+                    <dt className="text-[9px] font-bold tracking-widest text-muted-foreground">
+                      REQUIRED INFO
+                    </dt>
+                    <dd className="text-[11px] text-muted-foreground whitespace-pre-wrap">
+                      {data.productSnapshot.required_info}
+                    </dd>
+                  </div>
+                )}
+              </dl>
+              <p className="text-[10px] text-muted-foreground pt-1">
+                This snapshot is the source of truth in disputes — it cannot be edited after the
+                order is placed.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* order chat */}
@@ -454,5 +493,197 @@ function OrderPage() {
         </div>
       </div>
     </PageShell>
+  );
+}
+
+function Snap({ label, value }: { label: string; value: string | number | null | undefined }) {
+  if (value === null || value === undefined || value === "") return null;
+  return (
+    <div>
+      <dt className="text-[9px] font-bold tracking-widest text-muted-foreground">
+        {label.toUpperCase()}
+      </dt>
+      <dd className="text-[11px] font-mono">{String(value)}</dd>
+    </div>
+  );
+}
+
+const KIND_LABEL: Record<string, string> = {
+  proof: "Delivery proof",
+  before: "Before",
+  after: "After",
+  evidence: "Evidence",
+  misc: "Other",
+};
+
+function OrderAttachments({ orderId, canUpload }: { orderId: string; canUpload: boolean }) {
+  const qc = useQueryClient();
+  const { data } = useQuery({
+    queryKey: ["orderAttachments", orderId],
+    queryFn: () => listOrderAttachments({ data: { orderId } }),
+    refetchInterval: 8000,
+  });
+  const [kind, setKind] = useState<"proof" | "before" | "after" | "evidence" | "misc">("proof");
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const del = useMutation({
+    mutationFn: (id: string) => deleteOrderAttachment({ data: { id } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["orderAttachments", orderId] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const onPick = async (file: File) => {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File too large (5 MB max)");
+      return;
+    }
+    setBusy(true);
+    try {
+      const buf = await file.arrayBuffer();
+      let bin = "";
+      const u8 = new Uint8Array(buf);
+      for (let i = 0; i < u8.length; i++) bin += String.fromCharCode(u8[i]);
+      const dataBase64 = btoa(bin);
+      await addOrderAttachment({
+        data: { orderId, mime: file.type, kind, dataBase64, note: note || undefined },
+      });
+      setNote("");
+      toast.success("Uploaded");
+      qc.invalidateQueries({ queryKey: ["orderAttachments", orderId] });
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="bg-card border border-border rounded-lg p-4 space-y-3">
+      <h2 className="text-xs font-bold tracking-widest text-muted-foreground flex items-center gap-1.5">
+        <Upload className="size-4" /> ATTACHMENTS & PROOF
+      </h2>
+
+      {canUpload && (
+        <div className="bg-secondary/40 border border-border rounded-md p-2.5 space-y-2">
+          <div className="flex flex-wrap gap-2 items-center">
+            <select
+              value={kind}
+              onChange={(e) => setKind(e.target.value as typeof kind)}
+              className="h-8 text-[11px] rounded-md bg-secondary border border-border px-2"
+            >
+              <option value="proof">Delivery proof</option>
+              <option value="before">Before screenshot</option>
+              <option value="after">After screenshot</option>
+              <option value="evidence">Dispute evidence</option>
+              <option value="misc">Other</option>
+            </select>
+            <input
+              type="text"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Optional note (max 500 chars)"
+              className="flex-1 min-w-[160px] h-8 text-[11px] rounded-md bg-secondary border border-border px-2"
+              maxLength={500}
+            />
+            <label className="inline-flex items-center gap-1.5 h-8 px-3 text-[11px] font-bold rounded-md bg-primary text-primary-foreground cursor-pointer">
+              {busy ? "Uploading…" : "Pick file"}
+              <input
+                type="file"
+                accept="image/*,video/mp4,video/webm,video/quicktime"
+                className="hidden"
+                disabled={busy}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) onPick(f);
+                  e.target.value = "";
+                }}
+              />
+            </label>
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            5 MB max. PNG/JPEG/WebP/GIF or MP4/WebM. Staff can request additional proof at any time.
+          </p>
+        </div>
+      )}
+
+      {(data?.attachments.length ?? 0) === 0 ? (
+        <p className="text-[11px] text-muted-foreground italic">No attachments yet.</p>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {data!.attachments.map((a) => (
+            <AttachmentTile
+              key={a.id}
+              id={a.id}
+              kind={a.kind}
+              mime={a.mime}
+              note={a.note}
+              uploaderRole={a.uploader_role}
+              createdAt={a.created_at}
+              onDelete={() => del.mutate(a.id)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AttachmentTile({
+  id,
+  kind,
+  mime,
+  note,
+  uploaderRole,
+  createdAt,
+  onDelete,
+}: {
+  id: string;
+  kind: string;
+  mime: string;
+  note: string | null;
+  uploaderRole: string;
+  createdAt: number;
+  onDelete: () => void;
+}) {
+  const { data } = useQuery({
+    queryKey: ["attachmentData", id],
+    queryFn: () => getOrderAttachmentData({ data: { id } }),
+    staleTime: 5 * 60_000,
+  });
+  const src = data ? `data:${data.mime};base64,${data.dataBase64}` : null;
+  const isVideo = mime.startsWith("video/");
+  return (
+    <div className="bg-secondary/40 border border-border rounded-md overflow-hidden flex flex-col">
+      <div className="aspect-video bg-background grid place-items-center text-[10px] text-muted-foreground">
+        {!src ? (
+          "Loading…"
+        ) : isVideo ? (
+          <video src={src} controls className="w-full h-full object-contain bg-black" />
+        ) : (
+          <a href={src} target="_blank" rel="noreferrer" className="block w-full h-full">
+            <img src={src} alt={kind} className="w-full h-full object-cover" />
+          </a>
+        )}
+      </div>
+      <div className="px-2 py-1.5 space-y-0.5">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-accent">
+          {KIND_LABEL[kind] ?? kind}{" "}
+          <span className="text-muted-foreground font-normal">· {uploaderRole}</span>
+        </p>
+        {note && <p className="text-[10px] text-muted-foreground line-clamp-2">{note}</p>}
+        <div className="flex items-center justify-between gap-1">
+          <span className="text-[9px] text-muted-foreground">{dateTime(createdAt)}</span>
+          <button
+            onClick={onDelete}
+            className="text-[10px] text-muted-foreground hover:text-destructive"
+            title="Delete"
+          >
+            <Trash2 className="size-3" />
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
