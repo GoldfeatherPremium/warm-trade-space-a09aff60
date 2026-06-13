@@ -212,6 +212,29 @@ function AdminSettings() {
             hint: "Products with stock at or below this number show a low-stock badge.",
             step: "1",
           })}
+          {num({
+            key: "chatRateLimitPerMin",
+            label: "Chat rate limit (messages / minute / user)",
+            hint: "Hard cap to stop spam. 20 is a sane default.",
+            step: "1",
+          })}
+          <div className="space-y-1.5">
+            <Label className="text-xs">Automod severity</Label>
+            <select
+              value={form.automodSeverity}
+              onChange={(e) =>
+                setForm({ ...form, automodSeverity: e.target.value as "block" | "flag" })
+              }
+              className="w-full h-9 rounded-md border border-border bg-background px-2 text-xs"
+            >
+              <option value="block">Block — hard-reject violating messages</option>
+              <option value="flag">Flag only — let it through, mark for staff review</option>
+            </select>
+            <p className="text-[10px] text-muted-foreground">
+              Controls what happens when a buyer↔seller message trips an automod pattern (PII, off-platform
+              payment, external links).
+            </p>
+          </div>
         </TabsContent>
       </Tabs>
 
