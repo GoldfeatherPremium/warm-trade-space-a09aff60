@@ -129,13 +129,19 @@ export async function getSettings(): Promise<SiteSettings> {
 // ---------- chat helpers ----------
 const AUTOMOD_PATTERNS: Array<[RegExp, string]> = [
   [/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i, "email address"],
-  [/(\+?\d[\d\s().-]{8,}\d)/, "phone number"],
-  [/\b(telegram|t\.me|whatsapp|wa\.me|discord\.gg|signal)\b/i, "external messenger"],
+  [/(\+?\d[\d\s().-]{7,}\d)/, "phone number"],
   [
-    /\b(paypal|venmo|cashapp|zelle|western union|bank transfer|btc address)\b/i,
+    /\b(telegram|t\.me|whatsapp|wa\.me|discord\.gg|discord\.com\/invite|signal\.me|signal|viber|wechat|kakao|line\.me|skype|snapchat|instagram|facebook|messenger|m\.me|twitter|x\.com|t\.co)\b/i,
+    "external messenger / social",
+  ],
+  [/(@[a-z0-9_]{4,}\b|#\d{4}\b)/i, "external handle (Telegram / Discord tag)"],
+  [
+    /\b(paypal|venmo|cashapp|cash\.app|zelle|western union|moneygram|bank transfer|wire transfer|iban|swift|btc address|bitcoin address|usdt address|0x[a-f0-9]{20,})\b/i,
     "off-platform payment",
   ],
-  [/\bpay(ing)?\s+(me\s+)?(outside|directly|off[- ]?site)\b/i, "fee circumvention"],
+  [/\bpay(ing)?\s+(me\s+)?(outside|directly|off[- ]?site|in[- ]?person)\b/i, "fee circumvention"],
+  [/\b(meet[- ]?up|in person|street address|zip\s?code|postal code)\b/i, "physical contact / address"],
+  [/https?:\/\/(?!(?:[\w-]+\.)*(?:warm-trade-space\.lovable\.app|x-?vault\.[a-z]{2,}))\S+/i, "external link"],
 ];
 
 export function automodCheck(body: string): string | null {
