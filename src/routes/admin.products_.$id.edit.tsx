@@ -34,12 +34,15 @@ function AdminProductEdit() {
     warrantyHours: "",
     minQty: 1,
     maxQty: 50,
+    maxOrdersAtOnce: 10,
+    subscriptionDuration: "" as "" | "7d" | "14d" | "1m" | "3m" | "6m" | "12m" | "lifetime",
     region: "",
     platform: "",
     requiredInfo: "",
     adminSeoDescription: "",
     status: "active" as "active" | "paused" | "rejected" | "out_of_stock" | "pending_review",
   });
+
   const [categoryAttrs, setCategoryAttrs] = useState<Record<string, string>>({});
 
   useEffect(() => {
