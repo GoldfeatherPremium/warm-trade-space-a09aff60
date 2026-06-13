@@ -200,12 +200,12 @@ async function schemaAlreadyMigrated(e: Engine): Promise<boolean> {
     if (isPostgres()) {
       const r = await e.q<{ c: number }>(
         `select count(*)::int as c from information_schema.tables
-         where table_schema = 'public' and table_name = 'credit_ledger'`,
+         where table_schema = 'public' and table_name = 'order_attachments'`,
       );
       return !!r[0] && Number(r[0].c) > 0;
     }
     const r = await e.q<{ name: string }>(
-      `select name from sqlite_master where type='table' and name='credit_ledger'`,
+      `select name from sqlite_master where type='table' and name='order_attachments'`,
     );
     return r.length > 0;
   } catch {
@@ -679,6 +679,8 @@ async function migrate(e: Engine): Promise<void> {
     // --- Phase 5: buyer credits (refunds + promos go here, not into wallet cash) ---
     `alter table orders add column credits_applied_cents ${big} not null default 0`,
     `alter table withdrawals add column from_credits integer not null default 0`,
+    // --- Phase 6: frozen product snapshot for order proof ---
+    `alter table orders add column product_snapshot text`,
   ];
   for (const stmt of addColumns) {
     await e.exec(stmt).catch(() => {}); // already exists
@@ -756,6 +758,28 @@ async function migrate(e: Engine): Promise<void> {
   await e
     .exec(`create index if not exists idx_credit_ledger_user on credit_ledger(user_id, created_at)`)
     .catch(() => {});
+
+  // --- Phase 6: Order attachments (delivery proof, before/after, dispute evidence) ---
+  await e
+    .exec(
+      `create table if not exists order_attachments (
+        id text primary key,
+        order_id text not null references orders(id),
+        uploader_id text not null references users(id),
+        uploader_role text not null,
+        kind text not null,
+        mime text not null,
+        data text not null,
+        note text,
+        created_at ${big} not null
+      )`,
+    )
+    .catch(() => {});
+  await e
+    .exec(`create index if not exists idx_order_attachments on order_attachments(order_id, created_at)`)
+    .catch(() => {});
+
+
 
 
   await e

@@ -174,12 +174,26 @@ export const createOrder = createServerFn({ method: "POST" })
       const commissionPct = p!.cat_commission;
       const commission = Math.round((total * commissionPct) / 100);
       const expiresAt = t + settings.payment_window_minutes * 60_000;
+      const snapshot = JSON.stringify({
+        product_id: p!.id,
+        title: titleSnapshot,
+        image_key: p!.image_key,
+        delivery_type: p!.delivery_type,
+        delivery_sla_minutes: p!.delivery_sla_minutes,
+        warranty_hours: warrantyHours,
+        region: (p as unknown as { region?: string | null }).region ?? null,
+        platform: (p as unknown as { platform?: string | null }).platform ?? null,
+        required_info: p!.required_info ?? null,
+        unit_price_cents: unitPrice,
+        variant_title: variantTitle,
+        captured_at: t,
+      });
       await run(
         `insert into orders (id, order_no, buyer_id, seller_id, product_id, product_title, image_key, qty,
           unit_price_cents, total_cents, commission_pct, commission_cents, seller_net_cents, status,
           delivery_type, delivery_sla_minutes, warranty_hours, buyer_info, expires_at, created_at,
-          discount_cents, coupon_code, variant_title)
-         values (?,?,?,?,?,?,?,?,?,?,?,?,?, 'awaiting_payment', ?,?,?,?,?,?,?,?,?)`,
+          discount_cents, coupon_code, variant_title, product_snapshot)
+         values (?,?,?,?,?,?,?,?,?,?,?,?,?, 'awaiting_payment', ?,?,?,?,?,?,?,?,?,?)`,
         [
           orderId,
           makeOrderNo(),
@@ -203,6 +217,7 @@ export const createOrder = createServerFn({ method: "POST" })
           discount,
           couponCode,
           variantTitle,
+          snapshot,
         ],
       );
       await run(
@@ -368,6 +383,29 @@ export const getOrder = createServerFn({ method: "GET" })
       payload:
         isBuyer || isStaff(user) ? del.payload : del.payload ? "•••• (visible to buyer)" : null,
     }));
+    type Snap = {
+      product_id?: string;
+      title?: string;
+      image_key?: string | null;
+      delivery_type?: string;
+      delivery_sla_minutes?: number;
+      warranty_hours?: number;
+      region?: string | null;
+      platform?: string | null;
+      required_info?: string | null;
+      unit_price_cents?: number;
+      variant_title?: string | null;
+      captured_at?: number;
+    };
+    let snapshot: Snap | null = null;
+    const snapRaw = (o as unknown as { product_snapshot?: string | null }).product_snapshot;
+    if (snapRaw) {
+      try {
+        snapshot = JSON.parse(snapRaw) as Snap;
+      } catch {
+        snapshot = null;
+      }
+    }
     return {
       order: o!,
       deliveries: safeDeliveries,
@@ -379,6 +417,7 @@ export const getOrder = createServerFn({ method: "GET" })
       viewerIsBuyer: isBuyer,
       viewerIsSeller: o!.seller_id === user.id,
       autoConfirmHours: settings.auto_confirm_hours,
+      productSnapshot: snapshot,
     };
   });
 
