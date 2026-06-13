@@ -41,9 +41,11 @@ export const Route = createFileRoute("/p/$slug")({
       };
     }
     const title = `${p.title} — ${p.category_name} | X-VAULT`;
-    const desc = (p.description || `Buy ${p.title} on X-VAULT — escrow-protected, ${p.warranty_hours}h warranty.`)
-      .replace(/\s+/g, " ")
-      .slice(0, 155);
+    const descSrc =
+      (p.admin_seo_description && p.admin_seo_description.trim()) ||
+      p.description ||
+      `Buy ${p.title} on X-VAULT — escrow-protected, ${p.warranty_hours}h warranty.`;
+    const desc = descSrc.replace(/\s+/g, " ").slice(0, 155);
     const img = p.image_key && !p.image_key.startsWith("upload:")
       ? `${SITE}${productImage(p.image_key)}`
       : undefined;
