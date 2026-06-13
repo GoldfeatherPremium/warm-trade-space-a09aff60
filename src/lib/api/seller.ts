@@ -328,7 +328,17 @@ export const saveProduct = createServerFn({ method: "POST" })
         : null,
       id,
     ]);
+    await run(
+      `update products set subscription_duration = ?, max_orders_at_once = ?, manual_stock = ? where id = ?`,
+      [
+        data.subscriptionDuration ?? null,
+        data.maxOrdersAtOnce,
+        data.manualStock ?? null,
+        id,
+      ],
+    );
     await audit(user.id, "product.create", "product", id);
+
     return { productId: id };
   });
 
