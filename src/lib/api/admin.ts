@@ -910,6 +910,7 @@ export const updateAdminSettings = createServerFn({ method: "POST" })
       ],
     );
     await audit(staff.id, "settings.update", "site_settings", "1", data);
+    clearSettingsCache();
     return { ok: true };
   });
 
