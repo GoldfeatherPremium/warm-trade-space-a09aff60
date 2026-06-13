@@ -838,28 +838,6 @@ function ProductForm() {
             Expired listings pause automatically; edit & resubmit to relist.
           </p>
         </div>
-        <div className="space-y-1.5">
-          <Label className="text-xs">🛡 Insurance program</Label>
-          <div className="flex gap-2 flex-wrap">
-            {[0, 7, 15, 30].map((d) => (
-              <button
-                key={d}
-                type="button"
-                onClick={() => setInsuranceDays(d)}
-                className={`px-3 py-2 rounded-md text-xs font-bold border ${
-                  insuranceDays === d
-                    ? "border-accent bg-accent/15 text-accent"
-                    : "border-border bg-secondary hover:bg-border"
-                }`}
-              >
-                {d === 0 ? "Do not join" : `${d} Days`}
-              </button>
-            ))}
-          </div>
-          <p className="text-[10px] text-muted-foreground">
-            Extends buyer warranty by the chosen days; insured listings rank first in browse.
-          </p>
-        </div>
       </div>
 
       <h2 className="text-sm font-bold flex items-center gap-2 pt-2">
