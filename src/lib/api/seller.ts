@@ -154,10 +154,26 @@ export const saveProduct = createServerFn({ method: "POST" })
     await appContext();
     const user = await requireSeller();
     if (data.minQty > data.maxQty) fail("Min quantity can't exceed max quantity.");
-    const cat = await q1(`select id from categories where id = ? and is_active = 1`, [
-      data.categoryId,
-    ]);
+    const cat = await q1<{
+      id: string;
+      requires_subscription: number;
+      allowed_durations: string;
+    }>(
+      `select id, requires_subscription, allowed_durations from categories where id = ? and is_active = 1`,
+      [data.categoryId],
+    );
     if (!cat) fail("Invalid category.");
+    if (cat!.requires_subscription) {
+      const allowed = (cat!.allowed_durations || "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (!data.subscriptionDuration)
+        fail("This category requires you to pick a subscription duration.");
+      if (allowed.length > 0 && !allowed.includes(data.subscriptionDuration))
+        fail("Selected subscription duration is not allowed for this category.");
+    }
+
     let itemId: string | null = null;
     if (data.itemId) {
       const item = await q1(`select id from catalog_items where id = ? and is_active = 1`, [
