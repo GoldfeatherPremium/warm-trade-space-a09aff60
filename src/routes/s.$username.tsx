@@ -87,13 +87,8 @@ export const Route = createFileRoute("/s/$username")({
   component: SellerStorePage,
 });
 
-const SOCIAL_ICONS: Record<string, { Icon: typeof Globe; label: string }> = {
-  website: { Icon: Globe, label: "Website" },
-  twitter: { Icon: Twitter, label: "Twitter" },
-  discord: { Icon: MessageCircle, label: "Discord" },
-  telegram: { Icon: Send, label: "Telegram" },
-  youtube: { Icon: Youtube, label: "YouTube" },
-};
+// Social icons removed — buyer-facing storefront never exposes seller off-platform links.
+
 
 function SellerStorePage() {
   const { username } = Route.useParams();
