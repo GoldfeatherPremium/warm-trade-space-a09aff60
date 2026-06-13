@@ -395,7 +395,7 @@ export const getMyRecommendations = createServerFn({ method: "GET" })
     const cats = Array.from(new Set(signals.map((s) => s.category_id).filter(Boolean))) as string[];
     const items = Array.from(new Set(signals.map((s) => s.item_id).filter(Boolean))) as string[];
     const owned = Array.from(new Set(signals.map((s) => s.product_id)));
-    const where: string[] = [`p.status = 'active'`];
+    const where: string[] = [`p.status = 'active'`, PUBLIC_SELLER_COND];
     const params: Array<string | number> = [];
     if (owned.length) {
       where.push(`p.id not in (${owned.map(() => "?").join(",")})`);
