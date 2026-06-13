@@ -2,16 +2,36 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Sparkles } from "lucide-react";
+import { Sparkles, AlertTriangle, Clock } from "lucide-react";
 import { listDisputes, resolveDispute } from "@/lib/api/admin";
 import { aiAssistDispute } from "@/lib/api/ai";
 import { GENERIC_STATUS_CLS, dateTime, usdt } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useMe } from "@/hooks/use-me";
 
 export const Route = createFileRoute("/admin/disputes")({
   component: AdminDisputes,
 });
+
+function SlaBadge({ openedAt, slaHours, resolved }: { openedAt: number; slaHours: number; resolved: boolean }) {
+  if (resolved) return null;
+  const deadline = openedAt + slaHours * 3600_000;
+  const remaining = deadline - Date.now();
+  const overdue = remaining < 0;
+  const hours = Math.round(Math.abs(remaining) / 3600_000);
+  return (
+    <span
+      className={`text-[9px] font-bold px-2 py-0.5 rounded inline-flex items-center gap-1 ${
+        overdue ? "bg-destructive/90 text-white" : remaining < 12 * 3600_000 ? "bg-amber-500/90 text-black" : "bg-secondary text-foreground/80"
+      }`}
+      title={`SLA target ${slaHours}h from open`}
+    >
+      {overdue ? <AlertTriangle className="size-2.5" /> : <Clock className="size-2.5" />}
+      {overdue ? `SLA +${hours}h` : `SLA ${hours}h`}
+    </span>
+  );
+}
 
 function AdminDisputes() {
   const qc = useQueryClient();
