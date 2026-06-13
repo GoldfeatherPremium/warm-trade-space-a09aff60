@@ -174,9 +174,13 @@ function ProductForm() {
           priceUsdt: String((p.price_cents as number) / 100),
           minQty: p.min_qty as number,
           maxQty: p.max_qty as number,
+          maxOrdersAtOnce: (p.max_orders_at_once as number) ?? 10,
+          subscriptionDuration: ((p.subscription_duration as string) ?? "") as never,
+          manualStock: p.manual_stock != null ? String(p.manual_stock) : "",
           platform: (p.platform as string) ?? "",
           requiredInfo: (p.required_info as string) ?? "",
         });
+
         const region = (p.region as string) ?? "";
         if (!region || region.toLowerCase() === "global") {
           setRegionMode("global");
