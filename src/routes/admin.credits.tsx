@@ -63,7 +63,7 @@ function AdminCredits() {
             className="h-8 text-xs"
           />
           <label className="flex items-center gap-2 shrink-0 text-[10px] font-bold uppercase tracking-wider">
-            <Switch checked={withBalanceOnly} onCheckedChange={setWB} /> >0
+            <Switch checked={withBalanceOnly} onCheckedChange={setWB} /> &gt; 0
           </label>
         </div>
         <div className="divide-y divide-border max-h-[70vh] overflow-y-auto">

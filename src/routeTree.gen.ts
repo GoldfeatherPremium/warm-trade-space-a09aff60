@@ -67,6 +67,7 @@ import { Route as AdminItemsRouteImport } from './routes/admin.items'
 import { Route as AdminFxRouteImport } from './routes/admin.fx'
 import { Route as AdminFinanceRouteImport } from './routes/admin.finance'
 import { Route as AdminDisputesRouteImport } from './routes/admin.disputes'
+import { Route as AdminCreditsRouteImport } from './routes/admin.credits'
 import { Route as AdminCouponsRouteImport } from './routes/admin.coupons'
 import { Route as AdminChatsRouteImport } from './routes/admin.chats'
 import { Route as AdminCategoriesRouteImport } from './routes/admin.categories'
@@ -370,6 +371,11 @@ const AdminDisputesRoute = AdminDisputesRouteImport.update({
   path: '/disputes',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminCreditsRoute = AdminCreditsRouteImport.update({
+  id: '/credits',
+  path: '/credits',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminCouponsRoute = AdminCouponsRouteImport.update({
   id: '/coupons',
   path: '/coupons',
@@ -460,6 +466,7 @@ export interface FileRoutesByFullPath {
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/chats': typeof AdminChatsRoute
   '/admin/coupons': typeof AdminCouponsRoute
+  '/admin/credits': typeof AdminCreditsRoute
   '/admin/disputes': typeof AdminDisputesRoute
   '/admin/finance': typeof AdminFinanceRoute
   '/admin/fx': typeof AdminFxRoute
@@ -530,6 +537,7 @@ export interface FileRoutesByTo {
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/chats': typeof AdminChatsRoute
   '/admin/coupons': typeof AdminCouponsRoute
+  '/admin/credits': typeof AdminCreditsRoute
   '/admin/disputes': typeof AdminDisputesRoute
   '/admin/finance': typeof AdminFinanceRoute
   '/admin/fx': typeof AdminFxRoute
@@ -603,6 +611,7 @@ export interface FileRoutesById {
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/chats': typeof AdminChatsRoute
   '/admin/coupons': typeof AdminCouponsRoute
+  '/admin/credits': typeof AdminCreditsRoute
   '/admin/disputes': typeof AdminDisputesRoute
   '/admin/finance': typeof AdminFinanceRoute
   '/admin/fx': typeof AdminFxRoute
@@ -677,6 +686,7 @@ export interface FileRouteTypes {
     | '/admin/categories'
     | '/admin/chats'
     | '/admin/coupons'
+    | '/admin/credits'
     | '/admin/disputes'
     | '/admin/finance'
     | '/admin/fx'
@@ -747,6 +757,7 @@ export interface FileRouteTypes {
     | '/admin/categories'
     | '/admin/chats'
     | '/admin/coupons'
+    | '/admin/credits'
     | '/admin/disputes'
     | '/admin/finance'
     | '/admin/fx'
@@ -819,6 +830,7 @@ export interface FileRouteTypes {
     | '/admin/categories'
     | '/admin/chats'
     | '/admin/coupons'
+    | '/admin/credits'
     | '/admin/disputes'
     | '/admin/finance'
     | '/admin/fx'
@@ -1309,6 +1321,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDisputesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/credits': {
+      id: '/admin/credits'
+      path: '/credits'
+      fullPath: '/admin/credits'
+      preLoaderRoute: typeof AdminCreditsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/coupons': {
       id: '/admin/coupons'
       path: '/coupons'
@@ -1419,6 +1438,7 @@ interface AdminRouteChildren {
   AdminCategoriesRoute: typeof AdminCategoriesRoute
   AdminChatsRoute: typeof AdminChatsRoute
   AdminCouponsRoute: typeof AdminCouponsRoute
+  AdminCreditsRoute: typeof AdminCreditsRoute
   AdminDisputesRoute: typeof AdminDisputesRoute
   AdminFinanceRoute: typeof AdminFinanceRoute
   AdminFxRoute: typeof AdminFxRoute
@@ -1440,6 +1460,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminCategoriesRoute: AdminCategoriesRoute,
   AdminChatsRoute: AdminChatsRoute,
   AdminCouponsRoute: AdminCouponsRoute,
+  AdminCreditsRoute: AdminCreditsRoute,
   AdminDisputesRoute: AdminDisputesRoute,
   AdminFinanceRoute: AdminFinanceRoute,
   AdminFxRoute: AdminFxRoute,
