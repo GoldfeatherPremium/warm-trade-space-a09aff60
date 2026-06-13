@@ -850,6 +850,12 @@ export const updateAdminSettings = createServerFn({ method: "POST" })
       paymentWindowMinutes: z.number().int().min(5).max(1440),
       maintenanceMode: z.boolean(),
       announcement: z.string().max(300).optional(),
+      creditWithdrawalFeePct: z.number().min(0).max(20),
+      creditWithdrawalMinFeeUsdt: z.number().min(0).max(50),
+      attachmentMaxMb: z.number().int().min(1).max(50),
+      presencePingSeconds: z.number().int().min(15).max(600),
+      lowStockThreshold: z.number().int().min(0).max(1000),
+      disputeSlaHours: z.number().int().min(1).max(720),
     }),
   )
   .handler(async ({ data }) => {
@@ -857,7 +863,9 @@ export const updateAdminSettings = createServerFn({ method: "POST" })
     const staff = await requireAdmin();
     await run(
       `update site_settings set default_commission_pct = ?, withdrawal_fee_cents = ?, min_withdrawal_cents = ?,
-         auto_confirm_hours = ?, payment_window_minutes = ?, maintenance_mode = ?, announcement = ? where id = 1`,
+         auto_confirm_hours = ?, payment_window_minutes = ?, maintenance_mode = ?, announcement = ?,
+         credit_withdrawal_fee_pct = ?, credit_withdrawal_min_fee_cents = ?, attachment_max_mb = ?,
+         presence_ping_seconds = ?, low_stock_threshold = ?, dispute_sla_hours = ? where id = 1`,
       [
         data.defaultCommissionPct,
         Math.round(data.withdrawalFeeUsdt * 100),
@@ -866,6 +874,12 @@ export const updateAdminSettings = createServerFn({ method: "POST" })
         data.paymentWindowMinutes,
         data.maintenanceMode ? 1 : 0,
         data.announcement?.trim() || null,
+        data.creditWithdrawalFeePct,
+        Math.round(data.creditWithdrawalMinFeeUsdt * 100),
+        data.attachmentMaxMb,
+        data.presencePingSeconds,
+        data.lowStockThreshold,
+        data.disputeSlaHours,
       ],
     );
     await audit(staff.id, "settings.update", "site_settings", "1", data);
