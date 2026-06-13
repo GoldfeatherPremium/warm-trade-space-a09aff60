@@ -1031,7 +1031,7 @@ export const adminSaveCoupon = createServerFn({ method: "POST" })
 export const adminListItems = createServerFn({ method: "GET" }).handler(async () => {
   await appContext();
   await requireStaff();
-  const [items, maps, suggestions] = await Promise.all([
+  const [items, maps, suggestions, categories] = await Promise.all([
     q<{
       id: string;
       name: string;
@@ -1047,12 +1047,16 @@ export const adminListItems = createServerFn({ method: "GET" }).handler(async ()
       `select s.*, u.username from item_suggestions s join users u on u.id = s.user_id
        order by case s.status when 'pending' then 0 else 1 end, s.created_at desc limit 100`,
     ),
+    q<{ id: string; name: string; slug: string; icon: string; is_active: number }>(
+      `select id, name, slug, icon, is_active from categories order by sort, name`,
+    ),
   ]);
   const byItem: Record<string, string[]> = {};
   for (const m of maps) (byItem[m.item_id] ??= []).push(m.category_id);
   return {
     items: items.map((i) => ({ ...i, categoryIds: byItem[i.id] ?? [] })),
     suggestions,
+    categories,
   };
 });
 
