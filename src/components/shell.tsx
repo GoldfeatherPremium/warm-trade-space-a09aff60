@@ -17,6 +17,7 @@ import {
   Scale,
   Users,
   Sparkles,
+  CircleDollarSign,
 } from "lucide-react";
 import { type ReactNode } from "react";
 import { getMyLoyalty } from "@/lib/api/growth";
@@ -150,6 +151,9 @@ export function SiteHeader() {
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate({ to: "/wallet" })}>
                     <Wallet className="size-4" /> Wallet
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate({ to: "/account/credits" })}>
+                    <CircleDollarSign className="size-4" /> Store credits
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate({ to: "/favorites" })}>
                     <Heart className="size-4" /> Favorites

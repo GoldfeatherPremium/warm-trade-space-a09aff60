@@ -6,6 +6,7 @@ import { Copy, ShieldCheck, Timer, CreditCard, Zap, ShieldHalf, CircleDollarSign
 import { SellerBadge } from "@/components/seller-badge";
 import { cancelUnpaidOrder, getPayment, simulatePaymentSent } from "@/lib/api/orders";
 import { payWithWallet } from "@/lib/api/extras";
+import { getMyCredits, payWithCredits } from "@/lib/api/credits";
 import { getWalletData } from "@/lib/api/seller";
 import { PageShell } from "@/components/shell";
 import { usdt, countdown } from "@/lib/format";
@@ -33,11 +34,21 @@ function PayPage() {
   });
 
   const { data: walletData } = useQuery({ queryKey: ["wallet"], queryFn: () => getWalletData() });
+  const { data: credits } = useQuery({ queryKey: ["myCredits"], queryFn: () => getMyCredits() });
   const payWallet = useMutation({
     mutationFn: () => payWithWallet({ data: { orderId } }),
     onSuccess: () => {
       qc.invalidateQueries();
       toast.success("Paid from wallet balance!");
+      navigate({ to: "/orders/$orderId", params: { orderId } });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const payCredits = useMutation({
+    mutationFn: () => payWithCredits({ data: { orderId } }),
+    onSuccess: () => {
+      qc.invalidateQueries();
+      toast.success("Paid using store credits!");
       navigate({ to: "/orders/$orderId", params: { orderId } });
     },
     onError: (e: Error) => toast.error(e.message),
@@ -67,6 +78,7 @@ function PayPage() {
   }, [data?.order.status]);
 
   const walletAvailable = walletData?.wallet.available_cents ?? 0;
+  const creditsAvailable = credits?.balance ?? 0;
 
   if (!data)
     return (
@@ -186,6 +198,24 @@ function PayPage() {
             <EscrowTimeline warrantyHours={data.warrantyHours ?? 24} />
 
             <div className="space-y-2 pt-1">
+              {creditsAvailable >= deposit.amount_cents ? (
+                <Button
+                  variant="secondary"
+                  className="w-full font-bold border border-accent/60 text-accent"
+                  onClick={() => payCredits.mutate()}
+                  disabled={payCredits.isPending}
+                >
+                  {payCredits.isPending
+                    ? "Applying credits…"
+                    : `Pay with store credits (${usdt(creditsAvailable)} available)`}
+                </Button>
+              ) : creditsAvailable > 0 ? (
+                <div className="text-[11px] text-muted-foreground bg-secondary/50 rounded-md p-2.5 text-center">
+                  You have <b className="text-accent">{usdt(creditsAvailable)}</b> in credits —
+                  short {usdt(deposit.amount_cents - creditsAvailable)} for full coverage. Top up
+                  or pay below.
+                </div>
+              ) : null}
               {walletAvailable >= deposit.amount_cents && (
                 <Button
                   variant="secondary"

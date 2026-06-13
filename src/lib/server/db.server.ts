@@ -200,12 +200,12 @@ async function schemaAlreadyMigrated(e: Engine): Promise<boolean> {
     if (isPostgres()) {
       const r = await e.q<{ c: number }>(
         `select count(*)::int as c from information_schema.tables
-         where table_schema = 'public' and table_name = 'referrals'`,
+         where table_schema = 'public' and table_name = 'credit_ledger'`,
       );
       return !!r[0] && Number(r[0].c) > 0;
     }
     const r = await e.q<{ name: string }>(
-      `select name from sqlite_master where type='table' and name='referrals'`,
+      `select name from sqlite_master where type='table' and name='credit_ledger'`,
     );
     return r.length > 0;
   } catch {
@@ -676,6 +676,9 @@ async function migrate(e: Engine): Promise<void> {
     `alter table users add column loyalty_tier_at ${big}`,
     // --- Phase 2: presence (online dots in chat) ---
     `alter table users add column last_seen_at ${big} not null default 0`,
+    // --- Phase 5: buyer credits (refunds + promos go here, not into wallet cash) ---
+    `alter table orders add column credits_applied_cents ${big} not null default 0`,
+    `alter table withdrawals add column from_credits integer not null default 0`,
   ];
   for (const stmt of addColumns) {
     await e.exec(stmt).catch(() => {}); // already exists
@@ -724,7 +727,37 @@ async function migrate(e: Engine): Promise<void> {
     )
     .catch(() => {});
 
-  // --- Phase 7: FX rates relative to site base currency ---
+  // --- Phase 5: Buyer credit balances + ledger ---
+  await e
+    .exec(
+      `create table if not exists buyer_credits (
+        user_id text primary key references users(id),
+        balance_cents ${big} not null default 0,
+        updated_at ${big} not null default 0
+      )`,
+    )
+    .catch(() => {});
+  await e
+    .exec(
+      `create table if not exists credit_ledger (
+        id ${dialect === "postgres" ? "bigint generated always as identity primary key" : "integer primary key autoincrement"},
+        user_id text not null,
+        order_id text,
+        type text not null,
+        amount_cents ${big} not null,
+        balance_after_cents ${big} not null,
+        source text,
+        note text,
+        actor_id text,
+        created_at ${big} not null
+      )`,
+    )
+    .catch(() => {});
+  await e
+    .exec(`create index if not exists idx_credit_ledger_user on credit_ledger(user_id, created_at)`)
+    .catch(() => {});
+
+
   await e
     .exec(
       `create table if not exists fx_rates (

@@ -217,3 +217,134 @@ export function txSetFreeze(userId: string, freeze: boolean) {
     await run(`update users set wallet_frozen = ? where id = ?`, [freeze ? 1 : 0, userId]);
   });
 }
+
+// ---------------------------------------------------------------------------
+// Phase 5: Buyer credits (separate from spendable wallet cash)
+// ---------------------------------------------------------------------------
+export interface BuyerCredits {
+  user_id: string;
+  balance_cents: number;
+  updated_at: number;
+}
+
+export async function getBuyerCredits(userId: string): Promise<BuyerCredits> {
+  let c = await q1<BuyerCredits>(`select * from buyer_credits where user_id = ?`, [userId]);
+  if (!c) {
+    await run(
+      `insert into buyer_credits (user_id, balance_cents, updated_at) values (?, 0, ?) on conflict (user_id) do nothing`,
+      [userId, now()],
+    );
+    c = await q1<BuyerCredits>(`select * from buyer_credits where user_id = ?`, [userId]);
+  }
+  return c!;
+}
+
+async function writeCreditLedger(
+  userId: string,
+  orderId: string | null,
+  type: string,
+  amountCents: number,
+  source: string,
+  note: string,
+  actorId: string | null = null,
+) {
+  const c = await getBuyerCredits(userId);
+  await run(
+    `insert into credit_ledger (user_id, order_id, type, amount_cents, balance_after_cents, source, note, actor_id, created_at)
+     values (?,?,?,?,?,?,?,?,?)`,
+    [userId, orderId, type, amountCents, c.balance_cents, source, note, actorId, now()],
+  );
+}
+
+/** Credit a buyer (refund, promo, loyalty, admin adjustment). */
+export function txCreditGrant(
+  userId: string,
+  amountCents: number,
+  source: "refund" | "promo" | "loyalty" | "adjustment",
+  note: string,
+  orderId: string | null = null,
+  actorId: string | null = null,
+) {
+  return tx(async () => {
+    await getBuyerCredits(userId);
+    await run(
+      `update buyer_credits set balance_cents = balance_cents + ?, updated_at = ? where user_id = ?`,
+      [amountCents, now(), userId],
+    );
+    await writeCreditLedger(userId, orderId, source, amountCents, source, note, actorId);
+  });
+}
+
+/** Spend credits (checkout). Returns the new balance. */
+export function txCreditSpend(
+  userId: string,
+  amountCents: number,
+  orderId: string,
+  note: string,
+) {
+  return tx(async () => {
+    const c = await getBuyerCredits(userId);
+    if (c.balance_cents < amountCents) fail("Insufficient credits balance.");
+    await run(
+      `update buyer_credits set balance_cents = balance_cents - ?, updated_at = ? where user_id = ?`,
+      [amountCents, now(), userId],
+    );
+    await writeCreditLedger(userId, orderId, "spend", -amountCents, "spend", note);
+  });
+}
+
+/** Refund with buyer side going to credits instead of wallet cash. */
+export function txRefundToCredits(
+  orderId: string,
+  sellerId: string,
+  buyerId: string,
+  refundCents: number,
+  originalNetCents: number,
+  sellerKeepNetCents: number,
+  orderNo: string,
+) {
+  return tx(async () => {
+    const w = await getWallet(sellerId);
+    if (w.pending_cents < originalNetCents) fail(`Escrow inconsistency on order ${orderNo}`);
+    await run(`update wallets set pending_cents = pending_cents - ? where user_id = ?`, [
+      originalNetCents,
+      sellerId,
+    ]);
+    await writeLedger(
+      sellerId,
+      orderId,
+      "refund",
+      -originalNetCents,
+      `Escrow reversed for ${orderNo}`,
+    );
+    if (sellerKeepNetCents > 0) {
+      await run(`update wallets set available_cents = available_cents + ? where user_id = ?`, [
+        sellerKeepNetCents,
+        sellerId,
+      ]);
+      await writeLedger(
+        sellerId,
+        orderId,
+        "escrow_release",
+        sellerKeepNetCents,
+        `Partial release for ${orderNo}`,
+      );
+    }
+    if (refundCents > 0) {
+      await getBuyerCredits(buyerId);
+      await run(
+        `update buyer_credits set balance_cents = balance_cents + ?, updated_at = ? where user_id = ?`,
+        [refundCents, now(), buyerId],
+      );
+      await writeCreditLedger(
+        buyerId,
+        orderId,
+        "refund",
+        refundCents,
+        "refund",
+        `Refund for ${orderNo}`,
+      );
+    }
+  });
+}
+
