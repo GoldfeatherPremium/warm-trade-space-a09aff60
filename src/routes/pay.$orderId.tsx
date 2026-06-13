@@ -6,6 +6,7 @@ import { Copy, ShieldCheck, Timer, CreditCard, Zap, ShieldHalf, CircleDollarSign
 import { SellerBadge } from "@/components/seller-badge";
 import { cancelUnpaidOrder, getPayment, simulatePaymentSent } from "@/lib/api/orders";
 import { payWithWallet } from "@/lib/api/extras";
+import { getMyCredits, payWithCredits } from "@/lib/api/credits";
 import { getWalletData } from "@/lib/api/seller";
 import { PageShell } from "@/components/shell";
 import { usdt, countdown } from "@/lib/format";
