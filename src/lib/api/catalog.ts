@@ -586,11 +586,29 @@ export const getCategorySchema = createServerFn({ method: "GET" })
   .inputValidator(z.object({ categoryId: z.string() }))
   .handler(async ({ data }) => {
     await appContext();
-    const c = await q1<{ id: string; name: string; submission_schema: string | null }>(
-      `select id, name, submission_schema from categories where id = ?`,
+    const c = await q1<{
+      id: string;
+      name: string;
+      submission_schema: string | null;
+      requires_subscription: number;
+      allowed_durations: string;
+      admin_description: string | null;
+      delivery_kind: string;
+    }>(
+      `select id, name, submission_schema, requires_subscription, allowed_durations,
+              admin_description, delivery_kind from categories where id = ?`,
       [data.categoryId],
     );
-    if (!c) return { schema: null as CategorySubmissionSchema | null };
+    if (!c)
+      return {
+        schema: null as CategorySubmissionSchema | null,
+        config: null as null | {
+          requiresSubscription: boolean;
+          allowedDurations: string[];
+          adminDescription: string | null;
+          deliveryKind: string;
+        },
+      };
     let schema: CategorySubmissionSchema | null = null;
     if (c.submission_schema) {
       try {
@@ -599,8 +617,20 @@ export const getCategorySchema = createServerFn({ method: "GET" })
         /* ignore */
       }
     }
-    return { schema };
+    return {
+      schema,
+      config: {
+        requiresSubscription: !!c.requires_subscription,
+        allowedDurations: (c.allowed_durations || "")
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+        adminDescription: c.admin_description ?? null,
+        deliveryKind: c.delivery_kind || "code",
+      },
+    };
   });
+
 
 export const quickSearch = createServerFn({ method: "GET" })
   .inputValidator(z.object({ q: z.string().max(100) }))
