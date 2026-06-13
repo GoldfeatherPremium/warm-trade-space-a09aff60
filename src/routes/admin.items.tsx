@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { adminListItems, adminSaveItem, reviewItemSuggestion } from "@/lib/api/admin";
-import { getHomeData } from "@/lib/api/catalog";
 import { dateTime } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +21,6 @@ const EMPTY = {
 function AdminItems() {
   const qc = useQueryClient();
   const { data } = useQuery({ queryKey: ["adminItems"], queryFn: () => adminListItems() });
-  const { data: home } = useQuery({ queryKey: ["home"], queryFn: () => getHomeData() });
   const [form, setForm] = useState(EMPTY);
 
   const done = (msg: string) => {
@@ -42,7 +40,8 @@ function AdminItems() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const catName = (id: string) => home?.categories.find((c) => c.id === id)?.name ?? "?";
+  const categories = data?.categories ?? [];
+  const catName = (id: string) => categories.find((c) => c.id === id)?.name ?? "?";
 
   return (
     <div className="space-y-5">
