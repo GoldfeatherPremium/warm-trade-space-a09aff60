@@ -192,13 +192,19 @@ export const getHomeData = createServerFn({ method: "GET" }).handler(async () =>
         commission_pct: number;
         risk_tier: string;
         product_count: number;
+        requires_subscription: number;
+        allowed_durations: string;
+        admin_description: string | null;
+        delivery_kind: string;
       }>(
         `select c.id, c.name, c.slug, c.icon, c.default_warranty_hours, c.commission_pct, c.risk_tier,
+              c.requires_subscription, c.allowed_durations, c.admin_description, c.delivery_kind,
               (select count(*) from products p join users u on u.id = p.seller_id
                  where p.category_id = c.id and p.status = 'active'
                    and u.vacation_mode = 0 and u.is_banned = 0) as product_count
        from categories c where c.is_active = 1 order by c.sort`,
       ),
+
       q(
         `${productSelect} where p.status = 'active' and ${PUBLIC_SELLER_COND}
        order by (case when p.featured_until is not null and p.featured_until > ? then 0 else 1 end),
