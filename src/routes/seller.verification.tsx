@@ -58,6 +58,9 @@ function VerificationPage() {
   const [registration, setRegistration] = useState("");
   const [idRef, setIdRef] = useState("");
   const [notes, setNotes] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [contactWhatsapp, setContactWhatsapp] = useState("");
+  const [contactTelegram, setContactTelegram] = useState("");
 
   const apply = useMutation({
     mutationFn: () =>
@@ -70,6 +73,9 @@ function VerificationPage() {
           businessRegistration: registration || undefined,
           idDocRef: idRef || undefined,
           notes: notes || undefined,
+          contactPhone,
+          contactWhatsapp: contactWhatsapp || undefined,
+          contactTelegram: contactTelegram || undefined,
         },
       }),
     onSuccess: () => {
@@ -80,6 +86,9 @@ function VerificationPage() {
       setRegistration("");
       setIdRef("");
       setNotes("");
+      setContactPhone("");
+      setContactWhatsapp("");
+      setContactTelegram("");
     },
     onError: (e: Error) => toast.error(e.message),
   });
