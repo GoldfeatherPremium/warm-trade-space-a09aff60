@@ -399,13 +399,18 @@ function ProductForm() {
           onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
           className="w-full bg-secondary border border-border rounded-md px-2 py-2 text-xs h-9"
         >
-          <option value="">Select…</option>
+          <option value="">{home ? "Select…" : "Loading categories…"}</option>
           {allowedCategories?.map((c) => (
             <option key={c.id} value={c.id}>
               {c.icon} {c.name} ({c.commission_pct}% fee)
             </option>
           ))}
         </select>
+        {home && (allowedCategories?.length ?? 0) === 0 && (
+          <p className="text-[10px] text-yellow-400">
+            No sub-categories configured yet. Ask an admin to create one in Admin → Categories.
+          </p>
+        )}
         {selectedCat?.risk_tier === "high" && (
           <p className="text-[10px] text-yellow-400">
             High-risk category: extended warranty, manual delivery recommended.
