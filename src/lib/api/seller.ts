@@ -393,15 +393,20 @@ export const getProductStock = createServerFn({ method: "GET" })
       title: string;
       delivery_type: string;
       stock_count: number;
-    }>(`select id, seller_id, title, delivery_type, stock_count from products where id = ?`, [
-      data.productId,
-    ]);
+      delivery_kind: string;
+      manual_stock: number | null;
+    }>(
+      `select p.id, p.seller_id, p.title, p.delivery_type, p.stock_count,
+              coalesce(c.delivery_kind, 'code') as delivery_kind,
+              p.manual_stock
+       from products p left join categories c on c.id = p.category_id where p.id = ?`,
+      [data.productId],
+    );
     if (!p || p.seller_id !== user.id) fail("Product not found.");
     const counts = await q<{ status: string; c: number }>(
       `select status, count(*) c from stock_items where product_id = ? group by status`,
       [data.productId],
     );
-    // codes themselves are never returned — encrypted at rest, revealed only to buyers on delivery
     const items = await q<{
       id: string;
       status: string;
@@ -414,17 +419,21 @@ export const getProductStock = createServerFn({ method: "GET" })
     return { product: p!, counts, items };
   });
 
+
 export const uploadStock = createServerFn({ method: "POST" })
   .inputValidator(z.object({ productId: z.string(), codes: z.string().min(1).max(200_000) }))
   .handler(async ({ data }) => {
     await appContext();
     const user = await requireSeller();
-    const p = await q1<{ id: string; seller_id: string; delivery_type: string }>(
-      `select id, seller_id, delivery_type from products where id = ?`,
+    const p = await q1<{ id: string; seller_id: string; delivery_type: string; delivery_kind: string }>(
+      `select p.id, p.seller_id, p.delivery_type, coalesce(c.delivery_kind, 'code') as delivery_kind
+       from products p left join categories c on c.id = p.category_id where p.id = ?`,
       [data.productId],
     );
     if (!p || p.seller_id !== user.id) fail("Product not found.");
     if (p!.delivery_type !== "auto") fail("Stock codes only apply to auto-delivery products.");
+    if (p!.delivery_kind === "invite" || p!.delivery_kind === "manual_text")
+      fail("This category fulfils each order manually — no pre-uploaded stock.");
 
     const rawLines = data.codes
       .split("\n")
@@ -434,6 +443,11 @@ export const uploadStock = createServerFn({ method: "POST" })
     const inPayloadDuplicates = rawLines.length - lines.length;
     if (lines.length === 0) fail("No codes found.");
     if (lines.length > 5000) fail("Max 5000 codes per upload.");
+    if (p!.delivery_kind === "credentials") {
+      const bad = lines.find((l) => !/^[^:\s]+:[^\s]+$/.test(l));
+      if (bad) fail(`Credentials must be in "email:password" format. Invalid: ${bad.slice(0, 40)}`);
+    }
+
 
     // duplicate detection across this seller's entire inventory
     const existing = new Set(
@@ -499,6 +513,29 @@ export const removeStockItem = createServerFn({ method: "POST" })
     );
     return { ok: true };
   });
+
+export const setManualStock = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ productId: z.string(), manualStock: z.number().int().min(0).max(100000) }))
+  .handler(async ({ data }) => {
+    await appContext();
+    const user = await requireSeller();
+    const p = await q1<{ seller_id: string; delivery_kind: string }>(
+      `select p.seller_id, coalesce(c.delivery_kind, 'code') as delivery_kind
+       from products p left join categories c on c.id = p.category_id where p.id = ?`,
+      [data.productId],
+    );
+    if (!p || p.seller_id !== user.id) fail("Product not found.");
+    if (p!.delivery_kind !== "invite" && p!.delivery_kind !== "manual_text")
+      fail("Manual stock only applies to invite / manual-text delivery products.");
+    await run(`update products set manual_stock = ?, stock_count = ? where id = ?`, [
+      data.manualStock,
+      data.manualStock,
+      data.productId,
+    ]);
+    return { ok: true };
+  });
+
+
 
 // ---------------------------------------------------------------------------
 // Dashboard overview + wallet
