@@ -102,3 +102,17 @@ export const deleteOrderAttachment = createServerFn({ method: "POST" })
     await audit(user.id, "order.attachment_delete", "order", a!.order_id, { id: data.id });
     return { ok: true };
   });
+
+export const getOrderAttachmentData = createServerFn({ method: "GET" })
+  .inputValidator(z.object({ id: z.string() }))
+  .handler(async ({ data }) => {
+    await appContext();
+    const user = await requireUser();
+    const a = await q1<{ order_id: string; mime: string; data: string }>(
+      `select order_id, mime, data from order_attachments where id = ?`,
+      [data.id],
+    );
+    if (!a) fail("Attachment not found.");
+    await assertAccess(a!.order_id, user.id, isStaff(user));
+    return { mime: a!.mime, dataBase64: a!.data };
+  });
