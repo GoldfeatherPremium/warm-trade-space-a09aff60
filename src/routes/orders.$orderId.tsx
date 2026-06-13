@@ -2,7 +2,16 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Copy, Star, AlertTriangle, CheckCircle2, PackageCheck } from "lucide-react";
+import {
+  Copy,
+  Star,
+  AlertTriangle,
+  CheckCircle2,
+  PackageCheck,
+  FileText,
+  Upload,
+  Trash2,
+} from "lucide-react";
 import {
   buyerCancelSlaBreach,
   buyerConfirmReceived,
@@ -12,6 +21,12 @@ import {
   sellerRespondDispute,
 } from "@/lib/api/orders";
 import { leaveReview } from "@/lib/api/reviews";
+import {
+  addOrderAttachment,
+  deleteOrderAttachment,
+  getOrderAttachmentData,
+  listOrderAttachments,
+} from "@/lib/api/attachments";
 import { PageShell } from "@/components/shell";
 import { ChatBox } from "@/components/chat-box";
 import { ORDER_STATUS_META, countdown, dateTime, usdt } from "@/lib/format";
