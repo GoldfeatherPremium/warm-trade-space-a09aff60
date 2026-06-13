@@ -704,14 +704,26 @@ export const adminSaveCategory = createServerFn({ method: "POST" })
       commissionPct: z.number().min(0).max(50),
       riskTier: z.enum(["normal", "high"]),
       isActive: z.boolean(),
+      submissionSchema: z.string().max(20_000).optional(),
     }),
   )
   .handler(async ({ data }) => {
     await appContext();
     const staff = await requireAdmin();
+    // Validate submission_schema JSON if provided
+    let schema: string | null = null;
+    if (data.submissionSchema && data.submissionSchema.trim()) {
+      try {
+        const parsed = JSON.parse(data.submissionSchema);
+        if (typeof parsed !== "object" || parsed === null) throw new Error();
+        schema = JSON.stringify(parsed);
+      } catch {
+        fail("Submission schema must be valid JSON.");
+      }
+    }
     if (data.categoryId) {
       await run(
-        `update categories set name = ?, slug = ?, icon = ?, default_warranty_hours = ?, commission_pct = ?, risk_tier = ?, is_active = ? where id = ?`,
+        `update categories set name = ?, slug = ?, icon = ?, default_warranty_hours = ?, commission_pct = ?, risk_tier = ?, is_active = ?, submission_schema = ? where id = ?`,
         [
           data.name,
           data.slug,
@@ -720,6 +732,7 @@ export const adminSaveCategory = createServerFn({ method: "POST" })
           data.commissionPct,
           data.riskTier,
           data.isActive ? 1 : 0,
+          schema,
           data.categoryId,
         ],
       );
@@ -727,8 +740,8 @@ export const adminSaveCategory = createServerFn({ method: "POST" })
       if (await q1(`select 1 as x from categories where slug = ?`, [data.slug]))
         fail("Slug already exists.");
       await run(
-        `insert into categories (id, name, slug, icon, sort, default_warranty_hours, commission_pct, risk_tier, is_active)
-         values (?,?,?,?, (select coalesce(max(sort),0)+1 from categories), ?,?,?,?)`,
+        `insert into categories (id, name, slug, icon, sort, default_warranty_hours, commission_pct, risk_tier, is_active, submission_schema)
+         values (?,?,?,?, (select coalesce(max(sort),0)+1 from categories), ?,?,?,?,?)`,
         [
           uid(),
           data.name,
@@ -738,10 +751,83 @@ export const adminSaveCategory = createServerFn({ method: "POST" })
           data.commissionPct,
           data.riskTier,
           data.isActive ? 1 : 0,
+          schema,
         ],
       );
     }
     await audit(staff.id, "category.save", "category", data.categoryId ?? data.slug);
+    return { ok: true };
+  });
+
+// Admin full product edit
+export const adminGetProduct = createServerFn({ method: "GET" })
+  .inputValidator(z.object({ productId: z.string() }))
+  .handler(async ({ data }) => {
+    await appContext();
+    await requireStaff();
+    const product = await q1<Row>(
+      `select p.*, u.username as seller_name, c.name as category_name
+       from products p join users u on u.id = p.seller_id join categories c on c.id = p.category_id
+       where p.id = ?`,
+      [data.productId],
+    );
+    if (!product) fail("Product not found.");
+    const categories = await q<Row>(
+      `select id, name, slug, commission_pct, default_warranty_hours from categories where is_active = 1 order by sort`,
+    );
+    return { product: product!, categories };
+  });
+
+export const adminUpdateProduct = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      productId: z.string(),
+      title: z.string().min(8).max(120),
+      description: z.string().min(30).max(5000),
+      categoryId: z.string(),
+      priceUsdt: z.number().min(0.5).max(100_000),
+      warrantyHours: z.number().int().min(1).max(24 * 365).nullable(),
+      minQty: z.number().int().min(1).max(1000),
+      maxQty: z.number().int().min(1).max(1000),
+      region: z.string().max(40).optional(),
+      platform: z.string().max(40).optional(),
+      requiredInfo: z.string().max(500).optional(),
+      adminSeoDescription: z.string().max(8000).optional(),
+      categoryAttrs: z.record(z.string(), z.string().max(2000)).optional(),
+      status: z.enum(["active", "paused", "rejected", "out_of_stock", "pending_review"]).optional(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    await appContext();
+    const staff = await requireAdmin();
+    if (data.minQty > data.maxQty) fail("Min qty exceeds max qty.");
+    const exists = await q1(`select id from products where id = ?`, [data.productId]);
+    if (!exists) fail("Product not found.");
+    await run(
+      `update products set title = ?, description = ?, category_id = ?, price_cents = ?, warranty_hours = ?,
+         min_qty = ?, max_qty = ?, region = ?, platform = ?, required_info = ?,
+         admin_seo_description = ?, category_attrs = ?${data.status ? ", status = ?" : ""}
+       where id = ?`,
+      [
+        data.title,
+        data.description,
+        data.categoryId,
+        Math.round(data.priceUsdt * 100),
+        data.warrantyHours,
+        data.minQty,
+        data.maxQty,
+        data.region ?? null,
+        data.platform ?? null,
+        data.requiredInfo ?? null,
+        data.adminSeoDescription?.trim() || null,
+        data.categoryAttrs && Object.keys(data.categoryAttrs).length > 0
+          ? JSON.stringify(data.categoryAttrs)
+          : null,
+        ...(data.status ? [data.status] : []),
+        data.productId,
+      ],
+    );
+    await audit(staff.id, "product.admin_edit", "product", data.productId);
     return { ok: true };
   });
 
