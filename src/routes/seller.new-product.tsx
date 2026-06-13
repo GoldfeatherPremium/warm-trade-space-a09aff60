@@ -669,6 +669,55 @@ function ProductForm() {
         </div>
       </div>
 
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label className="text-xs">Max orders per single checkout</Label>
+          <Input
+            type="number"
+            min={1}
+            value={form.maxOrdersAtOnce}
+            onChange={(e) => setForm({ ...form, maxOrdersAtOnce: Number(e.target.value) })}
+          />
+        </div>
+        {form.deliveryType === "manual" && (
+          <div className="space-y-1.5">
+            <Label className="text-xs">Available stock (manual)</Label>
+            <Input
+              type="number"
+              min={0}
+              value={form.manualStock}
+              onChange={(e) => setForm({ ...form, manualStock: e.target.value })}
+              placeholder="leave blank for unlimited"
+            />
+          </div>
+        )}
+      </div>
+      {catSchema?.config?.requiresSubscription && (
+        <div className="space-y-1.5 bg-primary/5 border border-primary/30 rounded-lg p-3">
+          <Label className="text-xs font-bold text-primary">Subscription duration *</Label>
+          <select
+            required
+            value={form.subscriptionDuration}
+            onChange={(e) =>
+              setForm({ ...form, subscriptionDuration: e.target.value as never })
+            }
+            className="w-full bg-secondary border border-border rounded-md px-2 py-2 text-xs h-9"
+          >
+            <option value="">Select…</option>
+            {(catSchema?.config?.allowedDurations ?? []).map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+          </select>
+          <p className="text-[10px] text-muted-foreground">
+            Admin has marked this category as subscription-based. Buyers will see the duration on
+            the product card.
+          </p>
+        </div>
+      )}
+
+
       <div className="space-y-1.5">
         <Label className="text-xs">
           Warranty hours override (blank = category default
