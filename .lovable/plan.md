@@ -2,11 +2,11 @@
 
 This is a large batch (19 items). I'll group them into phases so each ships verifiable, then iterate. Tell me which phase(s) to start with — or say "all" and I'll proceed top-to-bottom.
 
-## Phase 1 — Privacy & PII protection (items 1, 2, 5, 7)
-- **Hide seller socials from buyers**: `s.$username.tsx` + product page seller card — strip Telegram/Discord/Twitter/etc. links for non-staff viewers. Keep visible in `seller.storefront.tsx` (seller's own view) and admin.
-- **Anti-PII automod hard block** (`core.server.ts` `automodCheck`): expand pattern set (phone numbers intl format, emails, Telegram `@handles`, Discord tags, WhatsApp/wa.me, signal.me, IBAN, addresses). Currently flags soft — change `sendMessage` to **reject** (not just flag) for buyer↔seller messages, with toast: "Sharing personal info is prohibited." Staff↔user chats exempt.
-- **Seller application contact fields**: add required `contact_phone`, `contact_whatsapp`, `contact_telegram` to seller verification form (`seller.verification.tsx`) — stored on `users` or `seller_profiles`, visible only to staff.
-- **Strict chat banner**: persistent red banner at top of `ChatBox` for both parties: "⚠ Never share phone, email, Telegram, payment links, or account credentials. All messages are monitored. Violations = ban + forfeit escrow."
+## Phase 1 — Privacy & PII protection (items 1, 2, 5, 7) ✅ DONE
+- ✅ Buyer-facing seller cards on `s.$username.tsx` and product pages strip Telegram/Discord/Twitter/etc.; full socials stay visible in the seller's own storefront and admin views.
+- ✅ Anti-PII automod set expanded in `core.server.ts` (phone, email, Telegram/Discord/WA/Signal, IBAN, off-platform payment / fee circumvention, external links). `chat.sendMessage` reads `automod_severity` from settings: hard-rejects buyer↔seller violations when set to `block` (default), or flags-only otherwise. Staff↔user threads remain exempt.
+- ✅ `seller_verifications` got staff-only `contact_phone` (required), `contact_whatsapp`, `contact_telegram` columns. `seller.verification.tsx` collects them in a dedicated "Staff-only contact channels" block; `admin.verifications.tsx` surfaces them to reviewers.
+- ✅ Persistent red banner inside `chat-box.tsx` warns both parties that sharing contacts / payment links forfeits escrow and triggers a ban.
 
 ## Phase 2 — Modern chat + presence + admin monitoring (items 6, 8, 9) ✅ DONE
 - ✅ Rebuilt `chat-box.tsx`: header with avatar + green/grey presence dot + "online / seen Xm ago", day separators, grouped consecutive bubbles per sender with smooth radii, sender avatars on the buyer/seller side, typing/sending indicator while a message is in-flight, plus a new `readOnly` mode for staff transcript viewing. Input is auto-focused on mount and after each send.
