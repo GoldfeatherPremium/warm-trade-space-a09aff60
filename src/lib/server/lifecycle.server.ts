@@ -299,7 +299,7 @@ export function refundOrder(orderId: string, refundCents: number, note: string):
       sellerKeepGross > 0
         ? sellerKeepGross - Math.round((sellerKeepGross * o.commission_pct) / 100)
         : 0;
-    await txRefund(
+    await txRefundToCredits(
       orderId,
       o.seller_id,
       o.buyer_id,
@@ -315,14 +315,14 @@ export function refundOrder(orderId: string, refundCents: number, note: string):
     const convId = await getOrCreateOrderConversation(orderId);
     await systemMessage(
       convId,
-      `Order refunded: ${(refundCents / 100).toFixed(2)} USDT returned to buyer wallet. ${note}`,
+      `Order refunded: ${(refundCents / 100).toFixed(2)} USDT credited to buyer's credit balance. ${note}`,
     );
     await notify(
       o.buyer_id,
       "refund",
-      "Refund issued",
-      `${(refundCents / 100).toFixed(2)} USDT credited to your wallet for ${o.order_no}.`,
-      `/orders/${orderId}`,
+      "Refund issued as credit",
+      `${(refundCents / 100).toFixed(2)} USDT added to your credits for ${o.order_no}. Use at checkout or request a withdrawal.`,
+      `/account/credits`,
     );
     await notify(
       o.seller_id,
