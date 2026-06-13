@@ -3,14 +3,12 @@ import { sweepLifecycle } from "./lifecycle.server";
 
 let booted: Promise<void> | null = null;
 let lastSweep = 0;
-const SWEEP_EVERY_MS = 60_000;
+// Lifecycle sweep is relatively expensive (5 queries + per-row work in a
+// transaction). Run it at most once every 5 minutes per isolate; it blocks
+// the triggering request, so keep it rare. Critical flows (payment, delivery)
+// don't depend on the sweep — they execute inline.
+const SWEEP_EVERY_MS = 5 * 60_000;
 
-/**
- * Called at the top of every server function. First-boot seed is awaited
- * (one-time). The lifecycle sweep runs at most once per minute and inline
- * within the request scope so it uses the request-scoped DB client (Cloudflare
- * Workers forbid sharing I/O across requests).
- */
 export async function appContext(): Promise<void> {
   if (!booted) booted = seedIfEmpty();
   await booted;
@@ -24,3 +22,4 @@ export async function appContext(): Promise<void> {
     }
   }
 }
+
