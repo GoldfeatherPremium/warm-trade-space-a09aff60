@@ -200,12 +200,12 @@ async function schemaAlreadyMigrated(e: Engine): Promise<boolean> {
     if (isPostgres()) {
       const r = await e.q<{ c: number }>(
         `select count(*)::int as c from information_schema.tables
-         where table_schema = 'public' and table_name = 'credit_ledger'`,
+         where table_schema = 'public' and table_name = 'order_attachments'`,
       );
       return !!r[0] && Number(r[0].c) > 0;
     }
     const r = await e.q<{ name: string }>(
-      `select name from sqlite_master where type='table' and name='credit_ledger'`,
+      `select name from sqlite_master where type='table' and name='order_attachments'`,
     );
     return r.length > 0;
   } catch {
@@ -741,7 +741,7 @@ async function migrate(e: Engine): Promise<void> {
     .catch(() => {});
   await e
     .exec(
-      `create table if not exists credit_ledger (
+      `create table if not exists order_attachments (
         id ${dialect === "postgres" ? "bigint generated always as identity primary key" : "integer primary key autoincrement"},
         user_id text not null,
         order_id text,
@@ -756,7 +756,7 @@ async function migrate(e: Engine): Promise<void> {
     )
     .catch(() => {});
   await e
-    .exec(`create index if not exists idx_credit_ledger_user on credit_ledger(user_id, created_at)`)
+    .exec(`create index if not exists idx_order_attachments_user on order_attachments(user_id, created_at)`)
     .catch(() => {});
 
   // --- Phase 6: Order attachments (delivery proof, before/after, dispute evidence) ---
