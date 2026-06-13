@@ -735,10 +735,11 @@ export const getFrequentlyBoughtTogether = createServerFn({ method: "GET" })
       if (seed) {
         const excludes = [data.productId, ...ids];
         const fillers = await q<{ id: string }>(
-          `select id from products
-            where status = 'active' and id not in (${excludes.map(() => "?").join(",")})
-              and category_id = ? and seller_id <> ?
-            order by sold_count desc limit ?`,
+          `select p.id from products p join users u on u.id = p.seller_id
+            where p.status = 'active' and ${PUBLIC_SELLER_COND}
+              and p.id not in (${excludes.map(() => "?").join(",")})
+              and p.category_id = ? and p.seller_id <> ?
+            order by p.sold_count desc limit ?`,
           [...excludes, seed.category_id, seed.seller_id, data.limit - ids.length],
         );
         ids = ids.concat(fillers.map((f) => f.id));
