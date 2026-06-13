@@ -1153,5 +1153,9 @@ export const reviewItemSuggestion = createServerFn({ method: "POST" })
       "/seller/new-product",
     );
     await audit(staff.id, `item_suggestion.${status}`, "item_suggestion", data.suggestionId);
+    if (data.approve) {
+      invalidateCache("catalog-items:v1");
+      invalidateCache("home:v1");
+    }
     return { ok: true };
   });
