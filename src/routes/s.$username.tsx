@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Star, Globe, Twitter, MessageCircle, Send, Youtube, Zap, Megaphone } from "lucide-react";
+import { Star, Zap, Megaphone } from "lucide-react";
 import { getSellerStore } from "@/lib/api/catalog";
 import { PageShell } from "@/components/shell";
 import { ProductCard } from "@/components/product-card";
