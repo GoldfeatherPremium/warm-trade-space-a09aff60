@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getMe } from "@/lib/api/auth";
+import { pingPresence } from "@/lib/api/chat";
 
 const CACHE_KEY = "xv_me_cache_v1";
 
@@ -38,6 +40,34 @@ export function useMe() {
     staleTime: 10_000,
     refetchInterval: 30_000,
   });
+
+  // Lightweight presence ping while a signed-in user has the tab open.
+  // Powers green "online" dots in chat. Throttled to ~60s and paused while
+  // the document is hidden so background tabs don't keep users "online".
+  const loggedIn = !!q.data?.user;
+  useEffect(() => {
+    if (!loggedIn || typeof window === "undefined") return;
+    let active = true;
+    const tick = () => {
+      if (!active) return;
+      if (typeof document !== "undefined" && document.hidden) return;
+      pingPresence().catch(() => {
+        /* ignore — presence is best-effort */
+      });
+    };
+    tick();
+    const id = window.setInterval(tick, 60_000);
+    const onVis = () => {
+      if (!document.hidden) tick();
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      active = false;
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, [loggedIn]);
+
   return {
     me: q.data?.user ?? null,
     unreadNotifications: q.data?.unreadNotifications ?? 0,

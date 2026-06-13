@@ -79,10 +79,17 @@ export const getMessages = createServerFn({ method: "GET" })
           : null;
     if (col)
       await run(`update conversations set ${col} = ? where id = ?`, [now(), data.conversationId]);
-    const other = (await q1<{ username: string }>(`select username from users where id = ?`, [
-      c!.buyer_id === user.id ? c!.seller_id : c!.buyer_id,
-    ]))!;
-    return { messages, myId: user.id, otherName: other.username, orderId: c!.order_id };
+    const other = (await q1<{ username: string; last_seen_at: number }>(
+      `select username, coalesce(last_seen_at,0) as last_seen_at from users where id = ?`,
+      [c!.buyer_id === user.id ? c!.seller_id : c!.buyer_id],
+    ))!;
+    return {
+      messages,
+      myId: user.id,
+      otherName: other.username,
+      otherLastSeenAt: other.last_seen_at,
+      orderId: c!.order_id,
+    };
   });
 
 export const sendMessage = createServerFn({ method: "POST" })
@@ -154,4 +161,83 @@ export const startProductConversation = createServerFn({ method: "POST" })
       [id, data.productId, user.id, p!.seller_id, now()],
     );
     return { conversationId: id };
+  });
+
+// ---------------------------------------------------------------------------
+// Presence — lightweight "online dot" signal.
+// Clients ping every ~60s while the tab is active. We consider a user
+// "online" if their last_seen_at is within the last 120 seconds.
+// ---------------------------------------------------------------------------
+export const PRESENCE_WINDOW_MS = 120_000;
+
+export const pingPresence = createServerFn({ method: "POST" }).handler(async () => {
+  await appContext();
+  const user = await requireUser();
+  await run(`update users set last_seen_at = ? where id = ?`, [now(), user.id]);
+  return { ok: true, at: now() };
+});
+
+export const getPresence = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ userIds: z.array(z.string()).max(50) }))
+  .handler(async ({ data }) => {
+    await appContext();
+    if (data.userIds.length === 0) return { presence: {} as Record<string, number> };
+    const placeholders = data.userIds.map(() => "?").join(",");
+    const rows = await q<{ id: string; last_seen_at: number }>(
+      `select id, coalesce(last_seen_at,0) as last_seen_at from users where id in (${placeholders})`,
+      data.userIds,
+    );
+    const presence: Record<string, number> = {};
+    for (const r of rows) presence[r.id] = r.last_seen_at;
+    return { presence };
+  });
+
+// ---------------------------------------------------------------------------
+// Admin: cross-platform chat monitor. Staff-only.
+// ---------------------------------------------------------------------------
+export const adminListConversations = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      q: z.string().max(80).optional(),
+      flaggedOnly: z.boolean().optional(),
+      limit: z.number().int().min(10).max(200).default(50),
+    }),
+  )
+  .handler(async ({ data }) => {
+    await appContext();
+    const user = await requireUser();
+    if (!isStaff(user)) fail("Staff access required.");
+    const where: string[] = [];
+    const params: Array<string | number> = [];
+    if (data.q) {
+      const like = `%${data.q.toLowerCase()}%`;
+      where.push(
+        `(lower(ub.username) like ? or lower(us.username) like ? or lower(coalesce(o.order_no,'')) like ?)`,
+      );
+      params.push(like, like, like);
+    }
+    if (data.flaggedOnly) {
+      where.push(
+        `exists (select 1 from messages m where m.conversation_id = cv.id and m.is_flagged = 1)`,
+      );
+    }
+    const whereSql = where.length ? `where ${where.join(" and ")}` : "";
+    params.push(data.limit);
+    const rows = await q<Record<string, string | number | null>>(
+      `select cv.id, cv.order_id, cv.product_id, cv.created_at, cv.last_message_at,
+              ub.username as buyer_name, us.username as seller_name,
+              o.order_no, o.status as order_status,
+              (select count(*) from messages m where m.conversation_id = cv.id) as msg_count,
+              (select count(*) from messages m where m.conversation_id = cv.id and m.is_flagged = 1) as flagged_count,
+              (select body from messages m where m.conversation_id = cv.id order by m.created_at desc limit 1) as last_body
+         from conversations cv
+         join users ub on ub.id = cv.buyer_id
+         join users us on us.id = cv.seller_id
+         left join orders o on o.id = cv.order_id
+         ${whereSql}
+         order by coalesce(cv.last_message_at, cv.created_at) desc
+         limit ?`,
+      params,
+    );
+    return { conversations: rows };
   });

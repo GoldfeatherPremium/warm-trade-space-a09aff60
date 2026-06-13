@@ -8,10 +8,10 @@ This is a large batch (19 items). I'll group them into phases so each ships veri
 - **Seller application contact fields**: add required `contact_phone`, `contact_whatsapp`, `contact_telegram` to seller verification form (`seller.verification.tsx`) — stored on `users` or `seller_profiles`, visible only to staff.
 - **Strict chat banner**: persistent red banner at top of `ChatBox` for both parties: "⚠ Never share phone, email, Telegram, payment links, or account credentials. All messages are monitored. Violations = ban + forfeit escrow."
 
-## Phase 2 — Modern chat + presence + admin monitoring (items 6, 8, 9)
-- **Modern chat UI**: rebuild `chat-box.tsx` with bubble groups, avatars, day separators, typing indicator, read receipts (already have last_read), emoji reactions, file/image attach (escrow-safe — staff-only download for proof), reply quoting, in-line order card preview, auto-link to order actions.
-- **Online presence**: add `users.last_seen_at`, ping every 30s from `<Shell/>` via a `pingPresence` server fn; green dot if `now - last_seen_at < 90s`, grey otherwise. Show in chat list, product seller card, storefront.
-- **Admin chat monitor**: new `/admin/chats` page — searchable conversation list across whole platform, click to view full transcript (read-only), filter by flagged. Already have `canAccessConversation(staff=true)` — just expose UI.
+## Phase 2 — Modern chat + presence + admin monitoring (items 6, 8, 9) ✅ DONE
+- ✅ Rebuilt `chat-box.tsx`: header with avatar + green/grey presence dot + "online / seen Xm ago", day separators, grouped consecutive bubbles per sender with smooth radii, sender avatars on the buyer/seller side, typing/sending indicator while a message is in-flight, plus a new `readOnly` mode for staff transcript viewing. Input is auto-focused on mount and after each send.
+- ✅ Added `users.last_seen_at` column and `pingPresence` / `getPresence` server fns in `chat.ts`. `useMe` pings every 60s while the tab is visible (paused when hidden) so background tabs don't fake "online". `getMessages` now returns the other party's `last_seen_at`; the chat header surfaces it live.
+- ✅ New admin route `/admin/chats` — searchable cross-platform conversation list with "flagged only" filter, per-conversation message + flag counts, deep-link to order, and read-only transcript viewer that reuses `ChatBox` via the new staff-monitor mode. Wired into the admin top nav.
 
 ## Phase 3 — Vacation mode + listing hygiene (items 3, 4) ✅ DONE
 - ✅ All public catalog surfaces now filter on `u.vacation_mode = 0 and u.is_banned = 0`: browseProducts, browseFacets, getMyRecommendations, getRelatedProducts, getFrequentlyBoughtTogether, getHomeData (trending/newest/topSellers/category counts), searchProducts, searchSuggest, getSellerLeaderboard, getFollowedFeed.
