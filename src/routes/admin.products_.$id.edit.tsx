@@ -95,6 +95,8 @@ function AdminProductEdit() {
           warrantyHours: form.warrantyHours ? Number(form.warrantyHours) : null,
           minQty: Number(form.minQty),
           maxQty: Number(form.maxQty),
+          maxOrdersAtOnce: Number(form.maxOrdersAtOnce),
+          subscriptionDuration: form.subscriptionDuration ? form.subscriptionDuration : null,
           region: form.region || undefined,
           platform: form.platform || undefined,
           requiredInfo: form.requiredInfo || undefined,
@@ -102,6 +104,7 @@ function AdminProductEdit() {
           categoryAttrs: Object.keys(categoryAttrs).length ? categoryAttrs : undefined,
           status: form.status,
         },
+
       }),
     onSuccess: () => {
       toast.success("Product updated.");
