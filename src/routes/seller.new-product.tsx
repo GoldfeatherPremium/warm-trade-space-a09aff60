@@ -259,11 +259,15 @@ function ProductForm() {
           priceUsdt: parseFloat(form.priceUsdt),
           minQty: Number(form.minQty),
           maxQty: Number(form.maxQty),
+          maxOrdersAtOnce: Number(form.maxOrdersAtOnce),
+          subscriptionDuration: form.subscriptionDuration ? form.subscriptionDuration : null,
+          manualStock: form.manualStock !== "" ? Number(form.manualStock) : null,
           region: regionMode === "global" ? "Global" : regionCountry || undefined,
           platform: form.platform || undefined,
           requiredInfo: form.requiredInfo || undefined,
           categoryAttrs: Object.keys(categoryAttrs).length ? categoryAttrs : undefined,
         },
+
       }),
     onSuccess: () => {
       toast.success("Submitted for review — admins approve listings before they go live.");
