@@ -34,9 +34,11 @@ This is a large batch (19 items). I'll group them into phases so each ships veri
 - ✅ Pay page (`pay.$orderId.tsx`) surfaces credit balance; full-cover "Pay with store credits" button, partial-cover info banner.
 - ✅ Header user menu links to "Store credits" right under Wallet.
 
-## Phase 6 — Order snapshot + delivery proof (items 17, 18)
-- **Snapshot on order create**: in `orders.ts` checkout, freeze `products` row JSON into `orders.product_snapshot` (title, description, image, attrs, price, delivery_terms). Show on `/orders/$orderId` and `/disputes/$orderId` as "what was sold". Read-only proof.
-- **Delivery proof uploads**: extend `order_attachments` (or create) — seller can attach delivery screenshot/video at delivery time (already partial via chat?). Add "Upload proof" section on order page for both buyer and seller. Buyer uploads "before/after" screenshots. Staff can request more. All attachments visible in dispute view.
+## Phase 6 — Order snapshot + delivery proof (items 17, 18) ✅ DONE
+- ✅ `orders.product_snapshot` text column; `createOrder` freezes title, image, delivery type/SLA, warranty, region, platform, required_info, unit price, variant at checkout time.
+- ✅ `getOrder` returns parsed `productSnapshot`; order page renders a "What was sold (frozen)" panel so buyers/sellers/staff see the immutable source of truth.
+- ✅ New `order_attachments` table (id, order_id, uploader_id, uploader_role, kind, mime, data, note) + server fns `listOrderAttachments` / `addOrderAttachment` / `deleteOrderAttachment` / `getOrderAttachmentData` with 5 MB cap and image/video MIME allow-list.
+- ✅ Order page gets an attachments grid with inline image/video previews and an uploader (kind: proof / before / after / evidence / misc + optional note). Both buyer and seller can upload; uploader's role and timestamp shown on every tile; uploader and staff can delete.
 
 ## Phase 7 — Auth + footer polish (items 14, 15)
 - Remove demo account block from `auth.tsx` bottom.
