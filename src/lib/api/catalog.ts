@@ -590,7 +590,7 @@ export const browseFacets = createServerFn({ method: "GET" })
     await appContext();
     // Build a shared WHERE excluding the facet being counted, so the user
     // can switch between categories without losing the option list.
-    const baseConds: string[] = [`p.status = 'active'`];
+    const baseConds: string[] = [`p.status = 'active'`, PUBLIC_SELLER_COND];
     const baseParams: Array<string | number> = [];
     if (data.q) {
       const tokens = tokenize(data.q);
