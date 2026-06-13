@@ -715,11 +715,12 @@ export const getFrequentlyBoughtTogether = createServerFn({ method: "GET" })
          join orders b on b.buyer_id = a.buyer_id and b.product_id <> a.product_id
                        and abs(b.created_at - a.created_at) < ${30 * 86_400_000}
          join products p on p.id = b.product_id
+         join users u on u.id = p.seller_id
         where a.product_id = ?
           and a.created_at >= ?
           and a.status in ('completed','released','delivered')
           and b.status in ('completed','released','delivered')
-          and p.status = 'active'
+          and p.status = 'active' and ${PUBLIC_SELLER_COND}
         group by p.id
         order by pairs desc
         limit ?`,
