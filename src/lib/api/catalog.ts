@@ -815,7 +815,7 @@ export const getSellerLeaderboard = createServerFn({ method: "GET" })
                  where p.seller_id = u.id and p.status = 'active'
                  group by c.id, c.name order by sum(p.sold_count) desc limit 1) as category_name
          from users u
-        where u.seller_status = 'approved' and u.is_banned = 0 and u.total_sales > 0
+        where u.seller_status = 'approved' and u.is_banned = 0 and u.vacation_mode = 0 and u.total_sales > 0
         order by (u.trust_score * 0.7 + (case when u.total_sales < 500 then u.total_sales else 500 end) * 0.3) desc, u.total_sales desc
         limit ?`,
       [since, since, data.limit],
