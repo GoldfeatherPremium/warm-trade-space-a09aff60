@@ -19,13 +19,18 @@ import {
   Sparkles,
   CircleDollarSign,
 } from "lucide-react";
-import { type ReactNode } from "react";
+import { type ReactNode, lazy, Suspense } from "react";
 import { getMyLoyalty } from "@/lib/api/growth";
 import { useMe } from "@/hooks/use-me";
 import { logout } from "@/lib/api/auth";
 import { SmartSearch } from "@/components/smart-search";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
-import { AiShoppingAssistant } from "@/components/ai-assistant";
+// The AI assistant is a non-critical floating widget. Lazy-load it so its code
+// stays out of the every-page shell bundle and the critical render path; the
+// FAB hydrates in shortly after the page is interactive.
+const AiShoppingAssistant = lazy(() =>
+  import("@/components/ai-assistant").then((m) => ({ default: m.AiShoppingAssistant })),
+);
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -284,7 +289,9 @@ export function PageShell({ children }: { children: ReactNode }) {
       <main className="flex-1 w-full max-w-6xl mx-auto px-4 py-6 pb-20 sm:pb-6">{children}</main>
       <SiteFooter />
       <MobileBottomNav />
-      <AiShoppingAssistant />
+      <Suspense fallback={null}>
+        <AiShoppingAssistant />
+      </Suspense>
     </div>
   );
 }
