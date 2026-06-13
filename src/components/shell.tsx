@@ -152,6 +152,9 @@ export function SiteHeader() {
                   <DropdownMenuItem onClick={() => navigate({ to: "/wallet" })}>
                     <Wallet className="size-4" /> Wallet
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate({ to: "/account/credits" })}>
+                    <CircleDollarSign className="size-4" /> Store credits
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate({ to: "/favorites" })}>
                     <Heart className="size-4" /> Favorites
                   </DropdownMenuItem>
