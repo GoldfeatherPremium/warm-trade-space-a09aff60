@@ -477,12 +477,21 @@ export const removeStockItem = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     await appContext();
     const user = await requireSeller();
-    const s = await q1<{ id: string; status: string; product_id: string; seller_id: string }>(
-      `select s.id, s.status, s.product_id, p.seller_id from stock_items s join products p on p.id = s.product_id where s.id = ?`,
+    const s = await q1<{
+      id: string;
+      status: string;
+      product_id: string;
+      seller_id: string;
+      locked_at: number | null;
+    }>(
+      `select s.id, s.status, s.product_id, p.seller_id, s.locked_at from stock_items s join products p on p.id = s.product_id where s.id = ?`,
       [data.stockItemId],
     );
     if (!s || s.seller_id !== user.id) fail("Stock item not found.");
+    if (s!.locked_at)
+      fail("This item was already delivered to a buyer and can no longer be modified.");
     if (s!.status !== "available") fail("Only unsold codes can be removed.");
+
     await run(`update stock_items set status = 'invalid' where id = ?`, [data.stockItemId]);
     await run(
       `update products set stock_count = (select count(*) from stock_items where product_id = ? and status = 'available') where id = ?`,
