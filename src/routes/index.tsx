@@ -15,7 +15,7 @@ import {
   UserPlus,
   PackageSearch,
 } from "lucide-react";
-import { getHomeData, getLiveMarketPulse, getMyRecommendations } from "@/lib/api/catalog";
+import { getHomeData, getLiveMarketPulse, getMyRecommendations, filterAvailableSlugs } from "@/lib/api/catalog";
 import { getFollowedFeed } from "@/lib/api/follows";
 import { PageShell } from "@/components/shell";
 import { ProductCard } from "@/components/product-card";
