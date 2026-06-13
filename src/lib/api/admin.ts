@@ -755,6 +755,9 @@ export const adminSaveCategory = createServerFn({ method: "POST" })
       );
     }
     await audit(staff.id, "category.save", "category", data.categoryId ?? data.slug);
+    // Reflect taxonomy edits immediately on home + catalog surfaces
+    invalidateCache("home:v1");
+    invalidateCache("catalog-items:v1");
     return { ok: true };
   });
 
