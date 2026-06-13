@@ -565,17 +565,21 @@ export interface CatalogItem {
 
 export const listCatalogItems = createServerFn({ method: "GET" }).handler(async () => {
   await appContext();
-  const [items, maps] = await Promise.all([
-    q<{ id: string; name: string; slug: string; is_active: number }>(
-      `select id, name, slug, is_active from catalog_items where is_active = 1 order by sort, name`,
-    ),
-    q<{ item_id: string; category_id: string }>(
-      `select item_id, category_id from catalog_item_categories`,
-    ),
-  ]);
-  const byItem: Record<string, string[]> = {};
-  for (const m of maps) (byItem[m.item_id] ??= []).push(m.category_id);
-  return { items: items.map((i) => ({ ...i, categoryIds: byItem[i.id] ?? [] })) };
+  // Global catalog taxonomy, hit on every browse load but changed only by
+  // admin edits — cache for a minute behind the single-flight cache.
+  return cached("catalog-items:v1", 60_000, async () => {
+    const [items, maps] = await Promise.all([
+      q<{ id: string; name: string; slug: string; is_active: number }>(
+        `select id, name, slug, is_active from catalog_items where is_active = 1 order by sort, name`,
+      ),
+      q<{ item_id: string; category_id: string }>(
+        `select item_id, category_id from catalog_item_categories`,
+      ),
+    ]);
+    const byItem: Record<string, string[]> = {};
+    for (const m of maps) (byItem[m.item_id] ??= []).push(m.category_id);
+    return { items: items.map((i) => ({ ...i, categoryIds: byItem[i.id] ?? [] })) };
+  });
 });
 
 export const getCategorySchema = createServerFn({ method: "GET" })

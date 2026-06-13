@@ -23,6 +23,7 @@ import {
   adminExtendWarranty,
 } from "../server/lifecycle.server";
 import { txAdjustment, txSetFreeze, txWithdrawalReversal } from "../server/money.server";
+import { invalidateCache } from "../server/cache.server";
 
 type Row = Record<string, string | number | null>;
 
@@ -1096,6 +1097,7 @@ export const adminSaveItem = createServerFn({ method: "POST" })
       );
     }
     await audit(staff.id, "catalog_item.save", "catalog_item", id);
+    invalidateCache("catalog-items:v1"); // reflect taxonomy edits immediately
     return { itemId: id };
   });
 
