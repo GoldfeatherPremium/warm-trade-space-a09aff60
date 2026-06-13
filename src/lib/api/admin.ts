@@ -1105,6 +1105,7 @@ export const adminSaveItem = createServerFn({ method: "POST" })
     }
     await audit(staff.id, "catalog_item.save", "catalog_item", id);
     invalidateCache("catalog-items:v1"); // reflect taxonomy edits immediately
+    invalidateCache("home:v1");
     return { itemId: id };
   });
 
