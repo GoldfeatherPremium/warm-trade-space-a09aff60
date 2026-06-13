@@ -202,6 +202,78 @@ function AdminCategories() {
           Active (visible to buyers and sellers)
         </label>
 
+        <div className="space-y-2 pt-2 border-t border-border">
+          <p className="text-xs font-bold">Delivery & subscription</p>
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-bold">Delivery kind (what sellers fulfill)</label>
+            <select
+              value={form.deliveryKind}
+              onChange={(e) =>
+                setForm({ ...form, deliveryKind: e.target.value as never })
+              }
+              className="w-full bg-secondary border border-border rounded-md px-2 text-xs h-9"
+            >
+              {DELIVERY_KINDS.map((d) => (
+                <option key={d.value} value={d.value}>
+                  {d.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <label className="flex items-center gap-2 text-xs">
+            <input
+              type="checkbox"
+              checked={form.requiresSubscription}
+              onChange={(e) =>
+                setForm({ ...form, requiresSubscription: e.target.checked })
+              }
+            />
+            Subscription-based — seller must pick a duration
+          </label>
+          {form.requiresSubscription && (
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-bold">
+                Allowed subscription durations (sellers pick one of these)
+              </label>
+              <div className="flex flex-wrap gap-1.5">
+                {DURATION_OPTIONS.map((d) => {
+                  const on = form.allowedDurations.includes(d);
+                  return (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() =>
+                        setForm({
+                          ...form,
+                          allowedDurations: on
+                            ? form.allowedDurations.filter((x) => x !== d)
+                            : [...form.allowedDurations, d],
+                        })
+                      }
+                      className={`text-[10px] font-bold px-2 py-1 rounded border ${on ? "bg-primary text-primary-foreground border-primary" : "bg-secondary border-border text-muted-foreground"}`}
+                    >
+                      {d}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-1.5 pt-2 border-t border-border">
+          <label className="text-xs font-bold">
+            Admin general description (shown to buyers + used as SEO copy)
+          </label>
+          <Textarea
+            rows={4}
+            value={form.adminDescription}
+            onChange={(e) => setForm({ ...form, adminDescription: e.target.value })}
+            placeholder="Long-form, keyword-rich category description. Surfaces on the category page and in meta tags."
+          />
+        </div>
+
+
         <div className="space-y-1.5 pt-2 border-t border-border">
           <label className="text-xs font-bold flex items-center justify-between">
             <span>Submission schema (JSON, optional)</span>
