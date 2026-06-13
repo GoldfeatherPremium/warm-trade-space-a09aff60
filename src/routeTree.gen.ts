@@ -74,6 +74,7 @@ import { Route as AdminAuditRouteImport } from './routes/admin.audit'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AccountSubscriptionsRouteImport } from './routes/account.subscriptions'
 import { Route as AccountFollowingRouteImport } from './routes/account.following'
+import { Route as AccountCreditsRouteImport } from './routes/account.credits'
 import { Route as AccountAffiliateRouteImport } from './routes/account.affiliate'
 import { Route as SellerStockProductIdRouteImport } from './routes/seller.stock.$productId'
 import { Route as ApiPublicImgIdRouteImport } from './routes/api/public/img.$id'
@@ -404,6 +405,11 @@ const AccountFollowingRoute = AccountFollowingRouteImport.update({
   path: '/following',
   getParentRoute: () => AccountRoute,
 } as any)
+const AccountCreditsRoute = AccountCreditsRouteImport.update({
+  id: '/credits',
+  path: '/credits',
+  getParentRoute: () => AccountRoute,
+} as any)
 const AccountAffiliateRoute = AccountAffiliateRouteImport.update({
   id: '/affiliate',
   path: '/affiliate',
@@ -446,6 +452,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/wallet': typeof WalletRoute
   '/account/affiliate': typeof AccountAffiliateRoute
+  '/account/credits': typeof AccountCreditsRoute
   '/account/following': typeof AccountFollowingRoute
   '/account/subscriptions': typeof AccountSubscriptionsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -515,6 +522,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/wallet': typeof WalletRoute
   '/account/affiliate': typeof AccountAffiliateRoute
+  '/account/credits': typeof AccountCreditsRoute
   '/account/following': typeof AccountFollowingRoute
   '/account/subscriptions': typeof AccountSubscriptionsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -587,6 +595,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/wallet': typeof WalletRoute
   '/account/affiliate': typeof AccountAffiliateRoute
+  '/account/credits': typeof AccountCreditsRoute
   '/account/following': typeof AccountFollowingRoute
   '/account/subscriptions': typeof AccountSubscriptionsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
@@ -660,6 +669,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/wallet'
     | '/account/affiliate'
+    | '/account/credits'
     | '/account/following'
     | '/account/subscriptions'
     | '/admin/analytics'
@@ -729,6 +739,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/wallet'
     | '/account/affiliate'
+    | '/account/credits'
     | '/account/following'
     | '/account/subscriptions'
     | '/admin/analytics'
@@ -800,6 +811,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/wallet'
     | '/account/affiliate'
+    | '/account/credits'
     | '/account/following'
     | '/account/subscriptions'
     | '/admin/analytics'
@@ -1346,6 +1358,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountFollowingRouteImport
       parentRoute: typeof AccountRoute
     }
+    '/account/credits': {
+      id: '/account/credits'
+      path: '/credits'
+      fullPath: '/account/credits'
+      preLoaderRoute: typeof AccountCreditsRouteImport
+      parentRoute: typeof AccountRoute
+    }
     '/account/affiliate': {
       id: '/account/affiliate'
       path: '/affiliate'
@@ -1379,12 +1398,14 @@ declare module '@tanstack/react-router' {
 
 interface AccountRouteChildren {
   AccountAffiliateRoute: typeof AccountAffiliateRoute
+  AccountCreditsRoute: typeof AccountCreditsRoute
   AccountFollowingRoute: typeof AccountFollowingRoute
   AccountSubscriptionsRoute: typeof AccountSubscriptionsRoute
 }
 
 const AccountRouteChildren: AccountRouteChildren = {
   AccountAffiliateRoute: AccountAffiliateRoute,
+  AccountCreditsRoute: AccountCreditsRoute,
   AccountFollowingRoute: AccountFollowingRoute,
   AccountSubscriptionsRoute: AccountSubscriptionsRoute,
 }
