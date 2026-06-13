@@ -100,6 +100,14 @@ export const sendMessage = createServerFn({ method: "POST" })
     if (recent >= 20) fail("You're sending messages too quickly.");
 
     const flagReason = automodCheck(data.body);
+    const senderIsStaff = isStaff(user);
+    // Hard-reject PII / off-platform attempts between buyer and seller.
+    // Staff are exempt so they can quote violations back to users.
+    if (flagReason && !senderIsStaff) {
+      fail(
+        `Message blocked: sharing ${flagReason} is strictly prohibited. All trades, payments and chat must stay on X-VAULT — violations forfeit escrow and result in a permanent ban.`,
+      );
+    }
     await run(
       `insert into messages (id, conversation_id, sender_id, body, is_flagged, flag_reason, created_at) values (?,?,?,?,?,?,?)`,
       [uid(), data.conversationId, user.id, data.body, flagReason ? 1 : 0, flagReason, now()],

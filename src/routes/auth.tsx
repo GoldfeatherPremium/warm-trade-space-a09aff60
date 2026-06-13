@@ -114,10 +114,11 @@ function AuthPage() {
             </Button>
           </form>
 
-          <div className="text-[10px] text-muted-foreground leading-relaxed border-t border-border pt-4">
-            <p className="font-bold mb-1">Demo accounts (password: Password123!)</p>
-            <p>buyer@xvault.test · goldrush@xvault.test (seller)</p>
-            <p>admin@xvault.test · finance@xvault.test · support@xvault.test</p>
+          <div className="text-[10px] text-muted-foreground leading-relaxed border-t border-border pt-4 text-center">
+            By continuing you agree to our{" "}
+            <a href="/legal/terms" className="underline hover:text-foreground">Terms</a>
+            {" "}and{" "}
+            <a href="/legal/privacy" className="underline hover:text-foreground">Privacy Policy</a>.
           </div>
         </div>
       </div>

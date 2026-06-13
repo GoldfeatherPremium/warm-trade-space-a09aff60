@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Star, Globe, Twitter, MessageCircle, Send, Youtube, Zap, Megaphone } from "lucide-react";
+import { Star, Zap, Megaphone } from "lucide-react";
 import { getSellerStore } from "@/lib/api/catalog";
 import { PageShell } from "@/components/shell";
 import { ProductCard } from "@/components/product-card";
@@ -87,13 +87,8 @@ export const Route = createFileRoute("/s/$username")({
   component: SellerStorePage,
 });
 
-const SOCIAL_ICONS: Record<string, { Icon: typeof Globe; label: string }> = {
-  website: { Icon: Globe, label: "Website" },
-  twitter: { Icon: Twitter, label: "Twitter" },
-  discord: { Icon: MessageCircle, label: "Discord" },
-  telegram: { Icon: Send, label: "Telegram" },
-  youtube: { Icon: Youtube, label: "YouTube" },
-};
+// Social icons removed — buyer-facing storefront never exposes seller off-platform links.
+
 
 function SellerStorePage() {
   const { username } = Route.useParams();
@@ -118,7 +113,7 @@ function SellerStorePage() {
   const s = data.seller;
   const featured = [...data.products].sort((a, b) => b.sold_count - a.sold_count).slice(0, 4);
   const latest = [...data.products].slice(0, 8);
-  const socials = Object.entries(s.store_socials || {}).filter(([, v]) => !!v);
+  
 
   return (
     <PageShell>
@@ -165,25 +160,9 @@ function SellerStorePage() {
                 {s.store_description}
               </p>
             )}
-            {socials.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-3">
-                {socials.map(([k, url]) => {
-                  const meta = SOCIAL_ICONS[k] ?? { Icon: Globe, label: k };
-                  const Icon = meta.Icon;
-                  return (
-                    <a
-                      key={k}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer nofollow"
-                      className="inline-flex items-center gap-1.5 text-[11px] bg-secondary hover:bg-border border border-border rounded-full px-2.5 py-1"
-                    >
-                      <Icon className="size-3" /> {meta.label}
-                    </a>
-                  );
-                })}
-              </div>
-            )}
+            {/* External social links intentionally hidden from buyers — all comms stay on X-VAULT. */}
+
+
           </div>
         </div>
 
