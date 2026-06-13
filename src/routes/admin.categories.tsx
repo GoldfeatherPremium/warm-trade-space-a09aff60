@@ -122,7 +122,15 @@ function AdminCategories() {
                   riskTier: c.risk_tier as never,
                   isActive: !!c.is_active,
                   submissionSchema: (c.submission_schema as string) ?? "",
+                  requiresSubscription: !!c.requires_subscription,
+                  allowedDurations: ((c.allowed_durations as string) ?? "")
+                    .split(",")
+                    .map((s) => s.trim())
+                    .filter(Boolean) as Duration[],
+                  adminDescription: (c.admin_description as string) ?? "",
+                  deliveryKind: (c.delivery_kind as never) ?? "code",
                 })
+
               }
             >
               Edit
