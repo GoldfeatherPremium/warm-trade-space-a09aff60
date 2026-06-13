@@ -29,6 +29,7 @@ function AdminProductEdit() {
     title: "",
     description: "",
     categoryId: "",
+    itemId: "",
     priceUsdt: "",
     warrantyHours: "",
     minQty: 1,
@@ -48,6 +49,7 @@ function AdminProductEdit() {
       title: (p.title as string) ?? "",
       description: (p.description as string) ?? "",
       categoryId: (p.category_id as string) ?? "",
+      itemId: (p.item_id as string) ?? "",
       priceUsdt: String(((p.price_cents as number) ?? 0) / 100),
       warrantyHours: p.warranty_hours ? String(p.warranty_hours) : "",
       minQty: (p.min_qty as number) ?? 1,
@@ -80,6 +82,7 @@ function AdminProductEdit() {
           title: form.title,
           description: form.description,
           categoryId: form.categoryId,
+          itemId: form.itemId || null,
           priceUsdt: parseFloat(form.priceUsdt),
           warrantyHours: form.warrantyHours ? Number(form.warrantyHours) : null,
           minQty: Number(form.minQty),
@@ -139,13 +142,13 @@ function AdminProductEdit() {
         />
       </div>
 
-      <div className="grid sm:grid-cols-3 gap-3">
+      <div className="grid sm:grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <Label className="text-xs">Category</Label>
           <select
             required
             value={form.categoryId}
-            onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
+            onChange={(e) => setForm({ ...form, categoryId: e.target.value, itemId: "" })}
             className="w-full bg-secondary border border-border rounded-md px-2 py-2 text-xs h-9"
           >
             {data.categories.map((c) => (
@@ -155,6 +158,37 @@ function AdminProductEdit() {
             ))}
           </select>
         </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Sub-category (selling item)</Label>
+          <select
+            value={form.itemId}
+            onChange={(e) => setForm({ ...form, itemId: e.target.value })}
+            className="w-full bg-secondary border border-border rounded-md px-2 py-2 text-xs h-9"
+          >
+            <option value="">— None —</option>
+            {(() => {
+              const allowedIds = new Set(
+                data.itemCategories
+                  .filter((m) => m.category_id === form.categoryId)
+                  .map((m) => m.item_id),
+              );
+              const mappedItemIds = new Set(data.itemCategories.map((m) => m.item_id));
+              return data.items
+                .filter((i) => !mappedItemIds.has(i.id) || allowedIds.has(i.id))
+                .map((i) => (
+                  <option key={i.id} value={i.id}>
+                    {i.name}
+                  </option>
+                ));
+            })()}
+          </select>
+          <p className="text-[10px] text-muted-foreground">
+            Items restricted to other categories are hidden.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <Label className="text-xs">Price (USDT)</Label>
           <Input
