@@ -17,6 +17,7 @@ import {
   Scale,
   Users,
   Sparkles,
+  CircleDollarSign,
 } from "lucide-react";
 import { type ReactNode } from "react";
 import { getMyLoyalty } from "@/lib/api/growth";
