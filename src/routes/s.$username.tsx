@@ -113,7 +113,7 @@ function SellerStorePage() {
   const s = data.seller;
   const featured = [...data.products].sort((a, b) => b.sold_count - a.sold_count).slice(0, 4);
   const latest = [...data.products].slice(0, 8);
-  const socials = Object.entries(s.store_socials || {}).filter(([, v]) => !!v);
+  
 
   return (
     <PageShell>
