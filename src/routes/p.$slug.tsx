@@ -343,7 +343,37 @@ function ProductPage() {
               DESCRIPTION
             </h2>
             <p className="text-sm whitespace-pre-wrap leading-relaxed">{p.description}</p>
+            {p.admin_seo_description && (
+              <div className="mt-4 pt-4 border-t border-border space-y-1">
+                <p className="text-[10px] font-bold tracking-widest text-muted-foreground">
+                  MORE ABOUT THIS LISTING
+                </p>
+                <p className="text-sm whitespace-pre-wrap leading-relaxed text-muted-foreground">
+                  {p.admin_seo_description}
+                </p>
+              </div>
+            )}
+            {p.category_attrs && Object.keys(p.category_attrs).length > 0 && (
+              <div className="mt-4 pt-4 border-t border-border">
+                <p className="text-[10px] font-bold tracking-widest text-muted-foreground mb-2">
+                  SPECS
+                </p>
+                <dl className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+                  {Object.entries(p.category_attrs).map(([k, v]) => {
+                    const label =
+                      p.submission_schema?.sellerFields?.find((f) => f.key === k)?.label ?? k;
+                    return (
+                      <div key={k} className="contents">
+                        <dt className="text-muted-foreground">{label}</dt>
+                        <dd className="font-mono text-foreground">{v as string}</dd>
+                      </div>
+                    );
+                  })}
+                </dl>
+              </div>
+            )}
           </div>
+
 
           <div className="bg-card border border-accent/30 rounded-lg p-4 flex gap-3">
             <ShieldCheck className="size-8 text-accent shrink-0" />
