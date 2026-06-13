@@ -39,7 +39,11 @@ function PayPage() {
   const { data } = useQuery({
     queryKey: ["payment", orderId],
     queryFn: () => getPayment({ data: { orderId } }),
-    refetchInterval: 2500,
+    // Only poll while awaiting payment. Once paid the page redirects to the
+    // order; once expired nothing changes — either way, stop hammering the
+    // gateway-status endpoint every 2.5s.
+    refetchInterval: (query) =>
+      query.state.data?.order?.status === "awaiting_payment" ? 2500 : false,
   });
 
   const { data: walletData } = useQuery({ queryKey: ["wallet"], queryFn: () => getWalletData() });

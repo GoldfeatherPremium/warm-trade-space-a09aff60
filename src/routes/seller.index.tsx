@@ -1,9 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { lazy, Suspense } from "react";
 import { TrendingUp, TrendingDown, Activity, Target, BarChart3 } from "lucide-react";
 import { getSellerOverview } from "@/lib/api/seller";
 import { usdt } from "@/lib/format";
-import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+
+// Lazy-loaded so the recharts bundle stays off the dashboard's critical path.
+const SalesAreaChart = lazy(() => import("@/components/charts/sales-area-chart"));
 
 export const Route = createFileRoute("/seller/")({
   component: SellerOverview,
@@ -113,42 +116,11 @@ function SellerOverview() {
           NET SALES — LAST 14 DAYS
         </h2>
         <div className="h-44">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data.daily} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-              <defs>
-                <linearGradient id="salesFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.5} />
-                  <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <XAxis
-                dataKey="day"
-                tick={{ fontSize: 10, fill: "#71717a" }}
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis tick={{ fontSize: 10, fill: "#71717a" }} tickLine={false} axisLine={false} />
-              <Tooltip
-                contentStyle={{
-                  background: "#18181b",
-                  border: "1px solid #27272a",
-                  borderRadius: 8,
-                  fontSize: 12,
-                }}
-                formatter={(v: number, name: string) => [
-                  name === "sales" ? `${v.toFixed(2)} USDT` : v,
-                  name,
-                ]}
-              />
-              <Area
-                type="monotone"
-                dataKey="sales"
-                stroke="#3b82f6"
-                strokeWidth={2}
-                fill="url(#salesFill)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          <Suspense
+            fallback={<div className="h-full w-full rounded bg-secondary/40 animate-pulse" />}
+          >
+            <SalesAreaChart data={data.daily} />
+          </Suspense>
         </div>
       </div>
 

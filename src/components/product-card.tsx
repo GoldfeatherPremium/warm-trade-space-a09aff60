@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { memo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Zap, Clock, Star, Heart } from "lucide-react";
 import type { PublicProduct } from "@/lib/api/catalog";
@@ -51,7 +52,16 @@ export function FavoriteButton({
   );
 }
 
-export function ProductCard({ product, priority }: { product: PublicProduct; priority?: boolean }) {
+// Memoized: product grids render 8–24 cards, and the parent page re-renders
+// on unrelated state changes (recently-viewed, pulse polling). With stable
+// product props from the query cache, memo skips re-rendering every card.
+export const ProductCard = memo(function ProductCard({
+  product,
+  priority,
+}: {
+  product: PublicProduct;
+  priority?: boolean;
+}) {
   const { banner } = useMe();
   const lowStockThreshold = banner?.lowStockThreshold ?? 5;
   return (
@@ -133,4 +143,4 @@ export function ProductCard({ product, priority }: { product: PublicProduct; pri
       </div>
     </Link>
   );
-}
+});

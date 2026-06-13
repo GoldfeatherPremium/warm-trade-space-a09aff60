@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { q, q1, run } from "../server/db.server";
 import { appContext } from "../server/app.server";
+import { cached } from "../server/cache.server";
 import { buildSearchClause, didYouMean, tokenize } from "../server/search.server";
 
 export interface PublicSeller {
@@ -166,84 +167,89 @@ function mapProduct(r: Record<string, unknown>): PublicProduct {
 
 export const getHomeData = createServerFn({ method: "GET" }).handler(async () => {
   await appContext();
-  const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
-  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  const [
-    categoryRows,
-    trendingRows,
-    newestRows,
-    topSellers,
-    recentSales,
-    stats,
-    last24h,
-    trendingSearches,
-  ] = await Promise.all([
-    q<{
-      id: string;
-      name: string;
-      slug: string;
-      icon: string;
-      default_warranty_hours: number;
-      commission_pct: number;
-      risk_tier: string;
-      product_count: number;
-    }>(
-      `select c.id, c.name, c.slug, c.icon, c.default_warranty_hours, c.commission_pct, c.risk_tier,
+  // Homepage feed is identical for every visitor and changes slowly — serve
+  // from a short single-flight cache so traffic spikes don't multiply these
+  // eight queries across every open tab.
+  return cached("home:v1", 20_000, async () => {
+    const dayAgo = Date.now() - 24 * 60 * 60 * 1000;
+    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const [
+      categoryRows,
+      trendingRows,
+      newestRows,
+      topSellers,
+      recentSales,
+      stats,
+      last24h,
+      trendingSearches,
+    ] = await Promise.all([
+      q<{
+        id: string;
+        name: string;
+        slug: string;
+        icon: string;
+        default_warranty_hours: number;
+        commission_pct: number;
+        risk_tier: string;
+        product_count: number;
+      }>(
+        `select c.id, c.name, c.slug, c.icon, c.default_warranty_hours, c.commission_pct, c.risk_tier,
               (select count(*) from products p join users u on u.id = p.seller_id
                  where p.category_id = c.id and p.status = 'active'
                    and u.vacation_mode = 0 and u.is_banned = 0) as product_count
        from categories c where c.is_active = 1 order by c.sort`,
-    ),
-    q(
-      `${productSelect} where p.status = 'active' and ${PUBLIC_SELLER_COND}
+      ),
+      q(
+        `${productSelect} where p.status = 'active' and ${PUBLIC_SELLER_COND}
        order by (case when p.featured_until is not null and p.featured_until > ? then 0 else 1 end),
                 p.sold_count desc, p.views desc limit 8`,
-      [Date.now()],
-    ),
-    q(
-      `${productSelect} where p.status = 'active' and ${PUBLIC_SELLER_COND} order by p.created_at desc limit 8`,
-    ),
-    q<PublicSeller>(
-      `select id, username, seller_level, rating, rating_count, total_sales, completion_rate, vacation_mode, created_at,
+        [Date.now()],
+      ),
+      q(
+        `${productSelect} where p.status = 'active' and ${PUBLIC_SELLER_COND} order by p.created_at desc limit 8`,
+      ),
+      q<PublicSeller>(
+        `select id, username, seller_level, rating, rating_count, total_sales, completion_rate, vacation_mode, created_at,
               verification_tier, trust_score
        from users where seller_status = 'approved' and is_banned = 0 and vacation_mode = 0 order by trust_score desc, total_sales desc limit 6`,
-    ),
-    q<{ product_title: string; total_cents: number; created_at: number; buyer: string }>(
-      `select o.product_title, o.total_cents, o.created_at, u.username as buyer
+      ),
+      q<{ product_title: string; total_cents: number; created_at: number; buyer: string }>(
+        `select o.product_title, o.total_cents, o.created_at, u.username as buyer
        from orders o join users u on u.id = o.buyer_id
        where o.status in ('delivered','completed','released') order by o.created_at desc limit 8`,
-    ),
-    q1<{ sellers: number; products: number; orders: number; reviews: number }>(
-      `select
+      ),
+      q1<{ sellers: number; products: number; orders: number; reviews: number }>(
+        `select
          (select count(*) from users where seller_status = 'approved' and is_banned = 0) as sellers,
          (select count(*) from products where status = 'active') as products,
          (select count(*) from orders where status in ('delivered','completed','released')) as orders,
          (select count(*) from reviews) as reviews`,
-    ),
-    q1<{ orders24h: number; gmv24h: number }>(
-      `select count(*) as orders24h, coalesce(sum(total_cents),0) as gmv24h from orders
+      ),
+      q1<{ orders24h: number; gmv24h: number }>(
+        `select count(*) as orders24h, coalesce(sum(total_cents),0) as gmv24h from orders
          where status in ('delivered','completed','released') and created_at >= ?`,
-      [dayAgo],
-    ),
-    q<{ query: string; uses: number }>(
-      `select query, count(*) as uses from search_queries
+        [dayAgo],
+      ),
+      q<{ query: string; uses: number }>(
+        `select query, count(*) as uses from search_queries
          where created_at >= ? and length(query) >= 2 and results > 0
          group by query order by uses desc limit 8`,
-      [weekAgo],
-    ),
-  ]);
-  const trending = trendingRows.map(mapProduct);
-  const newest = newestRows.map(mapProduct);
-  return {
-    categories: categoryRows,
-    trending,
-    newest,
-    topSellers,
-    recentSales,
-    stats: stats ?? { sellers: 0, products: 0, orders: 0, reviews: 0 },
-    last24h: last24h ?? { orders24h: 0, gmv24h: 0 },
-    trendingSearches,
-  };
+        [weekAgo],
+      ),
+    ]);
+    const trending = trendingRows.map(mapProduct);
+    const newest = newestRows.map(mapProduct);
+    return {
+      categories: categoryRows,
+      trending,
+      newest,
+      topSellers,
+      recentSales,
+      stats: stats ?? { sellers: 0, products: 0, orders: 0, reviews: 0 },
+      last24h: last24h ?? { orders24h: 0, gmv24h: 0 },
+      trendingSearches,
+    };
+  });
 });
 
 /**
@@ -253,37 +259,41 @@ export const getHomeData = createServerFn({ method: "GET" }).handler(async () =>
  */
 export const getLiveMarketPulse = createServerFn({ method: "GET" }).handler(async () => {
   await appContext();
-  const t = Date.now();
-  const tenMin = t - 10 * 60 * 1000;
-  const hourAgo = t - 60 * 60 * 1000;
-  const dayAgo = t - 24 * 60 * 60 * 1000;
-  const [shoppers, joined, ordersHour, listingsDay, sellersOnline] = await Promise.all([
-    q1<{ n: number }>(`select count(distinct buyer_id) n from orders where created_at >= ?`, [
-      tenMin,
-    ]),
-    q1<{ n: number }>(`select count(*) n from users where created_at >= ?`, [dayAgo]),
-    q1<{ n: number }>(
-      `select count(*) n from orders where paid_at >= ? and status in ('paid','delivered','completed','released')`,
-      [hourAgo],
-    ),
-    q1<{ n: number }>(
-      `select count(*) n from products where created_at >= ? and status = 'active'`,
-      [dayAgo],
-    ),
-    q1<{ n: number }>(`select count(distinct seller_id) n from products where created_at >= ?`, [
-      hourAgo,
-    ]),
-  ]);
-  // Sprinkle a small base so the pulse never reads as a ghost-town on quiet
-  // hours — real numbers still surface underneath as they grow.
-  const base = 7 + Math.floor(Math.sin(t / 60_000) * 3 + 3);
-  return {
-    shoppersNow: Math.max(base, Number(shoppers?.n ?? 0)),
-    sellersOnline: Math.max(2, Number(sellersOnline?.n ?? 0)),
-    joinedToday: Number(joined?.n ?? 0),
-    ordersLastHour: Number(ordersHour?.n ?? 0),
-    liveListingsToday: Number(listingsDay?.n ?? 0),
-  };
+  // Global social-proof counters, polled by every homepage tab every ~20s.
+  // Cache for 10s so a thousand tabs cost one set of counts per window.
+  return cached("pulse:v1", 10_000, async () => {
+    const t = Date.now();
+    const tenMin = t - 10 * 60 * 1000;
+    const hourAgo = t - 60 * 60 * 1000;
+    const dayAgo = t - 24 * 60 * 60 * 1000;
+    const [shoppers, joined, ordersHour, listingsDay, sellersOnline] = await Promise.all([
+      q1<{ n: number }>(`select count(distinct buyer_id) n from orders where created_at >= ?`, [
+        tenMin,
+      ]),
+      q1<{ n: number }>(`select count(*) n from users where created_at >= ?`, [dayAgo]),
+      q1<{ n: number }>(
+        `select count(*) n from orders where paid_at >= ? and status in ('paid','delivered','completed','released')`,
+        [hourAgo],
+      ),
+      q1<{ n: number }>(
+        `select count(*) n from products where created_at >= ? and status = 'active'`,
+        [dayAgo],
+      ),
+      q1<{ n: number }>(`select count(distinct seller_id) n from products where created_at >= ?`, [
+        hourAgo,
+      ]),
+    ]);
+    // Sprinkle a small base so the pulse never reads as a ghost-town on quiet
+    // hours — real numbers still surface underneath as they grow.
+    const base = 7 + Math.floor(Math.sin(t / 60_000) * 3 + 3);
+    return {
+      shoppersNow: Math.max(base, Number(shoppers?.n ?? 0)),
+      sellersOnline: Math.max(2, Number(sellersOnline?.n ?? 0)),
+      joinedToday: Number(joined?.n ?? 0),
+      ordersLastHour: Number(ordersHour?.n ?? 0),
+      liveListingsToday: Number(listingsDay?.n ?? 0),
+    };
+  });
 });
 
 export const browseProducts = createServerFn({ method: "GET" })
@@ -555,17 +565,21 @@ export interface CatalogItem {
 
 export const listCatalogItems = createServerFn({ method: "GET" }).handler(async () => {
   await appContext();
-  const [items, maps] = await Promise.all([
-    q<{ id: string; name: string; slug: string; is_active: number }>(
-      `select id, name, slug, is_active from catalog_items where is_active = 1 order by sort, name`,
-    ),
-    q<{ item_id: string; category_id: string }>(
-      `select item_id, category_id from catalog_item_categories`,
-    ),
-  ]);
-  const byItem: Record<string, string[]> = {};
-  for (const m of maps) (byItem[m.item_id] ??= []).push(m.category_id);
-  return { items: items.map((i) => ({ ...i, categoryIds: byItem[i.id] ?? [] })) };
+  // Global catalog taxonomy, hit on every browse load but changed only by
+  // admin edits — cache for a minute behind the single-flight cache.
+  return cached("catalog-items:v1", 60_000, async () => {
+    const [items, maps] = await Promise.all([
+      q<{ id: string; name: string; slug: string; is_active: number }>(
+        `select id, name, slug, is_active from catalog_items where is_active = 1 order by sort, name`,
+      ),
+      q<{ item_id: string; category_id: string }>(
+        `select item_id, category_id from catalog_item_categories`,
+      ),
+    ]);
+    const byItem: Record<string, string[]> = {};
+    for (const m of maps) (byItem[m.item_id] ??= []).push(m.category_id);
+    return { items: items.map((i) => ({ ...i, categoryIds: byItem[i.id] ?? [] })) };
+  });
 });
 
 export const getCategorySchema = createServerFn({ method: "GET" })

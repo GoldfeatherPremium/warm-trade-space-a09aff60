@@ -1014,6 +1014,35 @@ async function migrate(e: Engine): Promise<void> {
     .exec(`create index if not exists idx_reviews_product_rating on reviews(product_id, rating)`)
     .catch(() => {});
 
+  // --- Phase D (perf audit): time-range scans on the homepage pulse,
+  // admin/seller order & user listings, and analytics roll-ups ---
+  await e
+    .exec(`create index if not exists idx_orders_created on orders(created_at)`)
+    .catch(() => {});
+  await e.exec(`create index if not exists idx_orders_paid on orders(paid_at)`).catch(() => {});
+  await e.exec(`create index if not exists idx_users_created on users(created_at)`).catch(() => {});
+
+  // --- Phase E (perf audit): full-text search acceleration ---
+  // Product search runs `lower(col) like '%term%'`, whose leading wildcard a
+  // btree index can't serve — a full table scan as the catalog grows. On
+  // Postgres, pg_trgm GIN indexes let the planner satisfy those LIKE scans
+  // from an index. SQLite keeps the sequential LIKE (fine at its scale).
+  // Extension/index creation is best-effort: a host without pg_trgm simply
+  // falls back to the scan rather than failing boot.
+  if (dialect === "postgres") {
+    await e.exec(`create extension if not exists pg_trgm`).catch(() => {});
+    await e
+      .exec(
+        `create index if not exists idx_products_title_trgm on products using gin (lower(title) gin_trgm_ops)`,
+      )
+      .catch(() => {});
+    await e
+      .exec(
+        `create index if not exists idx_products_desc_trgm on products using gin (lower(description) gin_trgm_ops)`,
+      )
+      .catch(() => {});
+  }
+
   // seed a sane default set if empty
   const seeded = await e.q<{ c: number }>(`select count(*) as c from fx_rates`);
   if (!seeded[0] || Number(seeded[0].c) === 0) {

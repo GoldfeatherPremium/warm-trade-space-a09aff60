@@ -72,6 +72,15 @@ const FAQ_JSONLD = {
 };
 
 export const Route = createFileRoute("/")({
+  // SSR the homepage feed: prime the query cache on the server so the trending
+  // / newest / categories grid ships inside the initial HTML (fast LCP) rather
+  // than popping in after hydration + a client round-trip. getHomeData is
+  // server-cached, so this loader is near-free.
+  loader: async ({ context }) => {
+    await context.queryClient
+      .ensureQueryData({ queryKey: ["home"], queryFn: () => getHomeData() })
+      .catch(() => {});
+  },
   head: () => ({
     meta: [
       { title: "X-VAULT — Buy & Sell Digital Goods with USDT Escrow" },

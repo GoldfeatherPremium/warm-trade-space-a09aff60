@@ -47,7 +47,12 @@ function OrderPage() {
   const { data, refetch } = useQuery({
     queryKey: ["order", orderId],
     queryFn: () => getOrder({ data: { orderId } }),
-    refetchInterval: 5000,
+    // Poll while the order can still change; stop once it reaches a terminal
+    // state so settled orders don't keep hitting the server every 5s.
+    refetchInterval: (query) => {
+      const s = query.state.data?.order?.status;
+      return s && ["released", "refunded", "cancelled", "expired"].includes(s) ? false : 5000;
+    },
   });
 
   const onDone = () => {

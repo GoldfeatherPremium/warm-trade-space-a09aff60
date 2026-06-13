@@ -322,6 +322,31 @@ check("automod passes normal text", core.automodCheck("thanks, code worked great
   check("coupon guard blocks redemption past max_uses", second.length === 0);
 }
 
+// =============== 11. single-flight TTL cache ===============
+{
+  const { cached, invalidateCache } = await import("../src/lib/server/cache.server");
+  let calls = 0;
+  const compute = async () => {
+    calls++;
+    await new Promise((r) => setTimeout(r, 10));
+    return calls;
+  };
+  // Concurrent callers during one in-flight computation share a single call.
+  const [a, b, c] = await Promise.all([
+    cached("t", 1000, compute),
+    cached("t", 1000, compute),
+    cached("t", 1000, compute),
+  ]);
+  check("cache single-flights concurrent callers", calls === 1 && a === 1 && b === 1 && c === 1);
+  // Subsequent call within TTL is served from cache (no recompute).
+  const d = await cached("t", 1000, compute);
+  check("cache serves fresh value within TTL", calls === 1 && d === 1);
+  // After invalidation it recomputes.
+  invalidateCache("t");
+  const e = await cached("t", 1000, compute);
+  check("cache recomputes after invalidation", calls === 2 && e === 2);
+}
+
 console.log(
   `\nAll ${passed} checks passed ✔ (engine: ${process.env.DATABASE_URL ? "postgres" : "sqlite"})`,
 );
