@@ -207,9 +207,10 @@ export function markManualDelivered(
     const o = (await getOrderRow(orderId))!;
     const t = now();
     await run(
-      `insert into order_deliveries (id, order_id, type, payload, note, delivered_by, created_at) values (?,?, 'manual', ?, ?, ?, ?)`,
-      [uid(), orderId, payload ?? null, proofNote, deliveredBy, t],
+      `insert into order_deliveries (id, order_id, type, payload, note, delivered_by, created_at, locked_at) values (?,?, 'manual', ?, ?, ?, ?, ?)`,
+      [uid(), orderId, payload ?? null, proofNote, deliveredBy, t, t],
     );
+
     const settings = await getSettings();
     await run(
       `update orders set status = 'delivered', delivered_at = ?, auto_confirm_at = ? where id = ?`,
