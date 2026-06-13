@@ -57,12 +57,15 @@ function AdminProductEdit() {
       warrantyHours: p.warranty_hours ? String(p.warranty_hours) : "",
       minQty: (p.min_qty as number) ?? 1,
       maxQty: (p.max_qty as number) ?? 50,
+      maxOrdersAtOnce: (p.max_orders_at_once as number) ?? 10,
+      subscriptionDuration: ((p.subscription_duration as string) ?? "") as never,
       region: (p.region as string) ?? "",
       platform: (p.platform as string) ?? "",
       requiredInfo: (p.required_info as string) ?? "",
       adminSeoDescription: (p.admin_seo_description as string) ?? "",
       status: (p.status as never) ?? "active",
     });
+
     if (p.category_attrs) {
       try {
         setCategoryAttrs(JSON.parse(p.category_attrs as string) as Record<string, string>);
