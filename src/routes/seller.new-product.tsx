@@ -5,7 +5,7 @@ import { AlertTriangle, BookOpen, ListChecks, Search, Send, Sparkles, Upload, X 
 import { generateProductContent } from "@/lib/api/ai";
 import { toast } from "sonner";
 import { z } from "zod";
-import { getHomeData, listCatalogItems } from "@/lib/api/catalog";
+import { getCategorySchema, getHomeData, listCatalogItems } from "@/lib/api/catalog";
 import {
   deleteProductImage,
   listMyProductImages,
@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { DynamicFields } from "@/components/dynamic-fields";
 
 export const Route = createFileRoute("/seller/new-product")({
   validateSearch: z.object({ edit: z.string().optional() }),
