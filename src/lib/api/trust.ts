@@ -23,6 +23,9 @@ export interface SellerVerification {
   business_registration: string | null;
   id_doc_ref: string | null;
   notes: string | null;
+  contact_phone: string | null;
+  contact_whatsapp: string | null;
+  contact_telegram: string | null;
   status: "pending" | "approved" | "rejected";
   reviewed_by: string | null;
   admin_note: string | null;
@@ -44,6 +47,9 @@ export const applyForVerification = createServerFn({ method: "POST" })
       businessRegistration: z.string().trim().max(120).optional(),
       idDocRef: z.string().trim().max(200).optional(),
       notes: z.string().trim().max(2000).optional(),
+      contactPhone: z.string().trim().min(5).max(40),
+      contactWhatsapp: z.string().trim().max(40).optional(),
+      contactTelegram: z.string().trim().max(60).optional(),
     }),
   )
   .handler(async ({ data }) => {
@@ -63,8 +69,8 @@ export const applyForVerification = createServerFn({ method: "POST" })
     const id = uid();
     await run(
       `insert into seller_verifications
-         (id, user_id, tier_requested, legal_name, country, business_name, business_registration, id_doc_ref, notes, created_at)
-       values (?,?,?,?,?,?,?,?,?,?)`,
+         (id, user_id, tier_requested, legal_name, country, business_name, business_registration, id_doc_ref, notes, contact_phone, contact_whatsapp, contact_telegram, created_at)
+       values (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       [
         id,
         user.id,
@@ -75,6 +81,9 @@ export const applyForVerification = createServerFn({ method: "POST" })
         data.businessRegistration ?? null,
         data.idDocRef ?? null,
         data.notes ?? null,
+        data.contactPhone,
+        data.contactWhatsapp ?? null,
+        data.contactTelegram ?? null,
         now(),
       ],
     );
