@@ -490,7 +490,7 @@ function OrderPage() {
         {/* order chat */}
         <div className="space-y-2 lg:sticky lg:top-20 self-start">
           <h2 className="text-xs font-bold tracking-widest text-muted-foreground">ORDER CHAT</h2>
-          <ChatBox conversationId={data.conversationId} />
+          <ChatBox conversationId={data.conversationId} showCard={false} />
           <p className="text-[10px] text-muted-foreground">
             Keep all communication here — it's the evidence staff use in disputes. Sharing contacts
             or paying off-platform is prohibited.
