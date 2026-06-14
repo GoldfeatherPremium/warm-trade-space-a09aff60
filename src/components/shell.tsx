@@ -224,7 +224,7 @@ export function SiteFooter() {
     {
       heading: "Trust & safety",
       links: [
-        { label: "How escrow works", to: "/legal/escrow" },
+        { label: "Buyer protection", to: "/legal/escrow" },
         { label: "Buyer protection", to: "/legal/buyer-protection" },
         { label: "Prohibited items", to: "/legal/prohibited" },
         { label: "Dispute resolution", to: "/disputes" },
@@ -274,7 +274,7 @@ export function SiteFooter() {
           ))}
         </div>
         <p className="text-[10px] text-muted-foreground text-center pt-6 border-t border-border/60 tracking-wide">
-          © 2026 X-VAULT MARKETPLACE · Escrow-protected digital goods · All chats are monitored —
+          © 2026 X-VAULT MARKETPLACE · Buyer-protected digital goods · All chats are monitored —
           never share personal info off-platform.
         </p>
       </div>

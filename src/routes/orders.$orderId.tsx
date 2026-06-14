@@ -230,7 +230,7 @@ function OrderPage() {
 
           {o.escrow_status === "on_hold" && o.escrow_hold_reason && (
             <div className="bg-destructive/5 border border-destructive/30 rounded-lg p-3 text-xs">
-              <p className="font-bold text-destructive mb-0.5">Escrow on administrative hold</p>
+              <p className="font-bold text-destructive mb-0.5">Payment on administrative hold</p>
               <p className="text-muted-foreground">{o.escrow_hold_reason}</p>
             </div>
           )}
@@ -371,7 +371,7 @@ function OrderPage() {
               <Textarea
                 value={disputeDesc}
                 onChange={(e) => setDisputeDesc(e.target.value)}
-                placeholder="Describe the problem in detail (min. 10 characters). Escrow freezes while staff review."
+                placeholder="Describe the problem in detail (min. 10 characters). Your payment stays held while staff review."
                 className="text-xs"
               />
               <Button

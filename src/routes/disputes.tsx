@@ -26,8 +26,8 @@ function DisputeCenter() {
         <Scale className="size-6 text-primary" /> DISPUTE CENTER
       </h1>
       <p className="text-[11px] text-muted-foreground mb-4">
-        Every dispute you're involved in, as buyer or seller. Escrow stays frozen until staff
-        resolve it.
+        Every dispute you're involved in, as buyer or seller. Funds stay frozen until staff resolve
+        it.
       </p>
       {!me && !isLoading && (
         <p className="py-16 text-center text-sm text-muted-foreground">

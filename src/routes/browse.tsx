@@ -72,7 +72,7 @@ export const Route = createFileRoute("/browse")({
     if (s.delivery) parts.push(s.delivery === "auto" ? "auto-delivery" : "manual delivery");
     const label = parts.length ? parts.join(" · ") : "All listings";
     const title = `${label} — Browse X-VAULT`;
-    const desc = `Browse ${label.toLowerCase()} on X-VAULT. Escrow-protected, USDT payments, instant delivery from verified sellers.`;
+    const desc = `Browse ${label.toLowerCase()} on X-VAULT. Buyer-protected, USDT payments, instant delivery from verified sellers.`;
     const canonical =
       s.category && !s.q && !s.item && !s.delivery
         ? `${SITE}/browse?category=${encodeURIComponent(s.category)}`
