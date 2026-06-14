@@ -713,6 +713,17 @@ async function migrate(e: Engine): Promise<void> {
     `alter table seller_verifications add column contact_phone text`,
     `alter table seller_verifications add column contact_whatsapp text`,
     `alter table seller_verifications add column contact_telegram text`,
+    // --- Seller application: richer onboarding (business profile, track record,
+    // reachable contact channels). All nullable for backward compatibility. ---
+    `alter table seller_applications add column display_name text`,
+    `alter table seller_applications add column years_experience text`,
+    `alter table seller_applications add column product_categories text`,
+    `alter table seller_applications add column source_of_goods text`,
+    `alter table seller_applications add column monthly_volume text`,
+    `alter table seller_applications add column portfolio text`,
+    `alter table seller_applications add column telegram text`,
+    `alter table seller_applications add column whatsapp text`,
+    `alter table seller_applications add column wechat text`,
   ];
   for (const stmt of addColumns) {
     await e.exec(stmt).catch(() => {}); // already exists
