@@ -348,30 +348,65 @@ check("automod passes normal text", core.automodCheck("thanks, code worked great
   check("cache recomputes after invalidation", calls === 2 && e === 2);
 }
 
-// =============== 12. base category taxonomy (additive ensure step) ===============
+// =============== 12. buyer dashboard aggregation ===============
 {
-  // ensureBaseCategories runs on boot, so every base slug should already exist.
-  const slugs = (await q<{ slug: string }>(`select slug from categories`)).map((r) => r.slug);
-  const have = new Set(slugs);
-  const missing = BASE_CATEGORIES.filter((c) => !have.has(c.slug)).map((c) => c.slug);
-  check("all base categories provisioned on boot", missing.length === 0, missing);
+  // Mirrors getBuyerDashboard: order stats by status + spend, recent orders,
+  // favorites/follows counts. The buyer placed several orders above.
+  const ACTIVE = ["awaiting_payment", "paid", "delivering", "delivered", "disputed"];
+  const COMPLETED = ["completed", "released"];
+
+  const byStatus = await q<{ status: string; c: number; s: number }>(
+    `select status, count(*) as c, coalesce(sum(total_cents), 0) as s
+       from orders where buyer_id = ? group by status`,
+    [buyer.id],
+  );
+  let totalOrders = 0;
+  let activeOrders = 0;
+  let completedOrders = 0;
+  let totalSpentCents = 0;
+  for (const r of byStatus) {
+    const c = Number(r.c);
+    totalOrders += c;
+    if (ACTIVE.includes(r.status)) activeOrders += c;
+    if (COMPLETED.includes(r.status)) {
+      completedOrders += c;
+      totalSpentCents += Number(r.s);
+    }
+  }
+  check("buyer dashboard sees all buyer orders", totalOrders >= 4, { totalOrders });
+  check("buyer dashboard counts a released order as completed", completedOrders >= 1, {
+    completedOrders,
+  });
   check(
-    "G2G additions present (skins/telco/payment-cards)",
-    have.has("skins") && have.has("telco") && have.has("payment-cards"),
+    "buyer dashboard sums spend only for completed/released orders",
+    totalSpentCents > 0 && totalSpentCents <= totalOrders * 1_000_000_00,
+    { totalSpentCents },
+  );
+  check(
+    "buyer dashboard active+completed never exceeds total",
+    activeOrders + completedOrders <= totalOrders,
   );
 
-  // Idempotent: a second pass with everything present inserts nothing.
-  check("ensure base categories is idempotent", (await ensureBaseCategoriesNow()) === 0);
+  const recent = await q<{ id: string; counterparty: string }>(
+    `select o.id, u.username as counterparty
+       from orders o join users u on u.id = o.seller_id
+      where o.buyer_id = ? order by o.created_at desc limit 6`,
+    [buyer.id],
+  );
+  check("buyer dashboard recent orders capped and joined", recent.length > 0 && recent.length <= 6);
 
-  // Additive: removing a base category with no products and re-running restores
-  // exactly that one, and never duplicates a slug.
-  await run(`delete from categories where slug = 'telco'`);
-  const added = await ensureBaseCategoriesNow();
-  check("ensure re-adds a missing base category", added === 1, { added });
-  const telcoCount = (await q1<{ c: number }>(
-    `select count(*) as c from categories where slug = 'telco'`,
+  const favCount = (await q1<{ c: number }>(
+    `select count(*) as c from favorites where user_id = ?`,
+    [buyer.id],
   ))!.c;
-  check("re-added category is not duplicated", Number(telcoCount) === 1);
+  const followCount = (await q1<{ c: number }>(
+    `select count(*) as c from seller_follows where user_id = ?`,
+    [buyer.id],
+  ))!.c;
+  check(
+    "buyer dashboard favorite/follow counts resolve",
+    Number(favCount) >= 0 && Number(followCount) >= 0,
+  );
 }
 
 // =============== 13. chat inbox + conversation card ===============
@@ -438,6 +473,32 @@ check("automod passes normal text", core.automodCheck("thanks, code worked great
     !!card && card.order_id === o1 && Number(card.total_cents) > 0 && !!card.product_slug,
     card,
   );
+}
+
+// =============== 14. base category taxonomy (additive ensure step) ===============
+{
+  // ensureBaseCategories runs on boot, so every base slug should already exist.
+  const slugs = (await q<{ slug: string }>(`select slug from categories`)).map((r) => r.slug);
+  const have = new Set(slugs);
+  const missing = BASE_CATEGORIES.filter((c) => !have.has(c.slug)).map((c) => c.slug);
+  check("all base categories provisioned on boot", missing.length === 0, missing);
+  check(
+    "G2G additions present (skins/telco/payment-cards)",
+    have.has("skins") && have.has("telco") && have.has("payment-cards"),
+  );
+
+  // Idempotent: a second pass with everything present inserts nothing.
+  check("ensure base categories is idempotent", (await ensureBaseCategoriesNow()) === 0);
+
+  // Additive: removing a base category with no products and re-running restores
+  // exactly that one, and never duplicates a slug.
+  await run(`delete from categories where slug = 'telco'`);
+  const added = await ensureBaseCategoriesNow();
+  check("ensure re-adds a missing base category", added === 1, { added });
+  const telcoCount = (await q1<{ c: number }>(
+    `select count(*) as c from categories where slug = 'telco'`,
+  ))!.c;
+  check("re-added category is not duplicated", Number(telcoCount) === 1);
 }
 
 console.log(

@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { lazy, Suspense } from "react";
+import { DollarSign, ShoppingBag, Coins, Lock, BarChart3, Trophy } from "lucide-react";
 import { getAdminDashboard } from "@/lib/api/admin";
 import { ORDER_STATUS_META, usdt } from "@/lib/format";
+import { StatCard, SectionCard, EmptyState, StatGridSkeleton } from "@/components/dashboard";
 
 // Lazy-loaded so the recharts bundle stays off the dashboard's critical path.
 const GmvBarChart = lazy(() => import("@/components/charts/gmv-bar-chart"));
@@ -17,7 +19,15 @@ function AdminDashboard() {
     queryFn: () => getAdminDashboard(),
     refetchInterval: 15_000,
   });
-  if (!data) return <div className="py-16 text-center text-sm text-muted-foreground">Loading…</div>;
+
+  if (!data)
+    return (
+      <div className="space-y-5">
+        <StatGridSkeleton count={4} />
+        <StatGridSkeleton count={5} cols={5} />
+        <div className="h-44 rounded-lg bg-card border border-border animate-pulse" />
+      </div>
+    );
 
   const queues = [
     { label: "Seller applications", v: data.pending.sellerApplications, to: "/admin/sellers" },
@@ -26,42 +36,60 @@ function AdminDashboard() {
     { label: "Withdrawals pending", v: data.pending.withdrawals, to: "/admin/finance" },
     { label: "Flagged messages", v: data.pending.flaggedMessages, to: "/admin/moderation" },
   ];
+  const maxStatus = Math.max(1, ...data.ordersByStatus.map((x) => x.c));
 
   return (
     <div className="space-y-5">
+      {/* Headline KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {[
-          { label: "GMV TODAY", v: `${usdt(data.gmvToday.s)} · ${data.gmvToday.c} orders` },
-          { label: "GMV 30 DAYS", v: `${usdt(data.gmv30d.s)} · ${data.gmv30d.c} orders` },
-          { label: "REVENUE (COMMISSIONS)", v: usdt(data.revenue) },
-          { label: "ESCROW HELD", v: usdt(data.escrowHeld) },
-        ].map((x) => (
-          <div key={x.label} className="bg-card border border-border rounded-lg p-4">
-            <p className="text-[9px] font-bold tracking-widest text-muted-foreground">{x.label}</p>
-            <p className="font-mono text-sm mt-1">{x.v}</p>
-          </div>
-        ))}
+        <StatCard
+          label="GMV TODAY"
+          icon={DollarSign}
+          value={usdt(data.gmvToday.s)}
+          sub={`${data.gmvToday.c} orders`}
+          valueCls="text-accent"
+        />
+        <StatCard
+          label="GMV 30 DAYS"
+          icon={ShoppingBag}
+          value={usdt(data.gmv30d.s)}
+          sub={`${data.gmv30d.c} orders`}
+        />
+        <StatCard
+          label="REVENUE (COMMISSIONS)"
+          icon={Coins}
+          value={usdt(data.revenue)}
+          valueCls="text-accent"
+        />
+        <StatCard
+          label="ESCROW HELD"
+          icon={Lock}
+          value={usdt(data.escrowHeld)}
+          valueCls="text-yellow-400"
+        />
       </div>
 
+      {/* Moderation / ops queues */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        {queues.map((q) => (
+        {queues.map((qq) => (
           <Link
-            key={q.label}
-            to={q.to}
-            className={`bg-card border rounded-lg p-3 text-center hover:border-primary/50 ${q.v > 0 ? "border-yellow-500/40" : "border-border"}`}
+            key={qq.label}
+            to={qq.to}
+            className={`bg-card border rounded-lg p-3 text-center hover:border-primary/50 transition-colors ${
+              qq.v > 0 ? "border-yellow-500/40" : "border-border"
+            }`}
           >
             <p
-              className={`font-display text-3xl ${q.v > 0 ? "text-yellow-400" : "text-muted-foreground"}`}
+              className={`font-display text-3xl ${qq.v > 0 ? "text-yellow-400" : "text-muted-foreground"}`}
             >
-              {q.v}
+              {qq.v}
             </p>
-            <p className="text-[10px] font-bold text-muted-foreground">{q.label}</p>
+            <p className="text-[10px] font-bold text-muted-foreground">{qq.label}</p>
           </Link>
         ))}
       </div>
 
-      <div className="bg-card border border-border rounded-lg p-4">
-        <h2 className="text-xs font-bold tracking-widest mb-3">GMV — LAST 14 DAYS</h2>
+      <SectionCard title="GMV — LAST 14 DAYS" icon={BarChart3}>
         <div className="h-44">
           <Suspense
             fallback={<div className="h-full w-full rounded bg-secondary/40 animate-pulse" />}
@@ -69,13 +97,14 @@ function AdminDashboard() {
             <GmvBarChart data={data.daily} />
           </Suspense>
         </div>
-      </div>
+      </SectionCard>
 
       <div className="grid md:grid-cols-2 gap-4">
-        <div className="bg-card border border-border rounded-lg p-4">
-          <h2 className="text-xs font-bold tracking-widest mb-3">ORDERS BY STATUS</h2>
-          <div className="space-y-1.5">
-            {data.ordersByStatus.map((s) => (
+        <SectionCard title="ORDERS BY STATUS" bodyClassName="space-y-1.5">
+          {data.ordersByStatus.length === 0 ? (
+            <EmptyState icon={ShoppingBag} title="No orders yet" />
+          ) : (
+            data.ordersByStatus.map((s) => (
               <div key={s.status} className="flex items-center gap-2 text-xs">
                 <span
                   className={`text-[9px] font-bold px-2 py-0.5 rounded w-36 text-center ${ORDER_STATUS_META[s.status]?.cls ?? "bg-muted"}`}
@@ -85,38 +114,34 @@ function AdminDashboard() {
                 <div className="flex-1 bg-secondary rounded-full h-2 overflow-hidden">
                   <div
                     className="bg-primary h-full"
-                    style={{
-                      width: `${Math.min(100, (s.c / Math.max(...data.ordersByStatus.map((x) => x.c))) * 100)}%`,
-                    }}
+                    style={{ width: `${Math.min(100, (s.c / maxStatus) * 100)}%` }}
                   />
                 </div>
                 <span className="font-mono w-8 text-right">{s.c}</span>
               </div>
-            ))}
-            {data.ordersByStatus.length === 0 && (
-              <p className="text-xs text-muted-foreground">No orders yet.</p>
-            )}
-          </div>
-        </div>
-        <div className="bg-card border border-border rounded-lg p-4">
-          <h2 className="text-xs font-bold tracking-widest mb-3">TOP SELLERS (30D)</h2>
-          {data.topSellers.length === 0 && (
-            <p className="text-xs text-muted-foreground">No sales in the last 30 days.</p>
+            ))
           )}
-          <div className="space-y-2">
-            {data.topSellers.map((s, i) => (
-              <div key={s.username} className="flex items-center gap-2 text-xs">
-                <span className="font-display text-muted-foreground">#{i + 1}</span>
-                <span className="font-bold flex-1">{s.username}</span>
-                <span className="text-muted-foreground">{s.c} orders</span>
-                <span className="font-mono text-accent">{usdt(s.s)}</span>
-              </div>
-            ))}
-          </div>
+        </SectionCard>
+
+        <SectionCard title="TOP SELLERS (30D)" icon={Trophy}>
+          {data.topSellers.length === 0 ? (
+            <EmptyState icon={Trophy} title="No sales in the last 30 days" />
+          ) : (
+            <div className="space-y-2">
+              {data.topSellers.map((s, i) => (
+                <div key={s.username} className="flex items-center gap-2 text-xs">
+                  <span className="font-display text-muted-foreground">#{i + 1}</span>
+                  <span className="font-bold flex-1 truncate">{s.username}</span>
+                  <span className="text-muted-foreground">{s.c} orders</span>
+                  <span className="font-mono text-accent">{usdt(s.s)}</span>
+                </div>
+              ))}
+            </div>
+          )}
           <p className="text-[10px] text-muted-foreground mt-4">
             {data.users} registered users total.
           </p>
-        </div>
+        </SectionCard>
       </div>
     </div>
   );
