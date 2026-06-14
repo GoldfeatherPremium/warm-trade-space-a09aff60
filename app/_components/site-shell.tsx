@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 import { SearchBox } from "./search-box";
+import { AccountNav } from "./account-nav";
 
 /**
- * Public RSC shell — header + footer rendered entirely on the server (zero
- * client JS except the small <SearchBox> island). Auth-aware nav (account
- * menu) arrives in Phase 3; public pages only need browse/sell/sign-in links.
+ * Public RSC shell — header + footer rendered on the server. The only client
+ * JS is the small <SearchBox> and <AccountNav> islands; <AccountNav> probes the
+ * session client-side so these pages stay statically prerendered/edge-cached.
  */
 function SiteHeader() {
   return (
@@ -29,12 +30,7 @@ function SiteHeader() {
         <div className="flex-1 max-w-md hidden sm:block">
           <SearchBox />
         </div>
-        <Link
-          href="/auth"
-          className="ml-auto sm:ml-0 text-xs font-bold px-3 py-2 bg-primary text-primary-foreground rounded-md shrink-0"
-        >
-          SIGN IN
-        </Link>
+        <AccountNav />
       </div>
     </header>
   );

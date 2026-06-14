@@ -309,7 +309,7 @@ All of `src/lib/server/*.server.ts` copied unchanged **except** `auth.server.ts`
   - [x] Gates: `next build` (18 routes), Vite build, tsc base+next, eslint 0, smoke 53 — all green
   - [ ] Measure mobile Lighthouse on Vercel preview (90+ gate) — **needs Deployment Protection off**
 
-- [ ] Phase 3 — Auth + buyer + checkout/pay
+- [~] Phase 3 — **Auth foundation done.** `src/server/auth.ts` (Next `next/headers` cookies; same `sessions` table + `xv_session` cookie as legacy → interoperable; self-contained so the legacy `auth.server.ts` is untouched). `src/server/actions/auth.ts` Server Actions (register/login/logout, mirroring the legacy SQL/rate-limit/referral logic). `/auth` RSC page + client form island; `/api/me` probe + account-aware header island (`AccountNav`) that keeps public pages static. Gates: next build (home still ○ static, 108 kB), vite build, tsc base+next, eslint 0, smoke 53. **Next:** buyer account, orders, checkout/pay (Server Actions).
 - [ ] Phase 4 — Seller
 - [ ] Phase 5 — Admin
 - [ ] Phase 6 — Chat, disputes, wallet, loyalty, affiliate, payments, notifications
