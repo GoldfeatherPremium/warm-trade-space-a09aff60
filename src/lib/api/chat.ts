@@ -15,6 +15,31 @@ interface ConversationRow {
   seller_last_read_at: number;
 }
 
+/** Pinned context shown at the top of a conversation. */
+export type ConversationCard =
+  | {
+      kind: "order";
+      order_id: string;
+      order_no: string;
+      status: string;
+      title: string;
+      total_cents: number;
+      qty: number;
+      unit_price_cents: number;
+      image_key: string | null;
+      product_id: string;
+      product_slug: string | null;
+    }
+  | {
+      kind: "product";
+      product_id: string;
+      title: string;
+      price_cents: number;
+      image_key: string | null;
+      product_slug: string | null;
+      status: string;
+    };
+
 async function canAccessConversation(userId: string, convId: string, staff: boolean) {
   const c = await q1<ConversationRow>(`select * from conversations where id = ?`, [convId]);
   if (!c) return null;
@@ -27,13 +52,18 @@ export const listConversations = createServerFn({ method: "GET" }).handler(async
   const user = await requireUser();
   const id = user.id;
   const rows = await q<Record<string, string | number | null>>(
-    `select cv.id, cv.order_id, cv.last_message_at, cv.created_at,
+    `select cv.id, cv.order_id, cv.product_id, cv.last_message_at, cv.created_at,
             case when cv.buyer_id = ? then cv.buyer_last_read_at else cv.seller_last_read_at end as my_last_read,
             ub.username as buyer_name, us.username as seller_name,
+            coalesce(ub.last_seen_at, 0) as buyer_last_seen,
+            coalesce(us.last_seen_at, 0) as seller_last_seen,
             cv.buyer_id, cv.seller_id,
-            o.order_no, o.product_title, o.status as order_status,
-            p.title as product_title_presale,
+            o.order_no, o.product_title, o.status as order_status, o.total_cents as order_total_cents,
+            p.title as product_title_presale, p.price_cents as product_price_cents, p.slug as product_slug,
+            coalesce(o.image_key, p.image_key) as image_key,
             (select body from messages m where m.conversation_id = cv.id order by m.created_at desc limit 1) as last_body,
+            (select sender_id from messages m where m.conversation_id = cv.id order by m.created_at desc limit 1) as last_sender_id,
+            (select is_system from messages m where m.conversation_id = cv.id order by m.created_at desc limit 1) as last_is_system,
             (select count(*) from messages m where m.conversation_id = cv.id
                and m.created_at > case when cv.buyer_id = ? then cv.buyer_last_read_at else cv.seller_last_read_at end
                and (m.sender_id is null or m.sender_id != ?)) as unread
@@ -79,16 +109,60 @@ export const getMessages = createServerFn({ method: "GET" })
           : null;
     if (col)
       await run(`update conversations set ${col} = ? where id = ?`, [now(), data.conversationId]);
+    const otherId = c!.buyer_id === user.id ? c!.seller_id : c!.buyer_id;
     const other = (await q1<{ username: string; last_seen_at: number }>(
       `select username, coalesce(last_seen_at,0) as last_seen_at from users where id = ?`,
-      [c!.buyer_id === user.id ? c!.seller_id : c!.buyer_id],
+      [otherId],
     ))!;
+
+    // Pinned context card: the related order (preferred) or, for pre-sale
+    // chats, the product the buyer enquired about.
+    let card: ConversationCard | null = null;
+    if (c!.order_id) {
+      const o = await q1<{
+        order_id: string;
+        order_no: string;
+        status: string;
+        title: string;
+        total_cents: number;
+        qty: number;
+        unit_price_cents: number;
+        image_key: string | null;
+        product_id: string;
+        product_slug: string | null;
+      }>(
+        `select o.id as order_id, o.order_no, o.status, o.product_title as title,
+                o.total_cents, o.qty, o.unit_price_cents, o.image_key, o.product_id,
+                p.slug as product_slug
+           from orders o left join products p on p.id = o.product_id
+          where o.id = ?`,
+        [c!.order_id],
+      );
+      if (o) card = { kind: "order", ...o };
+    } else if (c!.product_id) {
+      const p = await q1<{
+        product_id: string;
+        title: string;
+        price_cents: number;
+        image_key: string | null;
+        product_slug: string | null;
+        status: string;
+      }>(
+        `select id as product_id, title, price_cents, image_key, slug as product_slug, status
+           from products where id = ?`,
+        [c!.product_id],
+      );
+      if (p) card = { kind: "product", ...p };
+    }
+
     return {
       messages,
       myId: user.id,
+      otherId,
       otherName: other.username,
       otherLastSeenAt: other.last_seen_at,
       orderId: c!.order_id,
+      card,
     };
   });
 
