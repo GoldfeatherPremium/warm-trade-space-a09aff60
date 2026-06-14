@@ -1,0 +1,75 @@
+import Link from "next/link";
+import { Zap, Clock, Star } from "lucide-react";
+import type { PublicProduct } from "@/lib/api/catalog";
+import { usdtShort } from "@/lib/format";
+import { productImage } from "../_lib/product-image";
+
+/**
+ * Public product card — a pure Server Component (zero client JS). The favorite
+ * button (the only interactive bit) is logged-in only and will be added as a
+ * small client island in Phase 3; anonymous/public pages render none.
+ */
+export function ProductCard({ product, priority }: { product: PublicProduct; priority?: boolean }) {
+  const lowStock = 5;
+  const auto = product.delivery_type === "auto";
+  return (
+    <Link
+      href={`/p/${product.slug}`}
+      className="bg-card border border-border rounded-lg overflow-hidden hover:border-primary/50 transition-colors group flex flex-col"
+    >
+      <div className="aspect-[16/10] bg-secondary overflow-hidden relative">
+        <img
+          src={productImage(product.image_key)}
+          alt={product.title}
+          loading={priority ? "eager" : "lazy"}
+          fetchPriority={priority ? "high" : "auto"}
+          decoding="async"
+          className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition"
+        />
+        <span
+          className={`absolute top-2 left-2 text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 ${
+            auto ? "bg-accent/90 text-accent-foreground" : "bg-blue-500/90 text-white"
+          }`}
+        >
+          {auto ? <Zap className="size-2.5" /> : <Clock className="size-2.5" />}
+          {auto ? "INSTANT" : `~${product.delivery_sla_minutes}min`}
+        </span>
+        {product.is_promoted && (
+          <span className="absolute top-2 right-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-fuchsia-500/90 text-white tracking-widest">
+            SPONSORED
+          </span>
+        )}
+        {auto && product.stock_count === 0 && (
+          <span className="absolute top-2 right-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-destructive/90 text-white">
+            OUT OF STOCK
+          </span>
+        )}
+        {auto && product.stock_count > 0 && product.stock_count <= lowStock && (
+          <span className="absolute top-2 right-2 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/90 text-black">
+            ONLY {product.stock_count} LEFT
+          </span>
+        )}
+      </div>
+      <div className="p-3 flex-1 flex flex-col gap-1.5">
+        <h3 className="text-xs font-bold leading-tight line-clamp-2">{product.title}</h3>
+        <p className="text-[10px] text-muted-foreground">{product.category_name}</p>
+        <div className="mt-auto flex items-end justify-between gap-2">
+          <div className="min-w-0 space-y-1">
+            <div className="flex items-center gap-1 text-[10px] text-muted-foreground truncate">
+              <span className="size-1.5 rounded-full bg-accent inline-block" />
+              <span className="truncate">{product.seller.username}</span>
+              <span className="flex items-center gap-0.5 text-yellow-400">
+                <Star className="size-2.5 fill-current" />
+                {product.seller.rating > 0 ? product.seller.rating.toFixed(1) : "new"}
+              </span>
+            </div>
+            <span className="text-[9px] text-muted-foreground">· {product.sold_count} sold</span>
+          </div>
+          <span className="text-accent font-mono text-sm whitespace-nowrap">
+            {usdtShort(product.price_cents)}
+          </span>
+        </div>
+      </div>
+    </Link>
+  );
+}
