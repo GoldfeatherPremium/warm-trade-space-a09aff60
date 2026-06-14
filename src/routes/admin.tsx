@@ -44,6 +44,7 @@ const GROUPS: NavGroup[] = [
     items: [
       { to: "/admin/finance", label: "Finance", hint: "Withdrawals & ledger" },
       { to: "/admin/credits", label: "Buyer credits", hint: "Balances & grants" },
+      { to: "/admin/payments", label: "Payment methods", hint: "Checkout rails" },
       { to: "/admin/fx", label: "FX & currency", hint: "Rates & base currency" },
     ],
   },
@@ -122,7 +123,7 @@ function ControlHeader({ onOpenCmd }: { onOpenCmd: () => void }) {
           tone: data.refunds24h.c > 0 ? "warn" : undefined,
         },
         {
-          label: "Escrow on hold",
+          label: "Funds on hold",
           value: String(data.escrowOnHold),
           tone: data.escrowOnHold > 0 ? "alert" : undefined,
         },

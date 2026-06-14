@@ -1054,6 +1054,50 @@ async function migrate(e: Engine): Promise<void> {
       .catch(() => {});
   }
 
+  // --- Payment methods registry ---
+  // Foundation for offering multiple checkout rails. USDT is live today; the
+  // others are scaffolded as disabled "coming soon" entries whose providers
+  // get configured later. Per-method `config` (JSON) holds provider keys.
+  await e
+    .exec(
+      `create table if not exists payment_methods (
+        code text primary key,
+        name text not null,
+        kind text not null,
+        enabled integer not null default 0,
+        is_default integer not null default 0,
+        config text,
+        sort integer not null default 0,
+        created_at ${big} not null
+      )`,
+    )
+    .catch(() => {});
+  const pmSeeded = await e.q<{ c: number }>(`select count(*) as c from payment_methods`);
+  if (!pmSeeded[0] || Number(pmSeeded[0].c) === 0) {
+    const t = Date.now();
+    const methods: Array<[string, string, string, number, number]> = [
+      // code, name, kind, enabled, is_default
+      ["usdt", "USDT (crypto)", "crypto", 1, 1],
+      ["wallet", "X-VAULT wallet balance", "wallet", 1, 0],
+      ["credits", "Store credits", "wallet", 1, 0],
+      ["card", "Credit / Debit Card", "card", 0, 0],
+      ["paypal", "PayPal", "ewallet", 0, 0],
+      ["alipay", "Alipay", "ewallet", 0, 0],
+      ["wechat_pay", "WeChat Pay", "ewallet", 0, 0],
+      ["skrill", "Skrill", "ewallet", 0, 0],
+    ];
+    let sort = 0;
+    for (const [code, name, kind, enabled, isDefault] of methods) {
+      await e
+        .run(
+          `insert into payment_methods (code, name, kind, enabled, is_default, sort, created_at)
+           values (?,?,?,?,?,?,?)`,
+          [code, name, kind, enabled, isDefault, sort++, t],
+        )
+        .catch(() => {});
+    }
+  }
+
   // seed a sane default set if empty
   const seeded = await e.q<{ c: number }>(`select count(*) as c from fx_rates`);
   if (!seeded[0] || Number(seeded[0].c) === 0) {
