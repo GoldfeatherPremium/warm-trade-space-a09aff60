@@ -35,7 +35,7 @@ export const Route = createFileRoute("/s/$username")({
     const title = `${s.username} — Trusted seller on X-VAULT`;
     const desc = (
       s.store_description ||
-      `${s.username} on X-VAULT: ${s.total_sales.toLocaleString()} sales, ${s.rating > 0 ? s.rating.toFixed(1) + "★" : "new seller"}, escrow protected. Browse listings & buy with USDT.`
+      `${s.username} on X-VAULT: ${s.total_sales.toLocaleString()} sales, ${s.rating > 0 ? s.rating.toFixed(1) + "★" : "new seller"}, buyer protected. Browse listings & buy with USDT.`
     )
       .replace(/\s+/g, " ")
       .slice(0, 155);

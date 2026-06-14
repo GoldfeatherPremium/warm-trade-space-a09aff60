@@ -18,7 +18,7 @@ export const Route = createFileRoute("/sellers")({
   head: ({ loaderData }) => {
     const title = "Top Trusted Sellers — X-VAULT Marketplace";
     const desc =
-      "The most trusted digital-goods sellers on X-VAULT, ranked by verified trust score, completed sales, and buyer ratings — all escrow-protected.";
+      "The most trusted digital-goods sellers on X-VAULT, ranked by verified trust score, completed sales, and buyer ratings — all buyer-protected.";
     const url = `${SITE}/sellers`;
     const jsonLd = loaderData?.items?.length
       ? {
@@ -73,7 +73,7 @@ function SellersPage() {
           <h1 className="font-display text-3xl sm:text-4xl mt-1">TOP TRUSTED SELLERS</h1>
           <p className="text-xs text-muted-foreground max-w-xl mt-1">
             Ranked by a blended trust score combining verification tier, completed sales, buyer
-            ratings, and dispute history. All transactions are escrow-protected.
+            ratings, and dispute history. All transactions are buyer-protected.
           </p>
         </div>
         <div className="flex gap-1 bg-secondary rounded-md p-1 self-start">
@@ -213,7 +213,7 @@ function SellersPage() {
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
             <div className="bg-card border border-border rounded-lg p-3 flex items-center gap-2">
               <ShieldCheck className="size-4 text-primary" />
-              <span>All sellers escrow-protected by default.</span>
+              <span>All sellers buyer-protected by default.</span>
             </div>
             <div className="bg-card border border-border rounded-lg p-3 flex items-center gap-2">
               <Star className="size-4 text-yellow-400" />

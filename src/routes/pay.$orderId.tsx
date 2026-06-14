@@ -206,7 +206,7 @@ function PayPage() {
 
             <div className="flex items-center gap-2 text-[11px] text-muted-foreground bg-secondary/50 rounded-md p-2.5">
               <ShieldCheck className="size-4 text-accent shrink-0" />
-              Funds are held in escrow — the seller is paid only after delivery + warranty.
+              Funds are held securely — the seller is paid only after delivery + warranty.
             </div>
 
             {/* Escrow timeline — visual proof of how protection works */}
@@ -296,7 +296,7 @@ function EscrowTimeline({ warrantyHours }: { warrantyHours: number }) {
   return (
     <div className="bg-secondary/40 border border-border rounded-md p-3">
       <p className="text-[9px] font-bold tracking-widest text-muted-foreground mb-2.5 text-center">
-        ESCROW TIMELINE — YOUR FUNDS, YOUR CONTROL
+        BUYER PROTECTION — YOUR FUNDS, YOUR CONTROL
       </p>
       <div className="grid grid-cols-4 gap-1 relative">
         <div aria-hidden className="absolute top-3.5 left-[12%] right-[12%] h-px bg-border" />

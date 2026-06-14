@@ -24,8 +24,17 @@ export const applyForSeller = createServerFn({ method: "POST" })
   .inputValidator(
     z.object({
       fullName: z.string().min(2).max(100),
+      displayName: z.string().min(2).max(60),
       country: z.string().min(2).max(60),
+      yearsExperience: z.enum(["new", "lt1", "1-2", "3-5", "5+"]),
+      productCategories: z.string().min(2).max(300),
       experience: z.string().min(10).max(2000),
+      sourceOfGoods: z.string().min(10).max(1500),
+      monthlyVolume: z.enum(["lt100", "100-500", "500-2000", "2000-10000", "10000+"]).optional(),
+      portfolio: z.string().max(1500).optional(),
+      telegram: z.string().max(120).optional(),
+      whatsapp: z.string().max(60).optional(),
+      wechat: z.string().max(60).optional(),
       usdtPayoutAddress: z.string().min(20).max(120),
       usdtNetwork: z.enum(["TRC20", "BEP20", "ERC20"]),
     }),
@@ -35,15 +44,31 @@ export const applyForSeller = createServerFn({ method: "POST" })
     const user = await requireUser();
     if (user.seller_status === "approved") fail("You are already an approved seller.");
     if (user.seller_status === "pending") fail("Your application is already under review.");
+    // Require at least one reachable contact channel so support/compliance can
+    // always reach the seller off-platform if needed.
+    if (!data.telegram?.trim() && !data.whatsapp?.trim() && !data.wechat?.trim())
+      fail("Please provide at least one contact channel (Telegram, WhatsApp or WeChat).");
     await run(
-      `insert into seller_applications (id, user_id, full_name, country, experience, usdt_payout_address, usdt_network, created_at)
-       values (?,?,?,?,?,?,?,?)`,
+      `insert into seller_applications
+         (id, user_id, full_name, display_name, country, years_experience, product_categories,
+          experience, source_of_goods, monthly_volume, portfolio, telegram, whatsapp, wechat,
+          usdt_payout_address, usdt_network, created_at)
+       values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       [
         uid(),
         user.id,
         data.fullName,
+        data.displayName,
         data.country,
+        data.yearsExperience,
+        data.productCategories,
         data.experience,
+        data.sourceOfGoods,
+        data.monthlyVolume ?? null,
+        data.portfolio?.trim() || null,
+        data.telegram?.trim() || null,
+        data.whatsapp?.trim() || null,
+        data.wechat?.trim() || null,
         data.usdtPayoutAddress,
         data.usdtNetwork,
         now(),
@@ -116,7 +141,6 @@ const productInput = z.object({
   maxOrdersAtOnce: z.number().int().min(1).max(1000).default(10),
   manualStock: z.number().int().min(0).max(1_000_000).nullable().optional(),
 });
-
 
 const MAX_ACTIVE_LISTINGS: Record<number, number> = { 1: 10, 2: 25, 3: 60, 4: 150, 5: 100_000 };
 
@@ -262,7 +286,6 @@ export const saveProduct = createServerFn({ method: "POST" })
       return { productId: data.productId };
     }
 
-
     const activeCount = (await q1<{ c: number }>(
       `select count(*) c from products where seller_id = ? and status in ('active','pending_review','out_of_stock')`,
       [user.id],
@@ -330,12 +353,7 @@ export const saveProduct = createServerFn({ method: "POST" })
     ]);
     await run(
       `update products set subscription_duration = ?, max_orders_at_once = ?, manual_stock = ? where id = ?`,
-      [
-        data.subscriptionDuration ?? null,
-        data.maxOrdersAtOnce,
-        data.manualStock ?? null,
-        id,
-      ],
+      [data.subscriptionDuration ?? null, data.maxOrdersAtOnce, data.manualStock ?? null, id],
     );
     await audit(user.id, "product.create", "product", id);
 
@@ -419,13 +437,17 @@ export const getProductStock = createServerFn({ method: "GET" })
     return { product: p!, counts, items };
   });
 
-
 export const uploadStock = createServerFn({ method: "POST" })
   .inputValidator(z.object({ productId: z.string(), codes: z.string().min(1).max(200_000) }))
   .handler(async ({ data }) => {
     await appContext();
     const user = await requireSeller();
-    const p = await q1<{ id: string; seller_id: string; delivery_type: string; delivery_kind: string }>(
+    const p = await q1<{
+      id: string;
+      seller_id: string;
+      delivery_type: string;
+      delivery_kind: string;
+    }>(
       `select p.id, p.seller_id, p.delivery_type, coalesce(c.delivery_kind, 'code') as delivery_kind
        from products p left join categories c on c.id = p.category_id where p.id = ?`,
       [data.productId],
@@ -447,7 +469,6 @@ export const uploadStock = createServerFn({ method: "POST" })
       const bad = lines.find((l) => !/^[^:\s]+:[^\s]+$/.test(l));
       if (bad) fail(`Credentials must be in "email:password" format. Invalid: ${bad.slice(0, 40)}`);
     }
-
 
     // duplicate detection across this seller's entire inventory
     const existing = new Set(
@@ -515,7 +536,9 @@ export const removeStockItem = createServerFn({ method: "POST" })
   });
 
 export const setManualStock = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ productId: z.string(), manualStock: z.number().int().min(0).max(100000) }))
+  .inputValidator(
+    z.object({ productId: z.string(), manualStock: z.number().int().min(0).max(100000) }),
+  )
   .handler(async ({ data }) => {
     await appContext();
     const user = await requireSeller();
@@ -534,8 +557,6 @@ export const setManualStock = createServerFn({ method: "POST" })
     ]);
     return { ok: true };
   });
-
-
 
 // ---------------------------------------------------------------------------
 // Dashboard overview + wallet

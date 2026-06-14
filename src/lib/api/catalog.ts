@@ -637,7 +637,6 @@ export const getCategorySchema = createServerFn({ method: "GET" })
     };
   });
 
-
 export const quickSearch = createServerFn({ method: "GET" })
   .inputValidator(z.object({ q: z.string().max(100) }))
   .handler(async ({ data }) => {

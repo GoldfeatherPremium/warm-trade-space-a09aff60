@@ -55,7 +55,6 @@ const EMPTY = {
   deliveryKind: "code" as (typeof DELIVERY_KINDS)[number]["value"],
 };
 
-
 function AdminCategories() {
   const qc = useQueryClient();
   const { data } = useQuery({
@@ -130,7 +129,6 @@ function AdminCategories() {
                   adminDescription: (c.admin_description as string) ?? "",
                   deliveryKind: (c.delivery_kind as never) ?? "code",
                 })
-
               }
             >
               Edit
@@ -208,9 +206,7 @@ function AdminCategories() {
             <label className="text-[11px] font-bold">Delivery kind (what sellers fulfill)</label>
             <select
               value={form.deliveryKind}
-              onChange={(e) =>
-                setForm({ ...form, deliveryKind: e.target.value as never })
-              }
+              onChange={(e) => setForm({ ...form, deliveryKind: e.target.value as never })}
               className="w-full bg-secondary border border-border rounded-md px-2 text-xs h-9"
             >
               {DELIVERY_KINDS.map((d) => (
@@ -224,9 +220,7 @@ function AdminCategories() {
             <input
               type="checkbox"
               checked={form.requiresSubscription}
-              onChange={(e) =>
-                setForm({ ...form, requiresSubscription: e.target.checked })
-              }
+              onChange={(e) => setForm({ ...form, requiresSubscription: e.target.checked })}
             />
             Subscription-based — seller must pick a duration
           </label>
@@ -272,7 +266,6 @@ function AdminCategories() {
             placeholder="Long-form, keyword-rich category description. Surfaces on the category page and in meta tags."
           />
         </div>
-
 
         <div className="space-y-1.5 pt-2 border-t border-border">
           <label className="text-xs font-bold flex items-center justify-between">

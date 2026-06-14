@@ -38,10 +38,10 @@ const FAQ_JSONLD = {
   mainEntity: [
     {
       "@type": "Question",
-      name: "How does X-VAULT escrow protect my purchase?",
+      name: "How does X-VAULT protect my purchase?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Your USDT is held in escrow when you pay. Funds are only released to the seller after you confirm the digital goods were delivered as described. If anything goes wrong you can open a dispute and our team reviews it within 24 hours.",
+        text: "Your USDT is held securely when you pay. Funds are only released to the seller after you confirm the digital goods were delivered as described. If anything goes wrong you can open a dispute and our team reviews it within 24 hours.",
       },
     },
     {
@@ -83,16 +83,16 @@ export const Route = createFileRoute("/")({
   },
   head: () => ({
     meta: [
-      { title: "X-VAULT — Buy & Sell Digital Goods with USDT Escrow" },
+      { title: "X-VAULT — Buy & Sell Digital Goods with USDT" },
       {
         name: "description",
         content:
-          "The trusted digital goods marketplace. Game currency, gift cards, keys, accounts and boosting — escrow protected, paid in USDT, instant delivery.",
+          "The trusted digital goods marketplace. Game currency, gift cards, keys, accounts and boosting — buyer-protected, paid in USDT, instant delivery.",
       },
-      { property: "og:title", content: "X-VAULT — Buy & Sell Digital Goods with USDT Escrow" },
+      { property: "og:title", content: "X-VAULT — Buy & Sell Digital Goods with USDT" },
       {
         property: "og:description",
-        content: "Escrow-protected digital marketplace. Pay in USDT, instant delivery.",
+        content: "Buyer-protected digital marketplace. Pay in USDT, instant delivery.",
       },
       { property: "og:url", content: SITE + "/" },
     ],
@@ -552,7 +552,7 @@ function Index() {
           {[
             {
               icon: ShieldCheck,
-              t: "Escrow Protection",
+              t: "Buyer Protection",
               d: "Funds release to sellers only after your warranty clears.",
               tag: "100% PROTECTED",
             },

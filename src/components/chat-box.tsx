@@ -180,8 +180,8 @@ export function ChatBox({
         <ShieldAlert className="size-3.5 shrink-0 mt-0.5" />
         <span className="leading-relaxed">
           NEVER share phone, email, Telegram/Discord/WhatsApp, payment links, wallet addresses or
-          account credentials here. All chats are monitored and logged. Violations forfeit escrow +
-          permanent ban for both parties.
+          account credentials here. All chats are monitored and logged. Violations forfeit buyer
+          protection + permanent ban for both parties.
         </span>
       </div>
 

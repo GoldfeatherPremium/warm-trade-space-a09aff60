@@ -44,7 +44,7 @@ export const Route = createFileRoute("/p/$slug")({
     const descSrc =
       (p.admin_seo_description && p.admin_seo_description.trim()) ||
       p.description ||
-      `Buy ${p.title} on X-VAULT — escrow-protected, ${p.warranty_hours}h warranty.`;
+      `Buy ${p.title} on X-VAULT — buyer-protected, ${p.warranty_hours}h warranty.`;
     const desc = descSrc.replace(/\s+/g, " ").slice(0, 155);
     const img =
       p.image_key && !p.image_key.startsWith("upload:")
@@ -103,7 +103,7 @@ export const Route = createFileRoute("/p/$slug")({
           name: "Is this purchase protected?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: `Yes. Every order is escrow-protected — funds are released to the seller only after the ${p.warranty_hours}-hour warranty window passes without a dispute.`,
+            text: `Yes. Every order is buyer-protected — funds are released to the seller only after the ${p.warranty_hours}-hour warranty window passes without a dispute.`,
           },
         },
         {
@@ -122,7 +122,7 @@ export const Route = createFileRoute("/p/$slug")({
           name: "What if something goes wrong?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: `Open a dispute within the ${p.warranty_hours}-hour warranty window and X-VAULT support will review evidence from both sides and refund or release escrow accordingly.`,
+            text: `Open a dispute within the ${p.warranty_hours}-hour warranty window and X-VAULT support will review evidence from both sides and refund or release funds accordingly.`,
           },
         },
         {
@@ -383,7 +383,7 @@ function ProductPage() {
           <div className="bg-card border border-accent/30 rounded-lg p-4 flex gap-3">
             <ShieldCheck className="size-8 text-accent shrink-0" />
             <div className="text-xs leading-relaxed">
-              <p className="font-bold text-accent mb-1">How escrow protects you</p>
+              <p className="font-bold text-accent mb-1">How you're protected</p>
               <p className="text-muted-foreground">
                 Your USDT is held by X-VAULT — the seller never sees it until you confirm delivery{" "}
                 <b>and</b> your {p.warranty_hours}h warranty passes without a dispute. Problems?
@@ -595,7 +595,7 @@ function ProductPage() {
               <MessageSquare className="size-3.5" /> Chat with seller
             </Button>
             <p className="text-[10px] text-muted-foreground text-center">
-              Pay with USDT · TRC-20 / BEP-20 · escrow protected
+              Pay with USDT · TRC-20 / BEP-20 · buyer protected
             </p>
           </div>
 

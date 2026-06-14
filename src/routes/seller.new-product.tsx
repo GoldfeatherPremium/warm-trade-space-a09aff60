@@ -267,7 +267,6 @@ function ProductForm() {
           requiredInfo: form.requiredInfo || undefined,
           categoryAttrs: Object.keys(categoryAttrs).length ? categoryAttrs : undefined,
         },
-
       }),
     onSuccess: () => {
       toast.success("Submitted for review — admins approve listings before they go live.");
@@ -749,7 +748,6 @@ function ProductForm() {
           </div>
         );
       })()}
-
 
       <div className="space-y-1.5">
         <Label className="text-xs">

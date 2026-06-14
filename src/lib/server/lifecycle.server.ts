@@ -172,7 +172,6 @@ async function deliverAutoStock(orderId: string): Promise<void> {
     [uid(), orderId, codes.join("\n"), t, t],
   );
 
-
   const settings = await getSettings();
   const autoConfirmAt = t + settings.auto_confirm_hours * 3600_000;
   await run(

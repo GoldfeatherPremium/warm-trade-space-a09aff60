@@ -194,25 +194,26 @@ async function createPostgresEngine(): Promise<Engine> {
 async function schemaAlreadyMigrated(e: Engine): Promise<boolean> {
   // Sentinel: a column from the most recent additive migration. Bump this
   // (column or table) whenever you add new columns to migrate() so production
-  // databases pick up the change on the next cold start.
+  // databases pick up the change on the next cold start. Currently points at
+  // seller_applications.display_name (richer seller onboarding) — the newest
+  // additive change in migrate().
   try {
     if (isPostgres()) {
       const r = await e.q<{ c: number }>(
         `select count(*)::int as c from information_schema.columns
-         where table_schema = 'public' and table_name = 'categories'
-           and column_name = 'requires_subscription'`,
+         where table_schema = 'public' and table_name = 'seller_applications'
+           and column_name = 'display_name'`,
       );
       return !!r[0] && Number(r[0].c) > 0;
     }
     const r = await e.q<{ name: string }>(
-      `select name from pragma_table_info('categories') where name='requires_subscription'`,
+      `select name from pragma_table_info('seller_applications') where name='display_name'`,
     );
     return r.length > 0;
   } catch {
     return false;
   }
 }
-
 
 async function getEngine(): Promise<Engine> {
   if (!engine) engine = await (isPostgres() ? createPostgresEngine() : createSqliteEngine());
@@ -714,6 +715,17 @@ async function migrate(e: Engine): Promise<void> {
     `alter table seller_verifications add column contact_phone text`,
     `alter table seller_verifications add column contact_whatsapp text`,
     `alter table seller_verifications add column contact_telegram text`,
+    // --- Seller application: richer onboarding (business profile, track record,
+    // reachable contact channels). All nullable for backward compatibility. ---
+    `alter table seller_applications add column display_name text`,
+    `alter table seller_applications add column years_experience text`,
+    `alter table seller_applications add column product_categories text`,
+    `alter table seller_applications add column source_of_goods text`,
+    `alter table seller_applications add column monthly_volume text`,
+    `alter table seller_applications add column portfolio text`,
+    `alter table seller_applications add column telegram text`,
+    `alter table seller_applications add column whatsapp text`,
+    `alter table seller_applications add column wechat text`,
     // --- Phase 13: admin-configurable category + per-product subscription / delivery / stock ---
     `alter table categories add column requires_subscription integer not null default 0`,
     `alter table categories add column allowed_durations text not null default ''`,
@@ -1053,6 +1065,50 @@ async function migrate(e: Engine): Promise<void> {
         `create index if not exists idx_products_desc_trgm on products using gin (lower(description) gin_trgm_ops)`,
       )
       .catch(() => {});
+  }
+
+  // --- Payment methods registry ---
+  // Foundation for offering multiple checkout rails. USDT is live today; the
+  // others are scaffolded as disabled "coming soon" entries whose providers
+  // get configured later. Per-method `config` (JSON) holds provider keys.
+  await e
+    .exec(
+      `create table if not exists payment_methods (
+        code text primary key,
+        name text not null,
+        kind text not null,
+        enabled integer not null default 0,
+        is_default integer not null default 0,
+        config text,
+        sort integer not null default 0,
+        created_at ${big} not null
+      )`,
+    )
+    .catch(() => {});
+  const pmSeeded = await e.q<{ c: number }>(`select count(*) as c from payment_methods`);
+  if (!pmSeeded[0] || Number(pmSeeded[0].c) === 0) {
+    const t = Date.now();
+    const methods: Array<[string, string, string, number, number]> = [
+      // code, name, kind, enabled, is_default
+      ["usdt", "USDT (crypto)", "crypto", 1, 1],
+      ["wallet", "X-VAULT wallet balance", "wallet", 1, 0],
+      ["credits", "Store credits", "wallet", 1, 0],
+      ["card", "Credit / Debit Card", "card", 0, 0],
+      ["paypal", "PayPal", "ewallet", 0, 0],
+      ["alipay", "Alipay", "ewallet", 0, 0],
+      ["wechat_pay", "WeChat Pay", "ewallet", 0, 0],
+      ["skrill", "Skrill", "ewallet", 0, 0],
+    ];
+    let sort = 0;
+    for (const [code, name, kind, enabled, isDefault] of methods) {
+      await e
+        .run(
+          `insert into payment_methods (code, name, kind, enabled, is_default, sort, created_at)
+           values (?,?,?,?,?,?,?)`,
+          [code, name, kind, enabled, isDefault, sort++, t],
+        )
+        .catch(() => {});
+    }
   }
 
   // seed a sane default set if empty

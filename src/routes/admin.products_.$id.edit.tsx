@@ -104,7 +104,6 @@ function AdminProductEdit() {
           categoryAttrs: Object.keys(categoryAttrs).length ? categoryAttrs : undefined,
           status: form.status,
         },
-
       }),
     onSuccess: () => {
       toast.success("Product updated.");
@@ -317,9 +316,7 @@ function AdminProductEdit() {
             <Label className="text-xs">Subscription duration</Label>
             <select
               value={form.subscriptionDuration}
-              onChange={(e) =>
-                setForm({ ...form, subscriptionDuration: e.target.value as never })
-              }
+              onChange={(e) => setForm({ ...form, subscriptionDuration: e.target.value as never })}
               className="w-full bg-secondary border border-border rounded-md px-2 py-2 text-xs h-9"
             >
               <option value="">— Use seller's pick —</option>
@@ -332,7 +329,6 @@ function AdminProductEdit() {
           </div>
         )}
       </div>
-
 
       <Button type="submit" disabled={save.isPending}>
         {save.isPending ? "Saving…" : "Save changes"}

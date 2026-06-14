@@ -706,7 +706,8 @@ export const adminSaveCategory = createServerFn({ method: "POST" })
       submissionSchema: z.string().max(20_000).optional(),
       // Phase 13 — admin-configurable category surface
       requiresSubscription: z.boolean().default(false),
-      allowedDurations: z.array(z.enum(["7d", "14d", "1m", "3m", "6m", "12m", "lifetime"]))
+      allowedDurations: z
+        .array(z.enum(["7d", "14d", "1m", "3m", "6m", "12m", "lifetime"]))
         .max(7)
         .default([]),
       adminDescription: z.string().max(8000).optional(),
@@ -894,7 +895,6 @@ export const adminUpdateProduct = createServerFn({ method: "POST" })
     invalidateCache("catalog-items:v1");
     return { ok: true };
   });
-
 
 // ---------------------------------------------------------------------------
 // Settings + audit + moderation

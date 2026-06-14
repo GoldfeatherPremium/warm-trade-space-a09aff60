@@ -28,7 +28,8 @@ const KIND_META: Record<string, { label: string; placeholder: string; hint: stri
   },
   credentials: {
     label: "ACCOUNT CREDENTIALS",
-    placeholder: "One account per line, format email:password\nuser1@mail.com:P@ssw0rd\nuser2@mail.com:Hunter2",
+    placeholder:
+      "One account per line, format email:password\nuser1@mail.com:P@ssw0rd\nuser2@mail.com:Hunter2",
     hint: 'Format must be "email:password". Encrypted at rest, revealed only to the buyer on delivery.',
   },
   giftcard_image: {
@@ -110,7 +111,11 @@ function StockManager() {
         <div className="bg-card border border-border rounded-lg p-4 space-y-3">
           <h2 className="text-xs font-bold tracking-widest">AVAILABLE STOCK</h2>
           <p className="text-[11px] text-muted-foreground">
-            This category is fulfilled per-order ({kind === "invite" ? "you'll send an invite to the buyer's email after each order" : "you'll enter delivery details in a free-form box after each order"}). Set how many units you can still fulfil.
+            This category is fulfilled per-order (
+            {kind === "invite"
+              ? "you'll send an invite to the buyer's email after each order"
+              : "you'll enter delivery details in a free-form box after each order"}
+            ). Set how many units you can still fulfil.
           </p>
           <div className="flex gap-2 items-center">
             <Input

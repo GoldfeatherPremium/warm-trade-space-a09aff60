@@ -55,9 +55,43 @@ function AdminSellers() {
             <p>
               <b>Country:</b> {a.country}
             </p>
+            {a.display_name && (
+              <p>
+                <b>Store name:</b> {a.display_name}
+              </p>
+            )}
+            {a.years_experience && (
+              <p>
+                <b>Experience:</b> {a.years_experience}
+                {a.monthly_volume ? ` · vol ${a.monthly_volume}` : ""}
+              </p>
+            )}
+            {a.product_categories && (
+              <p className="sm:col-span-2">
+                <b>Sells:</b> {a.product_categories}
+              </p>
+            )}
             <p className="sm:col-span-2">
-              <b>Experience:</b> {a.experience}
+              <b>Background:</b> {a.experience}
             </p>
+            {a.source_of_goods && (
+              <p className="sm:col-span-2">
+                <b>Sourcing:</b> {a.source_of_goods}
+              </p>
+            )}
+            {a.portfolio && (
+              <p className="sm:col-span-2 break-all">
+                <b>Portfolio:</b> {a.portfolio}
+              </p>
+            )}
+            {(a.telegram || a.whatsapp || a.wechat) && (
+              <p className="sm:col-span-2">
+                <b>Contact:</b>
+                {a.telegram ? ` Telegram ${a.telegram}` : ""}
+                {a.whatsapp ? ` · WhatsApp ${a.whatsapp}` : ""}
+                {a.wechat ? ` · WeChat ${a.wechat}` : ""}
+              </p>
+            )}
             <p className="sm:col-span-2 font-mono text-[11px]">
               <b className="font-body">Payout:</b> {a.usdt_payout_address} ({a.usdt_network})
             </p>
