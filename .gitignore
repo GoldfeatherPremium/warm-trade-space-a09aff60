@@ -35,3 +35,8 @@ dist-ssr
 
 # local SQLite database
 data/
+
+# Next.js
+.next/
+next-env.d.ts
+*.tsbuildinfo

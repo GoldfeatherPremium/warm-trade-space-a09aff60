@@ -271,10 +271,30 @@ All of `src/lib/server/*.server.ts` copied unchanged **except** `auth.server.ts`
 3. **Realtime chat:** keep polling (simplest, matches today) or move to SSE/websockets in Phase 6?
 4. Confirm Vercel project + that `DATABASE_URL` (Supabase) and `STOCK_ENCRYPTION_KEY` will be set as Vercel env vars.
 
+## 8a. Phase 1 results (foundation)
+
+**Shipped (Next App Router scaffold, in-place alongside the Vite app):**
+`app/layout.tsx` (RSC root, `metadataBase` from `NEXT_PUBLIC_SITE_URL`, runtime-loaded fonts — no build-time fetch), `app/globals.css` (Tailwind 4 v4 engine via `@tailwindcss/postcss`, design tokens ported from `src/styles.css`), `app/page.tsx` (placeholder RSC home, zero client JS), `next.config.ts` (`serverExternalPackages: better-sqlite3/postgres`, eslint scoped to `app/`, Next-scoped `tsconfig.next.json`), `postcss.config.mjs`, `tsconfig.next.json`, `vercel.json` (framework `nextjs`), `.env.example`, ESLint override for `app/` (allow `metadata`/Server-Action exports + `server-only`), `.gitignore` Next artifacts, `package.json` `dev:next`/`build:next`/`start:next` scripts.
+
+**Local verification gates (all green):**
+
+| Gate                               | Result                                      |
+| ---------------------------------- | ------------------------------------------- |
+| `next build`                       | ✓ compiles, prerenders 4 static routes      |
+| Vite legacy `build`                | ✓ unchanged (old app intact)                |
+| `tsc` (base, legacy)               | ✓                                           |
+| `tsc -p tsconfig.next.json` (Next) | ✓                                           |
+| `eslint .`                         | ✓ 0 errors (9 pre-existing legacy warnings) |
+| `smoke-test.ts`                    | ✓ 48 checks                                 |
+
+**Foundation bundle (Next):** placeholder `/` = **102 kB First Load JS shared baseline** (Next 15 + React 19 runtime), route-specific = 123 B. Compare to the legacy **548 KB always-hydrated chunk**. This is the framework floor; public pages in Phase 2 add islands only.
+
+**Pending (require the Vercel preview — sandbox has no egress):** preview deploy success + mobile PageSpeed/Lighthouse numbers, to be recorded here. Auth cookie adapter is deferred to Phase 3 (no public page needs it); `src/lib/server/*` is imported directly by RSC from Phase 2 (only `auth.server.ts` needs the cookie adapter, built in Phase 3).
+
 ## 9. Progress checklist
 
 - [x] Phase 0 — MIGRATION.md — **APPROVED 2026-06-14**
-- [ ] Phase 1 — Foundation + server core + Vercel preview
+- [~] Phase 1 — Foundation: Next 15 scaffold + tokens/CSS + config. Local gates green (next build, vite build, both tsc, eslint 0, smoke 48). **Vercel preview deploy + mobile Lighthouse pending.**
 - [ ] Phase 2 — Public RSC pages + SEO + **Lighthouse 90+ mobile**
 - [ ] Phase 3 — Auth + buyer + checkout/pay
 - [ ] Phase 4 — Seller
