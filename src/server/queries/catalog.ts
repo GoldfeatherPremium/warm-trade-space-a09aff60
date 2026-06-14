@@ -15,7 +15,13 @@
 import { appContext } from "@/lib/server/app.server";
 import { q, q1 } from "@/lib/server/db.server";
 import { cached } from "@/lib/server/cache.server";
-import type { PublicProduct, PublicSeller, CategorySubmissionSchema } from "@/lib/api/catalog";
+import type {
+  PublicProduct,
+  PublicSeller,
+  CategorySubmissionSchema,
+  StoreProfile,
+  LeaderboardSeller,
+} from "@/lib/api/catalog";
 
 const productSelect = `
   select p.id, p.title, p.slug, p.description, p.image_key, p.delivery_type, p.delivery_sla_minutes,
@@ -193,4 +199,261 @@ export async function getHomePageData(): Promise<HomePageData> {
       trendingSearches,
     };
   });
+}
+
+// ---------------------------------------------------------------------------
+// Product detail (RSC). View-count increment is intentionally omitted here so
+// the read stays pure/cacheable; view tracking moves to a client beacon later.
+// ---------------------------------------------------------------------------
+export interface ProductReview {
+  rating: number;
+  comment: string | null;
+  seller_reply: string | null;
+  created_at: number;
+  buyer: string;
+}
+export interface ProductVariant {
+  id: string;
+  title: string;
+  price_cents: number;
+}
+
+export async function getProductBySlug(slug: string): Promise<{
+  product: PublicProduct | null;
+  reviews: ProductReview[];
+  variants: ProductVariant[];
+}> {
+  await appContext();
+  const row = await q1(`${productSelect} where p.slug = ?`, [slug]);
+  if (!row) return { product: null, reviews: [], variants: [] };
+  const product = mapProduct(row);
+  if (product.status !== "active" && product.status !== "out_of_stock")
+    return { product: null, reviews: [], variants: [] };
+  const [reviews, variants] = await Promise.all([
+    q<ProductReview>(
+      `select r.rating, r.comment, r.seller_reply, r.created_at, u.username as buyer
+       from reviews r join users u on u.id = r.buyer_id where r.product_id = ? order by r.created_at desc limit 30`,
+      [product.id],
+    ),
+    q<ProductVariant>(
+      `select id, title, price_cents from product_variants where product_id = ? order by sort`,
+      [product.id],
+    ),
+  ]);
+  return { product, reviews, variants };
+}
+
+export async function getRelatedProductsData(
+  productId: string,
+  limit = 8,
+): Promise<PublicProduct[]> {
+  await appContext();
+  const seed = await q1<{ category_id: string; item_id: string | null }>(
+    `select category_id, item_id from products where id = ?`,
+    [productId],
+  );
+  if (!seed) return [];
+  const rows = await q(
+    `${productSelect}
+       where p.status = 'active' and ${PUBLIC_SELLER_COND} and p.id <> ?
+         and (p.item_id = ? or p.category_id = ?)
+       order by (case when p.item_id = ? then 0 else 1 end),
+                p.sold_count desc, u.rating desc
+       limit ?`,
+    [productId, seed.item_id ?? "", seed.category_id, seed.item_id ?? "", limit],
+  );
+  return rows.map(mapProduct);
+}
+
+// ---------------------------------------------------------------------------
+// Seller store (RSC)
+// ---------------------------------------------------------------------------
+export interface StoreReview extends ProductReview {
+  product_title: string;
+}
+
+export async function getSellerStoreData(username: string): Promise<{
+  seller: StoreProfile | null;
+  products: PublicProduct[];
+  reviews: StoreReview[];
+}> {
+  await appContext();
+  const sellerRow = await q1<StoreProfile & { store_socials: unknown }>(
+    `select id, username, seller_level, rating, rating_count, total_sales, completion_rate, vacation_mode, created_at,
+            verification_tier, trust_score, store_banner_url, store_logo_url, store_description,
+            store_socials, store_announcement, avg_response_minutes, avg_delivery_minutes,
+            refund_count, dispute_count
+     from users where lower(username) = lower(?) and seller_status = 'approved' and is_banned = 0`,
+    [username],
+  );
+  if (!sellerRow) return { seller: null, products: [], reviews: [] };
+  const seller: StoreProfile = {
+    ...sellerRow,
+    store_socials:
+      typeof sellerRow.store_socials === "string"
+        ? JSON.parse(sellerRow.store_socials)
+        : ((sellerRow.store_socials as Record<string, string> | null) ?? {}),
+  };
+  const [productRows, reviews] = await Promise.all([
+    q(
+      `${productSelect} where p.seller_id = ? and p.status in ('active','out_of_stock') order by p.sold_count desc`,
+      [seller.id],
+    ),
+    q<StoreReview>(
+      `select r.rating, r.comment, r.seller_reply, r.created_at, u.username as buyer, o.product_title
+       from reviews r join users u on u.id = r.buyer_id join orders o on o.id = r.order_id
+       where r.seller_id = ? order by r.created_at desc limit 50`,
+      [seller.id],
+    ),
+  ]);
+  return { seller, products: productRows.map(mapProduct), reviews };
+}
+
+// ---------------------------------------------------------------------------
+// Seller leaderboard (RSC)
+// ---------------------------------------------------------------------------
+export async function getSellerLeaderboardData(
+  range: "30d" | "90d" | "all" = "30d",
+  limit = 25,
+): Promise<LeaderboardSeller[]> {
+  await appContext();
+  const dayMs = 86_400_000;
+  const since = range === "all" ? 0 : Date.now() - (range === "30d" ? 30 : 90) * dayMs;
+  const rows = await q<Record<string, unknown>>(
+    `select u.id, u.username, u.seller_level, u.rating, u.rating_count, u.total_sales,
+            u.completion_rate, u.vacation_mode, u.created_at, u.verification_tier,
+            u.trust_score, u.refund_count, u.dispute_count,
+            coalesce((select sum(o.total_cents) from orders o
+                        where o.seller_id = u.id and o.paid_at > ?
+                          and o.status not in ('cancelled','expired','refunded')),0) as gmv_cents,
+            coalesce((select count(*) from orders o
+                        where o.seller_id = u.id and o.paid_at > ?
+                          and o.status not in ('cancelled','expired','refunded')),0) as recent_orders,
+            (select c.name from products p join categories c on c.id = p.category_id
+               where p.seller_id = u.id and p.status = 'active'
+               group by c.id, c.name order by sum(p.sold_count) desc limit 1) as category_name
+       from users u
+      where u.seller_status = 'approved' and u.is_banned = 0 and u.vacation_mode = 0 and u.total_sales > 0
+      order by (u.trust_score * 0.7 + (case when u.total_sales < 500 then u.total_sales else 500 end) * 0.3) desc, u.total_sales desc
+      limit ?`,
+    [since, since, limit],
+  );
+  return rows.map((r, i) => ({
+    id: r.id as string,
+    username: r.username as string,
+    seller_level: r.seller_level as number,
+    rating: r.rating as number,
+    rating_count: r.rating_count as number,
+    total_sales: r.total_sales as number,
+    completion_rate: r.completion_rate as number,
+    vacation_mode: r.vacation_mode as number,
+    created_at: r.created_at as number,
+    verification_tier: (r.verification_tier as PublicSeller["verification_tier"]) ?? "unverified",
+    trust_score: Number(r.trust_score ?? 0),
+    refund_count: Number(r.refund_count ?? 0),
+    dispute_count: Number(r.dispute_count ?? 0),
+    rank: i + 1,
+    gmv_cents: Number(r.gmv_cents ?? 0),
+    recent_orders: Number(r.recent_orders ?? 0),
+    category_name: (r.category_name as string | null) ?? null,
+  }));
+}
+
+// ---------------------------------------------------------------------------
+// Browse (RSC grid; filters are URL search params, no client data layer)
+// ---------------------------------------------------------------------------
+export interface BrowseParams {
+  category?: string;
+  item?: string;
+  q?: string;
+  delivery?: "auto" | "manual";
+  minPrice?: number;
+  maxPrice?: number;
+  inStock?: boolean;
+  sort?: "popular" | "price_asc" | "price_desc" | "newest" | "rating";
+  page?: number;
+}
+
+export async function browseProductsData(p: BrowseParams): Promise<{
+  items: PublicProduct[];
+  total: number;
+  page: number;
+  pageCount: number;
+}> {
+  await appContext();
+  const { tokenize, buildSearchClause } = await import("@/lib/server/search.server");
+  const where: string[] = [`p.status = 'active'`, PUBLIC_SELLER_COND];
+  const params: Array<string | number> = [];
+  if (p.category) {
+    where.push(`c.slug = ?`);
+    params.push(p.category);
+  }
+  if (p.item) {
+    where.push(`p.item_id = ?`);
+    params.push(p.item);
+  }
+  if (p.q) {
+    const tokens = tokenize(p.q);
+    const cols = [
+      "p.title",
+      "p.description",
+      "coalesce(p.platform,'')",
+      "u.username",
+      "c.name",
+      "coalesce(ci.name,'')",
+    ];
+    const { sql, params: sp } = buildSearchClause(tokens, cols);
+    if (tokens.length > 0) {
+      where.push(`(${sql})`);
+      params.push(...sp);
+    } else {
+      const like = `%${p.q.toLowerCase()}%`;
+      where.push(`(lower(p.title) like ? or lower(p.description) like ?)`);
+      params.push(like, like);
+    }
+  }
+  if (p.delivery) {
+    where.push(`p.delivery_type = ?`);
+    params.push(p.delivery);
+  }
+  if (p.minPrice !== undefined) {
+    where.push(`p.price_cents >= ?`);
+    params.push(Math.round(p.minPrice * 100));
+  }
+  if (p.maxPrice !== undefined) {
+    where.push(`p.price_cents <= ?`);
+    params.push(Math.round(p.maxPrice * 100));
+  }
+  if (p.inStock) where.push(`(p.delivery_type = 'manual' or p.stock_count > 0)`);
+  const order = {
+    popular: `p.insurance_days desc, p.sold_count desc, p.views desc`,
+    price_asc: `p.price_cents asc`,
+    price_desc: `p.price_cents desc`,
+    newest: `p.created_at desc`,
+    rating: `u.rating desc, p.sold_count desc`,
+  }[p.sort ?? "popular"];
+  const PAGE = 24;
+  const page = p.page ?? 1;
+  const whereSql = where.join(" and ");
+  const [totalRow, itemRows] = await Promise.all([
+    q1<{ c: number }>(
+      `select count(*) c from products p
+         join categories c on c.id = p.category_id
+         join users u on u.id = p.seller_id
+         left join catalog_items ci on ci.id = p.item_id
+       where ${whereSql}`,
+      params,
+    ),
+    q(
+      `${productSelect} where ${whereSql} order by ${order} limit ${PAGE} offset ${(page - 1) * PAGE}`,
+      params,
+    ),
+  ]);
+  const total = totalRow!.c;
+  return {
+    items: itemRows.map(mapProduct),
+    total,
+    page,
+    pageCount: Math.max(1, Math.ceil(total / PAGE)),
+  };
 }
