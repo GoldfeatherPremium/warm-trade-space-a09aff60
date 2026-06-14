@@ -19,6 +19,7 @@ import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as MenuRouteImport } from './routes/menu'
 import { Route as FavoritesRouteImport } from './routes/favorites'
 import { Route as DisputesRouteImport } from './routes/disputes'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as BrowseRouteImport } from './routes/browse'
@@ -131,6 +132,11 @@ const FavoritesRoute = FavoritesRouteImport.update({
 const DisputesRoute = DisputesRouteImport.update({
   id: '/disputes',
   path: '/disputes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -459,6 +465,7 @@ export interface FileRoutesByFullPath {
   '/browse': typeof BrowseRoute
   '/chat': typeof ChatRoute
   '/contact': typeof ContactRoute
+  '/dashboard': typeof DashboardRoute
   '/disputes': typeof DisputesRouteWithChildren
   '/favorites': typeof FavoritesRoute
   '/menu': typeof MenuRoute
@@ -533,6 +540,7 @@ export interface FileRoutesByTo {
   '/browse': typeof BrowseRoute
   '/chat': typeof ChatRoute
   '/contact': typeof ContactRoute
+  '/dashboard': typeof DashboardRoute
   '/disputes': typeof DisputesRouteWithChildren
   '/favorites': typeof FavoritesRoute
   '/menu': typeof MenuRoute
@@ -608,6 +616,7 @@ export interface FileRoutesById {
   '/browse': typeof BrowseRoute
   '/chat': typeof ChatRoute
   '/contact': typeof ContactRoute
+  '/dashboard': typeof DashboardRoute
   '/disputes': typeof DisputesRouteWithChildren
   '/favorites': typeof FavoritesRoute
   '/menu': typeof MenuRoute
@@ -685,6 +694,7 @@ export interface FileRouteTypes {
     | '/browse'
     | '/chat'
     | '/contact'
+    | '/dashboard'
     | '/disputes'
     | '/favorites'
     | '/menu'
@@ -759,6 +769,7 @@ export interface FileRouteTypes {
     | '/browse'
     | '/chat'
     | '/contact'
+    | '/dashboard'
     | '/disputes'
     | '/favorites'
     | '/menu'
@@ -833,6 +844,7 @@ export interface FileRouteTypes {
     | '/browse'
     | '/chat'
     | '/contact'
+    | '/dashboard'
     | '/disputes'
     | '/favorites'
     | '/menu'
@@ -909,6 +921,7 @@ export interface RootRouteChildren {
   BrowseRoute: typeof BrowseRoute
   ChatRoute: typeof ChatRoute
   ContactRoute: typeof ContactRoute
+  DashboardRoute: typeof DashboardRoute
   DisputesRoute: typeof DisputesRouteWithChildren
   FavoritesRoute: typeof FavoritesRoute
   MenuRoute: typeof MenuRoute
@@ -1007,6 +1020,13 @@ declare module '@tanstack/react-router' {
       path: '/disputes'
       fullPath: '/disputes'
       preLoaderRoute: typeof DisputesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -1576,6 +1596,7 @@ const rootRouteChildren: RootRouteChildren = {
   BrowseRoute: BrowseRoute,
   ChatRoute: ChatRoute,
   ContactRoute: ContactRoute,
+  DashboardRoute: DashboardRoute,
   DisputesRoute: DisputesRouteWithChildren,
   FavoritesRoute: FavoritesRoute,
   MenuRoute: MenuRoute,
