@@ -32,8 +32,16 @@ export function FavoriteButton({
   productId: string;
   className?: string;
 }) {
-  const { ids, toggle, loggedIn } = useFavorites();
-  if (!loggedIn) return null;
+  // Logged-out visitors (the vast majority on public pages) skip the favorites
+  // query/mutation hooks entirely — no per-card React Query observers. Only an
+  // authenticated card mounts the inner button that subscribes.
+  const { me } = useMe();
+  if (!me) return null;
+  return <FavoriteButtonInner productId={productId} className={className} />;
+}
+
+function FavoriteButtonInner({ productId, className }: { productId: string; className?: string }) {
+  const { ids, toggle } = useFavorites();
   const active = ids.has(productId);
   return (
     <button
