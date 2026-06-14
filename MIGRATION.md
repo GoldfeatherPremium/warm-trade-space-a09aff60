@@ -295,18 +295,20 @@ All of `src/lib/server/*.server.ts` copied unchanged **except** `auth.server.ts`
 
 - [x] Phase 0 — MIGRATION.md — **APPROVED 2026-06-14**
 - [~] Phase 1 — Foundation: Next 15 scaffold + tokens/CSS + config. Local gates green (next build, vite build, both tsc, eslint 0, smoke 48). **Vercel preview deploy + mobile Lighthouse pending.**
-- [~] Phase 2 — SEO route handlers done (`sitemap.ts`, `robots.ts`, `/api/public/img/[id]`). **Home page LIVE as RSC** (`app/page.tsx`): RSC shell (`app/_components/site-shell.tsx`), `SearchBox` client island, RSC `ProductCard`, Next image helper, and `src/server/queries/catalog.ts` (RSC read layer that reuses the exact catalog SQL but imports only the tanstack-free server core). **Home First Load JS = 107 kB (ISR/prerendered) vs legacy 548 KB always-hydrated.** Remaining: `/browse`, `/p/[slug]`, `/s/[username]`, `/sellers`, `/legal/*`, `/about`, `/contact`. **Lighthouse 90+ mobile** gate to be measured on the Vercel preview.
+- [~] Phase 2 — **All public RSC pages complete**; only the mobile-Lighthouse 90+ measurement remains (Vercel preview, gated on Deployment Protection being disabled). Public pages render at ~107 kB First Load vs the legacy 548 KB always-hydrated chunk.
 
   **Phase 2 progress detail:**
   - [x] RSC public shell (header + footer) + `SearchBox` island
   - [x] RSC `ProductCard` (zero client JS; favorite island deferred to Phase 3)
-  - [x] `src/server/queries/catalog.ts` — `getHomePageData()` (reuses catalog SQL; imports only `@/lib/server/*` + `import type` from catalog)
-  - [x] `app/page.tsx` — RSC home (hero+search, categories, trending, fresh, top sellers, recent sales, trust, CTA) — `next build` ✓, both tsc ✓, eslint 0 ✓, smoke 53 ✓
-  - [ ] `/sellers` (needs `getSellerLeaderboard` query)
-  - [ ] `/p/[slug]` (+ generateMetadata + JSON-LD; buy/qty/favorite island) — highest SEO value
-  - [ ] `/browse` (RSC grid + filters/search client island)
-  - [ ] `/s/[username]` store, `/legal/*` (×8), `/about`, `/contact`
-  - [ ] Measure mobile Lighthouse on Vercel preview (90+ gate)
+  - [x] `src/server/queries/catalog.ts` — framework-agnostic read layer (reuses catalog SQL; imports only `@/lib/server/*`)
+  - [x] SEO route handlers: `app/sitemap.ts`, `app/robots.ts`, `app/api/public/img/[id]/route.ts` (all `NEXT_PUBLIC_SITE_URL`-driven)
+  - [x] `/` home (hero+search, categories, trending, fresh, top sellers, recent sales, trust, CTA)
+  - [x] `/sellers` (leaderboard) · `/browse` (RSC grid + sort + pagination, `SearchBox` island)
+  - [x] `/p/[slug]` (generateMetadata + Product JSON-LD) · `/s/[username]` store
+  - [x] `/legal/*` (×8), `/about`, `/contact` (static RSC via `LegalArticle`) · `/search` → `/browse` redirect
+  - [x] Gates: `next build` (18 routes), Vite build, tsc base+next, eslint 0, smoke 53 — all green
+  - [ ] Measure mobile Lighthouse on Vercel preview (90+ gate) — **needs Deployment Protection off**
+
 - [ ] Phase 3 — Auth + buyer + checkout/pay
 - [ ] Phase 4 — Seller
 - [ ] Phase 5 — Admin
