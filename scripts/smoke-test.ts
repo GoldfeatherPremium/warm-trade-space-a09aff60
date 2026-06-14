@@ -347,6 +347,72 @@ check("automod passes normal text", core.automodCheck("thanks, code worked great
   check("cache recomputes after invalidation", calls === 2 && e === 2);
 }
 
+// =============== 12. chat inbox + conversation card ===============
+{
+  // Order o1 already produced system messages via the lifecycle, so a
+  // conversation exists. Add a buyer message so unread/preview are exercised.
+  const conv = (await q1<{ id: string; seller_id: string; buyer_id: string }>(
+    `select id, seller_id, buyer_id from conversations where order_id = ?`,
+    [o1],
+  ))!;
+  check("order lifecycle created a conversation", !!conv?.id);
+
+  await run(
+    `insert into messages (id, conversation_id, sender_id, body, created_at) values (?,?,?,?,?)`,
+    [core.uid(), conv.id, conv.buyer_id, "hi, did the codes arrive?", core.now()],
+  );
+
+  // Inbox query (mirrors listConversations) from the seller's perspective.
+  const sellerId = conv.seller_id;
+  const inbox = await q<Record<string, any>>(
+    `select cv.id, cv.order_id, cv.product_id, cv.last_message_at,
+            coalesce(ub.last_seen_at, 0) as buyer_last_seen,
+            coalesce(us.last_seen_at, 0) as seller_last_seen,
+            cv.buyer_id, cv.seller_id,
+            o.order_no, o.product_title, o.status as order_status, o.total_cents as order_total_cents,
+            p.title as product_title_presale, p.price_cents as product_price_cents, p.slug as product_slug,
+            coalesce(o.image_key, p.image_key) as image_key,
+            (select body from messages m where m.conversation_id = cv.id order by m.created_at desc limit 1) as last_body,
+            (select sender_id from messages m where m.conversation_id = cv.id order by m.created_at desc limit 1) as last_sender_id,
+            (select is_system from messages m where m.conversation_id = cv.id order by m.created_at desc limit 1) as last_is_system,
+            (select count(*) from messages m where m.conversation_id = cv.id
+               and m.created_at > case when cv.buyer_id = ? then cv.buyer_last_read_at else cv.seller_last_read_at end
+               and (m.sender_id is null or m.sender_id != ?)) as unread
+       from conversations cv
+       join users ub on ub.id = cv.buyer_id
+       join users us on us.id = cv.seller_id
+       left join orders o on o.id = cv.order_id
+       left join products p on p.id = cv.product_id
+       where cv.buyer_id = ? or cv.seller_id = ?
+       order by coalesce(cv.last_message_at, cv.created_at) desc limit 100`,
+    [sellerId, sellerId, sellerId, sellerId],
+  );
+  const myRow = inbox.find((r) => r.id === conv.id)!;
+  check("inbox returns the order conversation", !!myRow);
+  check(
+    "inbox last_body is the latest buyer message",
+    myRow.last_body === "hi, did the codes arrive?",
+  );
+  check("inbox last_sender_id is the buyer", myRow.last_sender_id === conv.buyer_id);
+  check("inbox surfaces order metadata", !!myRow.order_no && Number(myRow.order_total_cents) > 0);
+  check("inbox counts unread for the seller", Number(myRow.unread) >= 1, myRow.unread);
+
+  // Pinned card query (mirrors getMessages) for an order conversation.
+  const card = (await q1<Record<string, any>>(
+    `select o.id as order_id, o.order_no, o.status, o.product_title as title,
+            o.total_cents, o.qty, o.unit_price_cents, o.image_key, o.product_id,
+            p.slug as product_slug
+       from orders o left join products p on p.id = o.product_id
+      where o.id = ?`,
+    [o1],
+  ))!;
+  check(
+    "conversation card resolves order details",
+    !!card && card.order_id === o1 && Number(card.total_cents) > 0 && !!card.product_slug,
+    card,
+  );
+}
+
 console.log(
   `\nAll ${passed} checks passed ✔ (engine: ${process.env.DATABASE_URL ? "postgres" : "sqlite"})`,
 );
