@@ -295,7 +295,7 @@ All of `src/lib/server/*.server.ts` copied unchanged **except** `auth.server.ts`
 
 - [x] Phase 0 — MIGRATION.md — **APPROVED 2026-06-14**
 - [~] Phase 1 — Foundation: Next 15 scaffold + tokens/CSS + config. Local gates green (next build, vite build, both tsc, eslint 0, smoke 48). **Vercel preview deploy + mobile Lighthouse pending.**
-- [ ] Phase 2 — Public RSC pages + SEO + **Lighthouse 90+ mobile**
+- [~] Phase 2 — SEO route handlers done (`sitemap.ts`, `robots.ts`, `/api/public/img/[id]`, all `NEXT_PUBLIC_SITE_URL`-driven). Public page UIs (home/browse/search/product/store/sellers/legal/about/contact) + shared RSC shell + islands next; **Lighthouse 90+ mobile** is the gate.
 - [ ] Phase 3 — Auth + buyer + checkout/pay
 - [ ] Phase 4 — Seller
 - [ ] Phase 5 — Admin
