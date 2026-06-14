@@ -1,5 +1,6 @@
-import { q1, run, tx } from "./db.server";
+import { q, q1, run, tx } from "./db.server";
 import { encryptStock, hashPassword, now, sha256, slugify, uid } from "./core.server";
+import { BASE_CATEGORIES } from "./categories.server";
 
 /**
  * Idempotent demo seed: runs once on first boot (skips if any user exists).
@@ -87,25 +88,19 @@ export async function seedIfEmpty(): Promise<void> {
       );
     }
 
-    const cats: Array<[string, string, string, number, number, string]> = [
-      // name, slug, icon, warranty_hours, commission_pct, risk
-      ["Game Top-Ups & Currency", "currency", "🪙", 72, 8, "normal"],
-      ["Game Items & Skins", "items", "⚔️", 72, 8, "normal"],
-      ["Game Accounts", "accounts", "👤", 168, 12, "high"],
-      ["Gift Cards", "gift-cards", "🎁", 24, 8, "normal"],
-      ["Software Keys & Licenses", "software-keys", "🔑", 72, 8, "normal"],
-      ["Digital Subscriptions", "subscriptions", "📺", 72, 10, "normal"],
-      ["Boosting / Services", "boosting", "🚀", 72, 10, "normal"],
-      ["Other Digital Goods", "other", "📦", 72, 8, "normal"],
-    ];
+    // Categories are normally provisioned by ensureBaseCategories() on boot,
+    // but keep the seed self-sufficient and collision-free: map existing
+    // slugs -> ids, then insert any base category that is still missing.
     const catIds: Record<string, string> = {};
-    for (let i = 0; i < cats.length; i++) {
-      const [name, slug, icon, wh, pct, risk] = cats[i];
+    for (const r of await q<{ id: string; slug: string }>(`select id, slug from categories`))
+      catIds[r.slug] = r.id;
+    for (const c of BASE_CATEGORIES) {
+      if (catIds[c.slug]) continue;
       const id = uid();
-      catIds[slug] = id;
+      catIds[c.slug] = id;
       await run(
         `insert into categories (id, name, slug, icon, sort, default_warranty_hours, commission_pct, risk_tier) values (?,?,?,?,?,?,?,?)`,
-        [id, name, slug, icon, i, wh, pct, risk],
+        [id, c.name, c.slug, c.icon, c.sort, c.defaultWarrantyHours, c.commissionPct, c.riskTier],
       );
     }
 

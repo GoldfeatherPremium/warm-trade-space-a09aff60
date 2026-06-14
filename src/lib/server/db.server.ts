@@ -1,4 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks";
+import { randomUUID } from "node:crypto";
+import { BASE_CATEGORIES } from "./categories.server";
 
 /**
  * Dual-engine data layer.
@@ -96,6 +98,7 @@ const pgTxStore = new AsyncLocalStorage<PgSql>();
 // created outside a scope are one-shot and closed after use.
 const pgRequestStore = new AsyncLocalStorage<{ sql: PgSql | null }>();
 let migratedFlag = false;
+let baseCategoriesEnsured: Promise<number> | null = null;
 
 function toPgPlaceholders(sql: string): string {
   let n = 0;
@@ -226,7 +229,53 @@ async function getEngine(): Promise<Engine> {
     if (!migrated) migrated = migrate(engine);
     await migrated;
   }
+  // Additive taxonomy backfill — runs once per process, independent of the
+  // migration sentinel, so live databases pick up new base categories on the
+  // next cold start without ever touching admin-customised ones.
+  if (!baseCategoriesEnsured) baseCategoriesEnsured = ensureBaseCategories(engine);
+  await baseCategoriesEnsured;
   return engine;
+}
+
+/**
+ * Idempotently insert any missing base categories (keyed by slug). Never
+ * updates, renames, reorders or deletes existing rows — admins keep full
+ * control via /admin/categories. Uses the engine directly to avoid re-entering
+ * getEngine() while it is still resolving.
+ */
+async function ensureBaseCategories(e: Engine): Promise<number> {
+  let inserted = 0;
+  try {
+    const existing = await e.q<{ slug: string }>(`select slug from categories`);
+    const have = new Set(existing.map((r) => r.slug));
+    for (const c of BASE_CATEGORIES) {
+      if (have.has(c.slug)) continue;
+      await e.run(
+        `insert into categories (id, name, slug, icon, sort, default_warranty_hours, commission_pct, risk_tier, is_active)
+         values (?,?,?,?,?,?,?,?,1)`,
+        [
+          randomUUID(),
+          c.name,
+          c.slug,
+          c.icon,
+          c.sort,
+          c.defaultWarrantyHours,
+          c.commissionPct,
+          c.riskTier,
+        ],
+      );
+      inserted++;
+    }
+  } catch (err) {
+    // Non-fatal: never block DB access if the categories table isn't ready yet.
+    console.error("[db] ensureBaseCategories failed:", (err as Error)?.message);
+  }
+  return inserted;
+}
+
+/** On-demand additive backfill, e.g. from the admin categories screen. */
+export async function ensureBaseCategoriesNow(): Promise<number> {
+  return ensureBaseCategories(await getEngine());
 }
 
 export async function q<T = Record<string, unknown>>(sql: string, params?: Params): Promise<T[]> {
@@ -275,6 +324,8 @@ export async function tx<T>(fn: () => Promise<T>): Promise<T> {
 export function resetDbForTests() {
   engine = null;
   migrated = null;
+  migratedFlag = false;
+  baseCategoriesEnsured = null;
 }
 
 // ---------------------------------------------------------------------------
