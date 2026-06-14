@@ -192,20 +192,22 @@ async function createPostgresEngine(): Promise<Engine> {
 // Public API
 // ---------------------------------------------------------------------------
 async function schemaAlreadyMigrated(e: Engine): Promise<boolean> {
-  // Sentinel: a table from the most recent migration. If present, every
-  // earlier additive column/table is also present, so we skip the
-  // ~100-statement migration on Worker cold starts. Bump the sentinel
-  // whenever you add a new column or table to migrate().
+  // Sentinel: a column from the most recent additive migration. Bump this
+  // (column or table) whenever you add new columns to migrate() so production
+  // databases pick up the change on the next cold start. Currently points at
+  // seller_applications.display_name (richer seller onboarding) — the newest
+  // additive change in migrate().
   try {
     if (isPostgres()) {
       const r = await e.q<{ c: number }>(
-        `select count(*)::int as c from information_schema.tables
-         where table_schema = 'public' and table_name = 'order_attachments'`,
+        `select count(*)::int as c from information_schema.columns
+         where table_schema = 'public' and table_name = 'seller_applications'
+           and column_name = 'display_name'`,
       );
       return !!r[0] && Number(r[0].c) > 0;
     }
     const r = await e.q<{ name: string }>(
-      `select name from sqlite_master where type='table' and name='order_attachments'`,
+      `select name from pragma_table_info('seller_applications') where name='display_name'`,
     );
     return r.length > 0;
   } catch {
@@ -724,7 +726,18 @@ async function migrate(e: Engine): Promise<void> {
     `alter table seller_applications add column telegram text`,
     `alter table seller_applications add column whatsapp text`,
     `alter table seller_applications add column wechat text`,
+    // --- Phase 13: admin-configurable category + per-product subscription / delivery / stock ---
+    `alter table categories add column requires_subscription integer not null default 0`,
+    `alter table categories add column allowed_durations text not null default ''`,
+    `alter table categories add column admin_description text`,
+    `alter table categories add column delivery_kind text not null default 'code'`,
+    `alter table products add column subscription_duration text`,
+    `alter table products add column max_orders_at_once integer not null default 10`,
+    `alter table products add column manual_stock integer`,
+    `alter table stock_items add column locked_at ${big}`,
+    `alter table order_deliveries add column locked_at ${big}`,
   ];
+
   for (const stmt of addColumns) {
     await e.exec(stmt).catch(() => {}); // already exists
   }

@@ -704,6 +704,16 @@ export const adminSaveCategory = createServerFn({ method: "POST" })
       riskTier: z.enum(["normal", "high"]),
       isActive: z.boolean(),
       submissionSchema: z.string().max(20_000).optional(),
+      // Phase 13 — admin-configurable category surface
+      requiresSubscription: z.boolean().default(false),
+      allowedDurations: z
+        .array(z.enum(["7d", "14d", "1m", "3m", "6m", "12m", "lifetime"]))
+        .max(7)
+        .default([]),
+      adminDescription: z.string().max(8000).optional(),
+      deliveryKind: z
+        .enum(["code", "credentials", "invite", "giftcard_image", "manual_text"])
+        .default("code"),
     }),
   )
   .handler(async ({ data }) => {
@@ -720,9 +730,13 @@ export const adminSaveCategory = createServerFn({ method: "POST" })
         fail("Submission schema must be valid JSON.");
       }
     }
+    const allowedCsv = data.allowedDurations.join(",");
+    const adminDesc = data.adminDescription?.trim() || null;
     if (data.categoryId) {
       await run(
-        `update categories set name = ?, slug = ?, icon = ?, default_warranty_hours = ?, commission_pct = ?, risk_tier = ?, is_active = ?, submission_schema = ? where id = ?`,
+        `update categories set name = ?, slug = ?, icon = ?, default_warranty_hours = ?, commission_pct = ?, risk_tier = ?, is_active = ?, submission_schema = ?,
+           requires_subscription = ?, allowed_durations = ?, admin_description = ?, delivery_kind = ?
+         where id = ?`,
         [
           data.name,
           data.slug,
@@ -732,6 +746,10 @@ export const adminSaveCategory = createServerFn({ method: "POST" })
           data.riskTier,
           data.isActive ? 1 : 0,
           schema,
+          data.requiresSubscription ? 1 : 0,
+          allowedCsv,
+          adminDesc,
+          data.deliveryKind,
           data.categoryId,
         ],
       );
@@ -739,8 +757,9 @@ export const adminSaveCategory = createServerFn({ method: "POST" })
       if (await q1(`select 1 as x from categories where slug = ?`, [data.slug]))
         fail("Slug already exists.");
       await run(
-        `insert into categories (id, name, slug, icon, sort, default_warranty_hours, commission_pct, risk_tier, is_active, submission_schema)
-         values (?,?,?,?, (select coalesce(max(sort),0)+1 from categories), ?,?,?,?,?)`,
+        `insert into categories (id, name, slug, icon, sort, default_warranty_hours, commission_pct, risk_tier, is_active, submission_schema,
+           requires_subscription, allowed_durations, admin_description, delivery_kind)
+         values (?,?,?,?, (select coalesce(max(sort),0)+1 from categories), ?,?,?,?,?,?,?,?,?)`,
         [
           uid(),
           data.name,
@@ -751,10 +770,18 @@ export const adminSaveCategory = createServerFn({ method: "POST" })
           data.riskTier,
           data.isActive ? 1 : 0,
           schema,
+          data.requiresSubscription ? 1 : 0,
+          allowedCsv,
+          adminDesc,
+          data.deliveryKind,
         ],
       );
     }
     await audit(staff.id, "category.save", "category", data.categoryId ?? data.slug);
+    // Reflect taxonomy edits immediately on home + catalog surfaces
+    invalidateCache("home:v1");
+    invalidateCache("catalog-items:v1");
+
     return { ok: true };
   });
 
@@ -806,6 +833,13 @@ export const adminUpdateProduct = createServerFn({ method: "POST" })
       adminSeoDescription: z.string().max(8000).optional(),
       categoryAttrs: z.record(z.string(), z.string().max(2000)).optional(),
       status: z.enum(["active", "paused", "rejected", "out_of_stock", "pending_review"]).optional(),
+      // Phase 13 overrides
+      subscriptionDuration: z
+        .enum(["7d", "14d", "1m", "3m", "6m", "12m", "lifetime"])
+        .nullable()
+        .optional(),
+
+      maxOrdersAtOnce: z.number().int().min(1).max(1000).optional(),
     }),
   )
   .handler(async ({ data }) => {
@@ -832,7 +866,7 @@ export const adminUpdateProduct = createServerFn({ method: "POST" })
     await run(
       `update products set title = ?, description = ?, category_id = ?, item_id = ?, price_cents = ?, warranty_hours = ?,
          min_qty = ?, max_qty = ?, region = ?, platform = ?, required_info = ?,
-         admin_seo_description = ?, category_attrs = ?${data.status ? ", status = ?" : ""}
+         admin_seo_description = ?, category_attrs = ?, subscription_duration = ?, max_orders_at_once = ?${data.status ? ", status = ?" : ""}
        where id = ?`,
       [
         data.title,
@@ -850,11 +884,15 @@ export const adminUpdateProduct = createServerFn({ method: "POST" })
         data.categoryAttrs && Object.keys(data.categoryAttrs).length > 0
           ? JSON.stringify(data.categoryAttrs)
           : null,
+        data.subscriptionDuration ? data.subscriptionDuration : null,
+        data.maxOrdersAtOnce ?? 10,
         ...(data.status ? [data.status] : []),
         data.productId,
       ],
     );
     await audit(staff.id, "product.admin_edit", "product", data.productId);
+    invalidateCache("home:v1");
+    invalidateCache("catalog-items:v1");
     return { ok: true };
   });
 
@@ -1031,7 +1069,7 @@ export const adminSaveCoupon = createServerFn({ method: "POST" })
 export const adminListItems = createServerFn({ method: "GET" }).handler(async () => {
   await appContext();
   await requireStaff();
-  const [items, maps, suggestions] = await Promise.all([
+  const [items, maps, suggestions, categories] = await Promise.all([
     q<{
       id: string;
       name: string;
@@ -1047,12 +1085,16 @@ export const adminListItems = createServerFn({ method: "GET" }).handler(async ()
       `select s.*, u.username from item_suggestions s join users u on u.id = s.user_id
        order by case s.status when 'pending' then 0 else 1 end, s.created_at desc limit 100`,
     ),
+    q<{ id: string; name: string; slug: string; icon: string; is_active: number }>(
+      `select id, name, slug, icon, is_active from categories order by sort, name`,
+    ),
   ]);
   const byItem: Record<string, string[]> = {};
   for (const m of maps) (byItem[m.item_id] ??= []).push(m.category_id);
   return {
     items: items.map((i) => ({ ...i, categoryIds: byItem[i.id] ?? [] })),
     suggestions,
+    categories,
   };
 });
 
@@ -1098,6 +1140,7 @@ export const adminSaveItem = createServerFn({ method: "POST" })
     }
     await audit(staff.id, "catalog_item.save", "catalog_item", id);
     invalidateCache("catalog-items:v1"); // reflect taxonomy edits immediately
+    invalidateCache("home:v1");
     return { itemId: id };
   });
 
@@ -1145,5 +1188,9 @@ export const reviewItemSuggestion = createServerFn({ method: "POST" })
       "/seller/new-product",
     );
     await audit(staff.id, `item_suggestion.${status}`, "item_suggestion", data.suggestionId);
+    if (data.approve) {
+      invalidateCache("catalog-items:v1");
+      invalidateCache("home:v1");
+    }
     return { ok: true };
   });

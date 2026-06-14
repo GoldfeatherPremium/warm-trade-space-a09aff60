@@ -111,9 +111,13 @@ function ProductForm() {
     priceUsdt: "" as string,
     minQty: 1,
     maxQty: 50,
+    maxOrdersAtOnce: 10,
+    subscriptionDuration: "" as "" | "7d" | "14d" | "1m" | "3m" | "6m" | "12m" | "lifetime",
+    manualStock: "" as string,
     platform: "",
     requiredInfo: "",
   });
+
   const [regionMode, setRegionMode] = useState<"global" | "country">("global");
   const [regionCountry, setRegionCountry] = useState<string>("");
   const [agreed, setAgreed] = useState(false);
@@ -170,9 +174,13 @@ function ProductForm() {
           priceUsdt: String((p.price_cents as number) / 100),
           minQty: p.min_qty as number,
           maxQty: p.max_qty as number,
+          maxOrdersAtOnce: (p.max_orders_at_once as number) ?? 10,
+          subscriptionDuration: ((p.subscription_duration as string) ?? "") as never,
+          manualStock: p.manual_stock != null ? String(p.manual_stock) : "",
           platform: (p.platform as string) ?? "",
           requiredInfo: (p.required_info as string) ?? "",
         });
+
         const region = (p.region as string) ?? "";
         if (!region || region.toLowerCase() === "global") {
           setRegionMode("global");
@@ -251,6 +259,9 @@ function ProductForm() {
           priceUsdt: parseFloat(form.priceUsdt),
           minQty: Number(form.minQty),
           maxQty: Number(form.maxQty),
+          maxOrdersAtOnce: Number(form.maxOrdersAtOnce),
+          subscriptionDuration: form.subscriptionDuration ? form.subscriptionDuration : null,
+          manualStock: form.manualStock !== "" ? Number(form.manualStock) : null,
           region: regionMode === "global" ? "Global" : regionCountry || undefined,
           platform: form.platform || undefined,
           requiredInfo: form.requiredInfo || undefined,
@@ -266,11 +277,14 @@ function ProductForm() {
   });
 
   const selectedCat = home?.categories.find((c) => c.id === form.categoryId);
-  const allowedCategories = home?.categories.filter((c) => {
-    if (!itemId) return true;
-    if (!selectedItem || selectedItem.categoryIds.length === 0) return true;
-    return selectedItem.categoryIds.includes(c.id);
-  });
+  const allCategories = home?.categories ?? [];
+  let allowedCategories = allCategories;
+  if (itemId && selectedItem && selectedItem.categoryIds.length > 0) {
+    const filtered = allCategories.filter((c) => selectedItem.categoryIds.includes(c.id));
+    // Fall back to all active categories if the item's allow-list no longer
+    // matches any active category — never block the seller with an empty picker.
+    allowedCategories = filtered.length > 0 ? filtered : allCategories;
+  }
 
   return (
     <form
@@ -396,13 +410,18 @@ function ProductForm() {
           onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
           className="w-full bg-secondary border border-border rounded-md px-2 py-2 text-xs h-9"
         >
-          <option value="">Select…</option>
+          <option value="">{home ? "Select…" : "Loading categories…"}</option>
           {allowedCategories?.map((c) => (
             <option key={c.id} value={c.id}>
               {c.icon} {c.name} ({c.commission_pct}% fee)
             </option>
           ))}
         </select>
+        {home && (allowedCategories?.length ?? 0) === 0 && (
+          <p className="text-[10px] text-yellow-400">
+            No sub-categories configured yet. Ask an admin to create one in Admin → Categories.
+          </p>
+        )}
         {selectedCat?.risk_tier === "high" && (
           <p className="text-[10px] text-yellow-400">
             High-risk category: extended warranty, manual delivery recommended.
@@ -649,6 +668,87 @@ function ProductForm() {
         </div>
       </div>
 
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label className="text-xs">Max orders per single checkout</Label>
+          <Input
+            type="number"
+            min={1}
+            value={form.maxOrdersAtOnce}
+            onChange={(e) => setForm({ ...form, maxOrdersAtOnce: Number(e.target.value) })}
+          />
+        </div>
+        {form.deliveryType === "manual" && (
+          <div className="space-y-1.5">
+            <Label className="text-xs">Available stock (manual)</Label>
+            <Input
+              type="number"
+              min={0}
+              value={form.manualStock}
+              onChange={(e) => setForm({ ...form, manualStock: e.target.value })}
+              placeholder="leave blank for unlimited"
+            />
+          </div>
+        )}
+      </div>
+      {(() => {
+        const requires = !!catSchema?.config?.requiresSubscription;
+        const allowed =
+          (catSchema?.config?.allowedDurations ?? []).length > 0
+            ? catSchema!.config!.allowedDurations!
+            : (["7d", "14d", "1m", "3m", "6m", "12m", "lifetime"] as readonly string[]);
+        return (
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5 bg-primary/5 border border-primary/30 rounded-lg p-3">
+              <Label className="text-xs font-bold text-primary">
+                Subscription duration {requires ? "*" : "(optional)"}
+              </Label>
+              <select
+                required={requires}
+                value={form.subscriptionDuration}
+                onChange={(e) =>
+                  setForm({ ...form, subscriptionDuration: e.target.value as never })
+                }
+                className="w-full bg-secondary border border-border rounded-md px-2 py-2 text-xs h-9"
+              >
+                <option value="">{requires ? "Select…" : "Not a subscription"}</option>
+                {allowed.map((d) => (
+                  <option key={d} value={d}>
+                    {d}
+                  </option>
+                ))}
+              </select>
+              <p className="text-[10px] text-muted-foreground">
+                Drives buyer-facing labels and future funds-release schedules tied to subscription
+                length.
+              </p>
+            </div>
+            <div className="space-y-1.5 bg-accent/5 border border-accent/30 rounded-lg p-3">
+              <Label className="text-xs font-bold text-accent">Insurance period</Label>
+              <div className="flex gap-1.5 flex-wrap">
+                {[0, 7, 15, 30, 60, 90].map((d) => (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => setInsuranceDays(d)}
+                    className={`px-2.5 py-1.5 rounded-md text-[11px] font-bold border ${
+                      insuranceDays === d
+                        ? "border-accent bg-accent/15 text-accent"
+                        : "border-border bg-secondary hover:bg-border"
+                    }`}
+                  >
+                    {d === 0 ? "None" : `${d}d`}
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Extends buyer warranty; longer insurance = later funds release but higher ranking.
+              </p>
+            </div>
+          </div>
+        );
+      })()}
+
       <div className="space-y-1.5">
         <Label className="text-xs">
           Warranty hours override (blank = category default
@@ -734,28 +834,6 @@ function ProductForm() {
           </div>
           <p className="text-[10px] text-muted-foreground">
             Expired listings pause automatically; edit & resubmit to relist.
-          </p>
-        </div>
-        <div className="space-y-1.5">
-          <Label className="text-xs">🛡 Insurance program</Label>
-          <div className="flex gap-2 flex-wrap">
-            {[0, 7, 15, 30].map((d) => (
-              <button
-                key={d}
-                type="button"
-                onClick={() => setInsuranceDays(d)}
-                className={`px-3 py-2 rounded-md text-xs font-bold border ${
-                  insuranceDays === d
-                    ? "border-accent bg-accent/15 text-accent"
-                    : "border-border bg-secondary hover:bg-border"
-                }`}
-              >
-                {d === 0 ? "Do not join" : `${d} Days`}
-              </button>
-            ))}
-          </div>
-          <p className="text-[10px] text-muted-foreground">
-            Extends buyer warranty by the chosen days; insured listings rank first in browse.
           </p>
         </div>
       </div>
