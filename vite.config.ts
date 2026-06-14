@@ -6,10 +6,17 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
+// Force-enable nitro outside Lovable so self-hosted deploys (Vercel, Netlify,
+// Cloudflare Pages, Node) actually get an SSR server bundle. Without this,
+// `vite build` on Vercel produces a static-only output and every route 404s
+// because TanStack Start needs a server handler. Nitro auto-detects the
+// target via NITRO_PRESET / Vercel / Netlify env vars; you can also hard-pin
+// it by setting `NITRO_PRESET=vercel` in your Vercel project env.
 export default defineConfig({
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  nitro: true,
 });

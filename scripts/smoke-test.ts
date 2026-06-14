@@ -13,8 +13,9 @@ if (!process.env.DATABASE_URL) {
   rmSync("/tmp/xvault-smoke.db", { force: true });
 }
 
-const { q, q1, run, tx } = await import("../src/lib/server/db.server");
+const { q, q1, run, tx, ensureBaseCategoriesNow } = await import("../src/lib/server/db.server");
 const { seedIfEmpty } = await import("../src/lib/server/seed.server");
+const { BASE_CATEGORIES } = await import("../src/lib/server/categories.server");
 const core = await import("../src/lib/server/core.server");
 const money = await import("../src/lib/server/money.server");
 const lc = await import("../src/lib/server/lifecycle.server");
@@ -472,6 +473,32 @@ check("automod passes normal text", core.automodCheck("thanks, code worked great
     !!card && card.order_id === o1 && Number(card.total_cents) > 0 && !!card.product_slug,
     card,
   );
+}
+
+// =============== 14. base category taxonomy (additive ensure step) ===============
+{
+  // ensureBaseCategories runs on boot, so every base slug should already exist.
+  const slugs = (await q<{ slug: string }>(`select slug from categories`)).map((r) => r.slug);
+  const have = new Set(slugs);
+  const missing = BASE_CATEGORIES.filter((c) => !have.has(c.slug)).map((c) => c.slug);
+  check("all base categories provisioned on boot", missing.length === 0, missing);
+  check(
+    "G2G additions present (skins/telco/payment-cards)",
+    have.has("skins") && have.has("telco") && have.has("payment-cards"),
+  );
+
+  // Idempotent: a second pass with everything present inserts nothing.
+  check("ensure base categories is idempotent", (await ensureBaseCategoriesNow()) === 0);
+
+  // Additive: removing a base category with no products and re-running restores
+  // exactly that one, and never duplicates a slug.
+  await run(`delete from categories where slug = 'telco'`);
+  const added = await ensureBaseCategoriesNow();
+  check("ensure re-adds a missing base category", added === 1, { added });
+  const telcoCount = (await q1<{ c: number }>(
+    `select count(*) as c from categories where slug = 'telco'`,
+  ))!.c;
+  check("re-added category is not duplicated", Number(telcoCount) === 1);
 }
 
 console.log(

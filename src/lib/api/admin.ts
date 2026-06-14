@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { q, q1, run } from "../server/db.server";
+import { q, q1, run, ensureBaseCategoriesNow } from "../server/db.server";
 import { appContext } from "../server/app.server";
 import {
   audit,
@@ -695,6 +695,7 @@ export const adminSaveCategory = createServerFn({ method: "POST" })
         .max(60)
         .regex(/^[a-z0-9-]+$/),
       icon: z.string().max(8).optional(),
+      sort: z.number().int().min(0).max(9999).optional(),
       defaultWarrantyHours: z
         .number()
         .int()
@@ -734,13 +735,14 @@ export const adminSaveCategory = createServerFn({ method: "POST" })
     const adminDesc = data.adminDescription?.trim() || null;
     if (data.categoryId) {
       await run(
-        `update categories set name = ?, slug = ?, icon = ?, default_warranty_hours = ?, commission_pct = ?, risk_tier = ?, is_active = ?, submission_schema = ?,
+        `update categories set name = ?, slug = ?, icon = ?, sort = coalesce(?, sort), default_warranty_hours = ?, commission_pct = ?, risk_tier = ?, is_active = ?, submission_schema = ?,
            requires_subscription = ?, allowed_durations = ?, admin_description = ?, delivery_kind = ?
          where id = ?`,
         [
           data.name,
           data.slug,
           data.icon ?? null,
+          data.sort ?? null,
           data.defaultWarrantyHours,
           data.commissionPct,
           data.riskTier,
@@ -784,6 +786,22 @@ export const adminSaveCategory = createServerFn({ method: "POST" })
 
     return { ok: true };
   });
+
+/**
+ * Idempotently add any missing G2G-style base categories. Additive only —
+ * never renames, reorders or deletes existing categories.
+ */
+export const adminEnsureBaseCategories = createServerFn({ method: "POST" }).handler(async () => {
+  await appContext();
+  const staff = await requireAdmin();
+  const added = await ensureBaseCategoriesNow();
+  if (added > 0) {
+    await audit(staff.id, "category.ensure_base", "category", `+${added}`);
+    invalidateCache("home:v1");
+    invalidateCache("catalog-items:v1");
+  }
+  return { added };
+});
 
 // Admin full product edit
 export const adminGetProduct = createServerFn({ method: "GET" })

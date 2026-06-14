@@ -24,6 +24,7 @@ import {
 import { getFollowedFeed } from "@/lib/api/follows";
 import { PageShell } from "@/components/shell";
 import { ProductCard } from "@/components/product-card";
+import { LazyMount } from "@/components/lazy-mount";
 import { usdtShort, timeAgo } from "@/lib/format";
 import { productImage } from "@/lib/images";
 import { SmartSearch } from "@/components/smart-search";
@@ -181,7 +182,7 @@ function Index() {
             />
             <div className="relative space-y-5 max-w-xl">
               <span className="inline-flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-primary bg-primary/10 border border-primary/30 rounded-full px-2.5 py-1">
-                <ShieldCheck className="size-3" /> ESCROW-PROTECTED · USDT
+                <ShieldCheck className="size-3" /> BUYER PROTECTED · USDT
               </span>
               <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl leading-[0.95] text-balance">
                 Level up your
@@ -329,222 +330,225 @@ function Index() {
         </div>
       </section>
 
-      {/* ============ RECENTLY VIEWED ============ */}
-      {recent.length > 0 && (
-        <section className="pt-8">
-          <SectionHeader label="JUST FOR YOU" title="Recently viewed" icon={<History />} />
-          <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
-            {recent.map((r) => (
-              <Link
-                key={r.slug}
-                to="/p/$slug"
-                params={{ slug: r.slug }}
-                className="shrink-0 w-44 bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50"
-              >
-                <div className="aspect-[16/10] bg-secondary overflow-hidden">
-                  <img
-                    src={productImage(r.image_key)}
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="p-2.5">
-                  <p className="text-[11px] font-bold line-clamp-1">{r.title}</p>
-                  <p className="text-[11px] font-mono text-accent mt-0.5">
-                    {usdtShort(r.price_cents)}
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* ============ FOR YOU (logged-in personalization) ============ */}
-      {me && recs && recs.items.length > 0 && (
-        <section className="pt-10">
-          <SectionHeader
-            label="JUST FOR YOU"
-            title="Picked based on what you like"
-            icon={<Sparkles />}
-          />
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {recs.items.slice(0, 8).map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* ============ FROM SELLERS YOU FOLLOW ============ */}
-      {me && feed && feed.sellers.length > 0 && (
-        <section className="pt-10">
-          <SectionHeader label="FOLLOWING" title="From sellers you follow" icon={<Star />} />
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 mb-3">
-            {feed.sellers.slice(0, 12).map((s) => (
-              <Link
-                key={s.id}
-                to="/s/$username"
-                params={{ username: s.username }}
-                className="shrink-0 flex items-center gap-2 bg-card border border-border rounded-full pl-1 pr-3 py-1 hover:border-primary/40"
-              >
-                <span className="size-7 rounded-full bg-primary/15 border border-primary/40 grid place-items-center text-[10px] font-bold text-primary uppercase">
-                  {s.username.slice(0, 2)}
-                </span>
-                <span className="text-xs font-bold">{s.username}</span>
-                <VerificationBadge
-                  tier={s.verification_tier as never}
-                  size="xs"
-                  showLabel={false}
-                />
-              </Link>
-            ))}
-          </div>
-          {feed.newListings.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              {feed.newListings.slice(0, 8).map((p) => (
+      {/* Below-the-fold sections: deferred hydration to cut initial main-thread work. */}
+      <LazyMount minHeight={240}>
+        {/* ============ RECENTLY VIEWED ============ */}
+        {recent.length > 0 && (
+          <section className="pt-8">
+            <SectionHeader label="JUST FOR YOU" title="Recently viewed" icon={<History />} />
+            <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+              {recent.map((r) => (
                 <Link
-                  key={p.id}
+                  key={r.slug}
                   to="/p/$slug"
-                  params={{ slug: p.slug }}
-                  className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50"
+                  params={{ slug: r.slug }}
+                  className="shrink-0 w-44 bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50"
                 >
                   <div className="aspect-[16/10] bg-secondary overflow-hidden">
                     <img
-                      src={productImage(p.image_key)}
+                      src={productImage(r.image_key)}
                       alt=""
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <div className="p-2.5">
-                    <p className="text-[11px] font-bold line-clamp-1">{p.title}</p>
-                    <p className="text-[10px] text-muted-foreground line-clamp-1">
-                      {p.seller_username} · {timeAgo(p.created_at)}
-                    </p>
-                    <p className="text-[11px] font-mono text-accent mt-1">
-                      {usdtShort(p.price_cents)}
+                    <p className="text-[11px] font-bold line-clamp-1">{r.title}</p>
+                    <p className="text-[11px] font-mono text-accent mt-0.5">
+                      {usdtShort(r.price_cents)}
                     </p>
                   </div>
                 </Link>
               ))}
             </div>
-          ) : (
-            <p className="text-xs text-muted-foreground">
-              No new listings yet from sellers you follow.
-            </p>
-          )}
-        </section>
-      )}
+          </section>
+        )}
 
-      {/* ============ TRENDING BENTO ============ */}
-      <section className="pt-10">
-        <SectionHeader
-          label="HOT RIGHT NOW"
-          title="Trending offers"
-          icon={<TrendingUp />}
-          link={{ to: "/browse", label: "View all" }}
-        />
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          {data?.trending.map((p, i) => (
-            <ProductCard key={p.id} product={p} priority={i < 4} />
-          ))}
-        </div>
-      </section>
+        {/* ============ FOR YOU (logged-in personalization) ============ */}
+        {me && recs && recs.items.length > 0 && (
+          <section className="pt-10">
+            <SectionHeader
+              label="JUST FOR YOU"
+              title="Picked based on what you like"
+              icon={<Sparkles />}
+            />
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {recs.items.slice(0, 8).map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+          </section>
+        )}
 
-      {/* ============ FRESH LISTINGS ============ */}
-      <section className="pt-10">
-        <SectionHeader
-          label="JUST DROPPED"
-          title="Fresh listings"
-          icon={<Sparkles />}
-          link={{ to: "/browse", search: { sort: "newest" as const }, label: "See more" }}
-        />
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          {data?.newest.slice(0, 4).map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
-      </section>
-
-      {/* ============ TOP SELLERS + LIVE FEED BENTO ============ */}
-      <section className="pt-10 grid lg:grid-cols-5 gap-4">
-        {/* Top sellers */}
-        <div className="lg:col-span-3 bg-card border border-border rounded-2xl p-5">
-          <SectionHeader label="LEADERBOARD" title="Top sellers" inline />
-          <div className="space-y-1.5 mt-3">
-            {data?.topSellers.map((s, i) => (
-              <Link
-                key={s.id}
-                to="/s/$username"
-                params={{ username: s.username }}
-                className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-secondary/60 transition-colors"
-              >
-                <span
-                  className={`font-display text-xl w-7 text-center ${
-                    i === 0
-                      ? "text-primary"
-                      : i === 1
-                        ? "text-foreground/80"
-                        : "text-muted-foreground"
-                  }`}
+        {/* ============ FROM SELLERS YOU FOLLOW ============ */}
+        {me && feed && feed.sellers.length > 0 && (
+          <section className="pt-10">
+            <SectionHeader label="FOLLOWING" title="From sellers you follow" icon={<Star />} />
+            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 mb-3">
+              {feed.sellers.slice(0, 12).map((s) => (
+                <Link
+                  key={s.id}
+                  to="/s/$username"
+                  params={{ username: s.username }}
+                  className="shrink-0 flex items-center gap-2 bg-card border border-border rounded-full pl-1 pr-3 py-1 hover:border-primary/40"
                 >
-                  {i + 1}
-                </span>
-                <div className="size-10 rounded-xl bg-primary/15 border border-primary/40 grid place-items-center text-xs font-bold text-primary uppercase">
-                  {s.username.slice(0, 2)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <p className="text-sm font-bold truncate">{s.username}</p>
-                    <VerificationBadge tier={s.verification_tier} size="xs" showLabel={false} />
-                  </div>
-                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-                    <span>
-                      Lvl {s.seller_level} · {s.total_sales.toLocaleString()} sales
-                    </span>
-                    <TrustScore score={s.trust_score} />
-                  </div>
-                </div>
-                <span className="text-[11px] text-yellow-400 flex items-center gap-0.5 font-bold">
-                  <Star className="size-3 fill-current" />
-                  {s.rating > 0 ? s.rating.toFixed(1) : "—"}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* Live feed */}
-        <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-5 relative overflow-hidden">
-          <div
-            aria-hidden
-            className="absolute -top-10 -right-10 size-40 rounded-full opacity-30 blur-3xl"
-            style={{ background: "var(--gradient-primary)" }}
-          />
-          <SectionHeader label="LIVE" title="Recent sales" inline pulse />
-          <div className="space-y-2.5 mt-3 relative">
-            {data?.recentSales.length === 0 && (
-              <p className="text-xs text-muted-foreground">No sales yet — be the first!</p>
-            )}
-            {data?.recentSales.slice(0, 6).map((s, i) => (
-              <div key={i} className="flex items-start gap-2 text-xs">
-                <span className="size-1.5 rounded-full bg-accent animate-pulse mt-1.5 shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="leading-tight truncate">
-                    <b className="text-foreground">{s.buyer}</b>{" "}
-                    <span className="text-muted-foreground">bought</span> {s.product_title}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">
-                    {timeAgo(s.created_at)} ·{" "}
-                    <span className="text-accent font-mono">{usdtShort(s.total_cents)}</span>
-                  </p>
-                </div>
+                  <span className="size-7 rounded-full bg-primary/15 border border-primary/40 grid place-items-center text-[10px] font-bold text-primary uppercase">
+                    {s.username.slice(0, 2)}
+                  </span>
+                  <span className="text-xs font-bold">{s.username}</span>
+                  <VerificationBadge
+                    tier={s.verification_tier as never}
+                    size="xs"
+                    showLabel={false}
+                  />
+                </Link>
+              ))}
+            </div>
+            {feed.newListings.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                {feed.newListings.slice(0, 8).map((p) => (
+                  <Link
+                    key={p.id}
+                    to="/p/$slug"
+                    params={{ slug: p.slug }}
+                    className="bg-card border border-border rounded-xl overflow-hidden hover:border-primary/50"
+                  >
+                    <div className="aspect-[16/10] bg-secondary overflow-hidden">
+                      <img
+                        src={productImage(p.image_key)}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="p-2.5">
+                      <p className="text-[11px] font-bold line-clamp-1">{p.title}</p>
+                      <p className="text-[10px] text-muted-foreground line-clamp-1">
+                        {p.seller_username} · {timeAgo(p.created_at)}
+                      </p>
+                      <p className="text-[11px] font-mono text-accent mt-1">
+                        {usdtShort(p.price_cents)}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
               </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                No new listings yet from sellers you follow.
+              </p>
+            )}
+          </section>
+        )}
+      </LazyMount>
+      <LazyMount minHeight={400}>
+        {/* ============ TRENDING BENTO ============ */}
+        <section className="pt-10">
+          <SectionHeader
+            label="HOT RIGHT NOW"
+            title="Trending offers"
+            icon={<TrendingUp />}
+            link={{ to: "/browse", label: "View all" }}
+          />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {data?.trending.map((p, i) => (
+              <ProductCard key={p.id} product={p} priority={i < 4} />
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
+        {/* ============ FRESH LISTINGS ============ */}
+        <section className="pt-10">
+          <SectionHeader
+            label="JUST DROPPED"
+            title="Fresh listings"
+            icon={<Sparkles />}
+            link={{ to: "/browse", search: { sort: "newest" as const }, label: "See more" }}
+          />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {data?.newest.slice(0, 4).map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        </section>
+
+        {/* ============ TOP SELLERS + LIVE FEED BENTO ============ */}
+        <section className="pt-10 grid lg:grid-cols-5 gap-4">
+          {/* Top sellers */}
+          <div className="lg:col-span-3 bg-card border border-border rounded-2xl p-5">
+            <SectionHeader label="LEADERBOARD" title="Top sellers" inline />
+            <div className="space-y-1.5 mt-3">
+              {data?.topSellers.map((s, i) => (
+                <Link
+                  key={s.id}
+                  to="/s/$username"
+                  params={{ username: s.username }}
+                  className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-secondary/60 transition-colors"
+                >
+                  <span
+                    className={`font-display text-xl w-7 text-center ${
+                      i === 0
+                        ? "text-primary"
+                        : i === 1
+                          ? "text-foreground/80"
+                          : "text-muted-foreground"
+                    }`}
+                  >
+                    {i + 1}
+                  </span>
+                  <div className="size-10 rounded-xl bg-primary/15 border border-primary/40 grid place-items-center text-xs font-bold text-primary uppercase">
+                    {s.username.slice(0, 2)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-sm font-bold truncate">{s.username}</p>
+                      <VerificationBadge tier={s.verification_tier} size="xs" showLabel={false} />
+                    </div>
+                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                      <span>
+                        Lvl {s.seller_level} · {s.total_sales.toLocaleString()} sales
+                      </span>
+                      <TrustScore score={s.trust_score} />
+                    </div>
+                  </div>
+                  <span className="text-[11px] text-yellow-400 flex items-center gap-0.5 font-bold">
+                    <Star className="size-3 fill-current" />
+                    {s.rating > 0 ? s.rating.toFixed(1) : "—"}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Live feed */}
+          <div className="lg:col-span-2 bg-card border border-border rounded-2xl p-5 relative overflow-hidden">
+            <div
+              aria-hidden
+              className="absolute -top-10 -right-10 size-40 rounded-full opacity-30 blur-3xl"
+              style={{ background: "var(--gradient-primary)" }}
+            />
+            <SectionHeader label="LIVE" title="Recent sales" inline pulse />
+            <div className="space-y-2.5 mt-3 relative">
+              {data?.recentSales.length === 0 && (
+                <p className="text-xs text-muted-foreground">No sales yet — be the first!</p>
+              )}
+              {data?.recentSales.slice(0, 6).map((s, i) => (
+                <div key={i} className="flex items-start gap-2 text-xs">
+                  <span className="size-1.5 rounded-full bg-accent animate-pulse mt-1.5 shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="leading-tight truncate">
+                      <b className="text-foreground">{s.buyer}</b>{" "}
+                      <span className="text-muted-foreground">bought</span> {s.product_title}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      {timeAgo(s.created_at)} ·{" "}
+                      <span className="text-accent font-mono">{usdtShort(s.total_cents)}</span>
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </LazyMount>
       {/* ============ TRUST BENTO ============ */}
       <section className="pt-10">
         <SectionHeader label="WHY X-VAULT" title="Built for trust" />
