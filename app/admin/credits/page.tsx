@@ -125,9 +125,7 @@ export default function AdminCredits() {
               <p className="text-[10px] font-bold tracking-widest text-muted-foreground">USER</p>
               <p className="font-bold">{detail?.user?.username}</p>
               <p className="text-[10px] text-muted-foreground">{detail?.user?.email}</p>
-              <p className="font-display text-2xl text-accent mt-2">
-                {usdt(detail?.balance ?? 0)}
-              </p>
+              <p className="font-display text-2xl text-accent mt-2">{usdt(detail?.balance ?? 0)}</p>
             </div>
             <div className="grid grid-cols-[1fr_2fr_auto] gap-2 items-end bg-secondary/40 rounded-md p-3">
               <div>

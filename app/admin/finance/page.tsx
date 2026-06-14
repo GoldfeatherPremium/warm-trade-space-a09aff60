@@ -94,9 +94,7 @@ export default function AdminFinance() {
                   <>
                     <Button
                       size="sm"
-                      onClick={() =>
-                        review({ withdrawalId: w.id as string, action: "approve" })
-                      }
+                      onClick={() => review({ withdrawalId: w.id as string, action: "approve" })}
                       disabled={isPending}
                     >
                       Approve
@@ -104,9 +102,7 @@ export default function AdminFinance() {
                     <Button
                       size="sm"
                       variant="destructive"
-                      onClick={() =>
-                        review({ withdrawalId: w.id as string, action: "reject" })
-                      }
+                      onClick={() => review({ withdrawalId: w.id as string, action: "reject" })}
                       disabled={isPending}
                     >
                       Reject & refund

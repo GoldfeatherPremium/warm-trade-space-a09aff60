@@ -1693,7 +1693,7 @@ export async function listVerifications(input: unknown) {
     .parse(input);
   await appContext();
   await requireStaff(["admin", "support"]);
-  const rows = await q<Row>(
+  const rows = await q<SellerVerification>(
     `select v.*, u.username from seller_verifications v
        join users u on u.id = v.user_id
        ${data.status === "all" ? "" : "where v.status = ?"}
@@ -1823,6 +1823,77 @@ Return JSON: {
     temperature: 0.3,
   });
   return out;
+}
+
+// ---------------------------------------------------------------------------
+// AI Fraud Risk Score — analyses user pattern
+// ---------------------------------------------------------------------------
+export async function aiRiskScoreUser(input: unknown) {
+  const data = z.object({ userId: z.string() }).parse(input);
+  await appContext();
+  await requireStaff(["admin", "support"]);
+  const u = await q1<{
+    id: string;
+    username: string;
+    role: string;
+    created_at: number;
+    is_banned: number;
+    trust_score: number | null;
+  }>(`select id, username, role, created_at, is_banned, trust_score from users where id = ?`, [
+    data.userId,
+  ]);
+  if (!u) fail("User not found.");
+
+  const [orders, refunds, disputes, reviews] = await Promise.all([
+    q1<{ c: number; total: number }>(
+      `select count(*) c, coalesce(sum(total_cents),0) total from orders where buyer_id = ? or seller_id = ?`,
+      [u!.id, u!.id],
+    ),
+    q1<{ c: number }>(
+      `select count(*) c from orders where (buyer_id = ? or seller_id = ?) and status in ('refunded','cancelled')`,
+      [u!.id, u!.id],
+    ),
+    q1<{ c: number }>(`select count(*) c from disputes where opened_by = ?`, [u!.id]),
+    q1<{ avg: number; c: number }>(
+      `select coalesce(avg(rating),0) avg, count(*) c from product_reviews where seller_id = ? or buyer_id = ?`,
+      [u!.id, u!.id],
+    ),
+  ]);
+
+  const ageDays = Math.floor((Date.now() - u!.created_at) / 86_400_000);
+  type Out = {
+    riskScore: number;
+    band: "low" | "medium" | "high";
+    reasons: string[];
+    recommendation: string;
+  };
+  const out = await callAiJson<Out>({
+    messages: [
+      {
+        role: "system",
+        content:
+          "You are a fraud-risk analyst for a digital goods marketplace. Score risk from 0 (safe) to 100 (high-risk fraud). Return ONLY valid JSON.",
+      },
+      {
+        role: "user",
+        content: `Analyse this account:
+Username: ${u!.username}
+Role: ${u!.role}
+Account age (days): ${ageDays}
+Already banned: ${u!.is_banned ? "yes" : "no"}
+Trust score: ${u!.trust_score ?? "n/a"}
+Total orders (as buyer or seller): ${orders?.c ?? 0}
+GMV (cents): ${orders?.total ?? 0}
+Refunded/cancelled orders: ${refunds?.c ?? 0}
+Disputes opened by user: ${disputes?.c ?? 0}
+Reviews count: ${reviews?.c ?? 0}, average rating: ${(reviews?.avg ?? 0).toFixed(2)}
+
+Return JSON: { "riskScore": 0-100 int, "band": "low"|"medium"|"high", "reasons": string[] (3-5 bullets), "recommendation": short string for staff action }`,
+      },
+    ],
+    temperature: 0.2,
+  });
+  return { ...out, ageDays };
 }
 
 // ---------------------------------------------------------------------------
