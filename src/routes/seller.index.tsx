@@ -1,9 +1,22 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { lazy, Suspense } from "react";
-import { TrendingUp, TrendingDown, Activity, Target, BarChart3 } from "lucide-react";
+import {
+  TrendingUp,
+  Activity,
+  Target,
+  BarChart3,
+  Wallet,
+  ShoppingCart,
+  Star,
+  CalendarDays,
+  Boxes,
+  AlertTriangle,
+  PackageCheck,
+} from "lucide-react";
 import { getSellerOverview } from "@/lib/api/seller";
 import { usdt } from "@/lib/format";
+import { StatCard, SectionCard, StatGridSkeleton } from "@/components/dashboard";
 
 // Lazy-loaded so the recharts bundle stays off the dashboard's critical path.
 const SalesAreaChart = lazy(() => import("@/components/charts/sales-area-chart"));
@@ -14,93 +27,136 @@ export const Route = createFileRoute("/seller/")({
 
 function SellerOverview() {
   const { data } = useQuery({ queryKey: ["sellerOverview"], queryFn: () => getSellerOverview() });
-  if (!data) return <div className="py-16 text-center text-sm text-muted-foreground">Loading…</div>;
+
+  if (!data)
+    return (
+      <div className="space-y-5">
+        <StatGridSkeleton count={4} />
+        <div className="h-44 rounded-lg bg-card border border-border animate-pulse" />
+        <StatGridSkeleton count={3} cols={3} />
+      </div>
+    );
+
+  const intel = data.intelligence;
+  const completionTone =
+    data.profile.completionRate >= 95
+      ? "up"
+      : data.profile.completionRate >= 85
+        ? "neutral"
+        : "down";
 
   return (
     <div className="space-y-5">
+      {/* Action banners — fulfilment & disputes first, they're time-sensitive. */}
+      {(data.needsDelivery > 0 || data.openDisputes > 0) && (
+        <div className="grid sm:grid-cols-2 gap-3">
+          {data.needsDelivery > 0 && (
+            <Link
+              to="/seller/orders"
+              className="flex items-center gap-3 bg-blue-500/10 border border-blue-500/40 rounded-lg p-3 hover:border-blue-500/70 transition-colors"
+            >
+              <PackageCheck className="size-5 text-blue-400 shrink-0" />
+              <p className="text-sm font-bold text-blue-400">
+                {data.needsDelivery} order{data.needsDelivery > 1 ? "s" : ""} awaiting delivery —
+                SLA running
+              </p>
+            </Link>
+          )}
+          {data.openDisputes > 0 && (
+            <Link
+              to="/seller/orders"
+              className="flex items-center gap-3 bg-destructive/10 border border-destructive/40 rounded-lg p-3 hover:border-destructive/70 transition-colors"
+            >
+              <AlertTriangle className="size-5 text-destructive shrink-0" />
+              <p className="text-sm font-bold text-destructive">
+                {data.openDisputes} open dispute{data.openDisputes > 1 ? "s" : ""} — respond with
+                evidence
+              </p>
+            </Link>
+          )}
+        </div>
+      )}
+
+      {/* Headline KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {[
-          { label: "SALES TODAY", v: `${data.today.c} · ${usdt(data.today.s)}` },
-          { label: "SALES 7 DAYS", v: `${data.week.c} · ${usdt(data.week.s)}` },
-          { label: "SALES 30 DAYS", v: `${data.month.c} · ${usdt(data.month.s)}` },
-          {
-            label: "RATING",
-            v:
-              data.profile.rating > 0
-                ? `★ ${data.profile.rating.toFixed(1)} (${data.profile.ratingCount})`
-                : "no reviews",
-          },
-        ].map((x) => (
-          <div key={x.label} className="bg-card border border-border rounded-lg p-4">
-            <p className="text-[9px] font-bold tracking-widest text-muted-foreground">{x.label}</p>
-            <p className="font-mono text-sm mt-1">{x.v}</p>
-          </div>
-        ))}
+        <StatCard
+          label="SALES TODAY"
+          icon={ShoppingCart}
+          value={usdt(data.today.s)}
+          sub={`${data.today.c} order${data.today.c === 1 ? "" : "s"}`}
+        />
+        <StatCard
+          label="SALES 7 DAYS"
+          icon={CalendarDays}
+          value={usdt(data.week.s)}
+          sub={`${data.week.c} order${data.week.c === 1 ? "" : "s"}`}
+        />
+        <StatCard
+          label="SALES 30 DAYS"
+          icon={BarChart3}
+          value={usdt(data.month.s)}
+          sub={`${data.month.c} order${data.month.c === 1 ? "" : "s"}`}
+        />
+        <StatCard
+          label="RATING"
+          icon={Star}
+          value={data.profile.rating > 0 ? `★ ${data.profile.rating.toFixed(1)}` : "—"}
+          sub={data.profile.rating > 0 ? `${data.profile.ratingCount} reviews` : "no reviews yet"}
+        />
       </div>
 
-      {/* Business Intelligence — weekly performance, forecast, conversion */}
-      <div className="bg-card border border-border rounded-lg p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-xs font-bold tracking-widest text-muted-foreground flex items-center gap-1.5">
-            <BarChart3 className="size-3.5" /> BUSINESS INTELLIGENCE
-          </h2>
+      {/* Business intelligence */}
+      <SectionCard
+        title="BUSINESS INTELLIGENCE"
+        icon={BarChart3}
+        action={
           <span className="text-[9px] text-muted-foreground tracking-widest">
             TRAILING 14d MODEL
           </span>
-        </div>
+        }
+      >
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <BIStat
-            icon={<Activity className="size-3.5" />}
+          <StatCard
             label="THIS WEEK"
-            value={usdt(data.intelligence.thisWeekCents)}
-            sub={`vs ${usdt(data.intelligence.lastWeekCents)} last`}
-            tone={data.intelligence.wowPct >= 0 ? "up" : "down"}
-            delta={`${data.intelligence.wowPct >= 0 ? "+" : ""}${data.intelligence.wowPct}% WoW`}
+            icon={Activity}
+            value={usdt(intel.thisWeekCents)}
+            sub={`vs ${usdt(intel.lastWeekCents)} last`}
+            tone={intel.wowPct >= 0 ? "up" : "down"}
+            delta={`${intel.wowPct >= 0 ? "+" : ""}${intel.wowPct}% WoW`}
           />
-          <BIStat
-            icon={<Target className="size-3.5" />}
+          <StatCard
             label="7-DAY FORECAST"
-            value={usdt(data.intelligence.forecast7dCents)}
-            sub={`${usdt(data.intelligence.avgDailyCents)} / day avg`}
-            tone="neutral"
+            icon={Target}
+            value={usdt(intel.forecast7dCents)}
+            sub={`${usdt(intel.avgDailyCents)} / day avg`}
           />
-          <BIStat
-            icon={<TrendingUp className="size-3.5" />}
+          <StatCard
             label="CONVERSION"
-            value={`${data.intelligence.conversionPct}%`}
-            sub={`${data.intelligence.sold.toLocaleString()} / ${data.intelligence.views.toLocaleString()} views`}
-            tone={data.intelligence.conversionPct >= 5 ? "up" : "neutral"}
+            icon={TrendingUp}
+            value={`${intel.conversionPct}%`}
+            sub={`${intel.sold.toLocaleString()} / ${intel.views.toLocaleString()} views`}
+            tone={intel.conversionPct >= 5 ? "up" : "neutral"}
           />
-          <BIStat
-            icon={<Activity className="size-3.5" />}
+          <StatCard
             label="COMPLETION"
+            icon={Activity}
             value={`${data.profile.completionRate.toFixed(0)}%`}
             sub={`Level ${data.profile.level}`}
-            tone={
-              data.profile.completionRate >= 95
-                ? "up"
-                : data.profile.completionRate >= 85
-                  ? "neutral"
-                  : "down"
-            }
+            tone={completionTone}
           />
         </div>
-        {data.intelligence.lastWeekCents > 0 && (
+        {intel.lastWeekCents > 0 && (
           <p className="text-[11px] text-muted-foreground mt-3 leading-relaxed">
-            {data.intelligence.wowPct >= 0 ? (
+            {intel.wowPct >= 0 ? (
               <>
                 <span className="text-accent font-bold">Momentum up.</span> You're outpacing last
-                week by {data.intelligence.wowPct}%. If you sustain it, next week's payout could
-                clear{" "}
-                <span className="font-mono text-foreground">
-                  {usdt(data.intelligence.forecast7dCents)}
-                </span>
-                .
+                week by {intel.wowPct}%. If you sustain it, next week's payout could clear{" "}
+                <span className="font-mono text-foreground">{usdt(intel.forecast7dCents)}</span>.
               </>
             ) : (
               <>
                 <span className="text-yellow-400 font-bold">Slowing down.</span> Sales are{" "}
-                {Math.abs(data.intelligence.wowPct)}% under last week.{" "}
+                {Math.abs(intel.wowPct)}% under last week.{" "}
                 <Link to="/seller/promotions" className="text-primary hover:underline">
                   Sponsored Boost
                 </Link>{" "}
@@ -109,12 +165,9 @@ function SellerOverview() {
             )}
           </p>
         )}
-      </div>
+      </SectionCard>
 
-      <div className="bg-card border border-border rounded-lg p-4">
-        <h2 className="text-xs font-bold tracking-widest text-muted-foreground mb-3">
-          NET SALES — LAST 14 DAYS
-        </h2>
+      <SectionCard title="NET SALES — LAST 14 DAYS">
         <div className="h-44">
           <Suspense
             fallback={<div className="h-full w-full rounded bg-secondary/40 animate-pulse" />}
@@ -122,30 +175,33 @@ function SellerOverview() {
             <SalesAreaChart data={data.daily} />
           </Suspense>
         </div>
-      </div>
+      </SectionCard>
 
+      {/* Wallet */}
       <div className="grid grid-cols-3 gap-3">
-        {[
-          { label: "AVAILABLE", v: usdt(data.wallet.available_cents), cls: "text-accent" },
-          { label: "IN ESCROW", v: usdt(data.wallet.pending_cents), cls: "text-yellow-400" },
-          { label: "FROZEN", v: usdt(data.wallet.frozen_cents), cls: "text-destructive" },
-        ].map((x) => (
-          <Link
-            to="/seller/wallet"
-            key={x.label}
-            className="bg-card border border-border rounded-lg p-4 hover:border-primary/50"
-          >
-            <p className="text-[9px] font-bold tracking-widest text-muted-foreground">{x.label}</p>
-            <p className={`font-mono text-lg mt-1 ${x.cls}`}>{x.v}</p>
-          </Link>
-        ))}
+        <StatCard
+          label="AVAILABLE"
+          icon={Wallet}
+          value={usdt(data.wallet.available_cents)}
+          valueCls="text-accent"
+          to="/seller/wallet"
+        />
+        <StatCard
+          label="IN ESCROW"
+          value={usdt(data.wallet.pending_cents)}
+          valueCls="text-yellow-400"
+          to="/seller/wallet"
+        />
+        <StatCard
+          label="FROZEN"
+          value={usdt(data.wallet.frozen_cents)}
+          valueCls="text-destructive"
+          to="/seller/wallet"
+        />
       </div>
 
       {data.topProducts.length > 0 && (
-        <div className="bg-card border border-border rounded-lg p-4">
-          <h2 className="text-xs font-bold tracking-widest text-muted-foreground mb-2">
-            PRODUCT PERFORMANCE
-          </h2>
+        <SectionCard title="PRODUCT PERFORMANCE" icon={Boxes}>
           <div className="space-y-1">
             <div className="grid grid-cols-[1fr_60px_60px_70px_60px] gap-2 text-[9px] font-bold text-muted-foreground tracking-widest pb-1 border-b border-border">
               <span>PRODUCT</span>
@@ -178,47 +234,25 @@ function SellerOverview() {
               );
             })}
           </div>
-        </div>
-      )}
-
-      {(data.needsDelivery > 0 || data.openDisputes > 0) && (
-        <div className="grid sm:grid-cols-2 gap-3">
-          {data.needsDelivery > 0 && (
-            <Link
-              to="/seller/orders"
-              className="bg-blue-500/10 border border-blue-500/40 rounded-lg p-4 text-sm font-bold text-blue-400"
-            >
-              ⚡ {data.needsDelivery} order{data.needsDelivery > 1 ? "s" : ""} awaiting delivery —
-              SLA running!
-            </Link>
-          )}
-          {data.openDisputes > 0 && (
-            <Link
-              to="/seller/orders"
-              className="bg-destructive/10 border border-destructive/40 rounded-lg p-4 text-sm font-bold text-destructive"
-            >
-              ⚠ {data.openDisputes} open dispute{data.openDisputes > 1 ? "s" : ""} — respond with
-              evidence
-            </Link>
-          )}
-        </div>
+        </SectionCard>
       )}
 
       {data.lowStock.length > 0 && (
-        <div className="bg-card border border-yellow-500/30 rounded-lg p-4">
-          <h2 className="text-xs font-bold tracking-widest text-yellow-400 mb-2">LOW STOCK</h2>
-          {data.lowStock.map((p) => (
-            <Link
-              key={p.id}
-              to="/seller/stock/$productId"
-              params={{ productId: p.id }}
-              className="flex justify-between text-xs py-1 hover:text-primary"
-            >
-              <span className="truncate">{p.title}</span>
-              <span className="font-mono text-yellow-400">{p.stock_count} left</span>
-            </Link>
-          ))}
-        </div>
+        <SectionCard title="LOW STOCK" className="border-yellow-500/30">
+          <div className="space-y-1">
+            {data.lowStock.map((p) => (
+              <Link
+                key={p.id}
+                to="/seller/stock/$productId"
+                params={{ productId: p.id }}
+                className="flex justify-between text-xs py-1 hover:text-primary"
+              >
+                <span className="truncate">{p.title}</span>
+                <span className="font-mono text-yellow-400">{p.stock_count} left</span>
+              </Link>
+            ))}
+          </div>
+        </SectionCard>
       )}
 
       <div className="bg-card border border-border rounded-lg p-4 text-xs text-muted-foreground leading-relaxed">
@@ -227,44 +261,6 @@ function SellerOverview() {
         completion. Levels rise with sales volume, rating and low dispute rate — higher levels
         unlock more listings and bigger weekly withdrawal caps.
       </div>
-    </div>
-  );
-}
-
-function BIStat({
-  icon,
-  label,
-  value,
-  sub,
-  delta,
-  tone,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  sub?: string;
-  delta?: string;
-  tone: "up" | "down" | "neutral";
-}) {
-  const toneCls =
-    tone === "up" ? "text-accent" : tone === "down" ? "text-destructive" : "text-muted-foreground";
-  const TrendIcon = tone === "up" ? TrendingUp : tone === "down" ? TrendingDown : null;
-  return (
-    <div className="bg-background/40 border border-border rounded-lg p-3">
-      <div className="flex items-center justify-between">
-        <p className="text-[9px] font-bold tracking-widest text-muted-foreground flex items-center gap-1">
-          {icon}
-          {label}
-        </p>
-        {delta && (
-          <span className={`text-[9px] font-bold flex items-center gap-0.5 ${toneCls}`}>
-            {TrendIcon && <TrendIcon className="size-2.5" />}
-            {delta}
-          </span>
-        )}
-      </div>
-      <p className="font-mono text-base mt-1.5">{value}</p>
-      {sub && <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{sub}</p>}
     </div>
   );
 }

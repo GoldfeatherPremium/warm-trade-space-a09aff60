@@ -18,6 +18,7 @@ import {
   Users,
   Sparkles,
   CircleDollarSign,
+  LayoutDashboard,
 } from "lucide-react";
 import { type ReactNode, lazy, Suspense } from "react";
 import { getMyLoyalty } from "@/lib/api/growth";
@@ -151,6 +152,9 @@ export function SiteHeader() {
                     )}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate({ to: "/dashboard" })}>
+                    <LayoutDashboard className="size-4" /> Dashboard
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate({ to: "/orders" })}>
                     <Package className="size-4" /> My Orders
                   </DropdownMenuItem>

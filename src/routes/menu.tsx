@@ -83,6 +83,7 @@ function AccountHub() {
       icon: ShoppingBag,
       color: "text-yellow-400",
       entries: [
+        { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
         { label: "Purchase Orders", to: "/orders", icon: ShoppingBag },
         { label: "Favorites", to: "/favorites", icon: Heart },
         { label: "My Wallet", to: "/wallet", icon: Wallet },
