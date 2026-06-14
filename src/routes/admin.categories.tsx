@@ -2,7 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { adminListCategories, adminSaveCategory } from "@/lib/api/admin";
+import { Sparkles, ShieldCheck } from "lucide-react";
+import { adminListCategories, adminSaveCategory, adminEnsureBaseCategories } from "@/lib/api/admin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -44,6 +45,7 @@ const EMPTY = {
   name: "",
   slug: "",
   icon: "📦",
+  sort: undefined as number | undefined,
   defaultWarrantyHours: 72,
   commissionPct: 8,
   riskTier: "normal" as "normal" | "high",
@@ -73,12 +75,48 @@ function AdminCategories() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const ensureBase = useMutation({
+    mutationFn: () => adminEnsureBaseCategories(),
+    onSuccess: (r) => {
+      toast.success(
+        r.added > 0
+          ? `Added ${r.added} missing base ${r.added === 1 ? "category" : "categories"}.`
+          : "All base categories already exist.",
+      );
+      qc.invalidateQueries();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const count = data?.categories.length ?? 0;
+
   return (
     <div className="space-y-4">
-      <h1 className="font-display text-2xl">CATEGORIES</h1>
-      <p className="text-[11px] text-muted-foreground -mt-2">
-        Per-category commission %, warranty defaults, and a JSON submission schema for dynamic
-        seller / buyer fields and delivery methods.
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <h1 className="font-display text-2xl">CATEGORIES</h1>
+          <p className="text-[11px] text-muted-foreground mt-1 max-w-xl">
+            Per-category commission %, warranty defaults, and a JSON submission schema for dynamic
+            seller / buyer fields and delivery methods. {count} categor{count === 1 ? "y" : "ies"}{" "}
+            configured.
+          </p>
+        </div>
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => ensureBase.mutate()}
+          disabled={ensureBase.isPending}
+          className="gap-1.5"
+        >
+          <Sparkles className="size-3.5" />
+          Add missing G2G categories
+        </Button>
+      </div>
+      <p className="text-[10px] text-muted-foreground flex items-center gap-1.5 bg-secondary/40 border border-border rounded-md px-3 py-2">
+        <ShieldCheck className="size-3.5 shrink-0 text-accent" />
+        Adding base categories is additive only — it inserts any missing G2G-style categories (Gift
+        Cards, Subscriptions, Accounts, Game Coins, Items, Skins, Boosting, Telco, Payment Cards…)
+        and never renames, reorders or removes the ones you already have.
       </p>
       <div className="space-y-2">
         {data?.categories.map((c) => (
@@ -90,8 +128,8 @@ function AdminCategories() {
             <span className="font-bold">{c.name}</span>
             <span className="text-muted-foreground font-mono">/{c.slug}</span>
             <span className="text-[10px] text-muted-foreground">
-              warranty {c.default_warranty_hours}h · fee {c.commission_pct}% · {c.product_count}{" "}
-              live products
+              #{c.sort as number} · warranty {c.default_warranty_hours}h · fee {c.commission_pct}% ·{" "}
+              {c.product_count} live products
             </span>
             {c.submission_schema && (
               <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-primary/15 text-primary">
@@ -116,6 +154,7 @@ function AdminCategories() {
                   name: c.name as string,
                   slug: c.slug as string,
                   icon: (c.icon as string) ?? "📦",
+                  sort: c.sort as number,
                   defaultWarrantyHours: c.default_warranty_hours as number,
                   commissionPct: c.commission_pct as number,
                   riskTier: c.risk_tier as never,
@@ -165,6 +204,15 @@ function AdminCategories() {
             placeholder="Icon (emoji)"
             value={form.icon}
             onChange={(e) => setForm({ ...form, icon: e.target.value })}
+          />
+          <Input
+            type="number"
+            min={0}
+            placeholder="Sort order"
+            value={form.sort ?? ""}
+            onChange={(e) =>
+              setForm({ ...form, sort: e.target.value === "" ? undefined : Number(e.target.value) })
+            }
           />
           <Input
             type="number"
