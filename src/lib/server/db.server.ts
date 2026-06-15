@@ -198,22 +198,20 @@ async function createPostgresEngine(): Promise<Engine> {
 // Public API
 // ---------------------------------------------------------------------------
 async function schemaAlreadyMigrated(e: Engine): Promise<boolean> {
-  // Sentinel: a column from the most recent additive migration. Bump this
-  // (column or table) whenever you add new columns to migrate() so production
-  // databases pick up the change on the next cold start. Currently points at
-  // seller_applications.display_name (richer seller onboarding) — the newest
-  // additive change in migrate().
+  // Sentinel: bump whenever you add new tables/columns to migrate() so
+  // production databases pick up changes on the next cold start. Currently
+  // points at users.store_banner_url (seller storefront columns).
   try {
     if (isPostgres()) {
       const r = await e.q<{ c: number }>(
         `select count(*)::int as c from information_schema.columns
-         where table_schema = 'public' and table_name = 'seller_applications'
-           and column_name = 'display_name'`,
+         where table_schema = 'public' and table_name = 'users'
+           and column_name = 'store_banner_url'`,
       );
       return !!r[0] && Number(r[0].c) > 0;
     }
     const r = await e.q<{ c: number }>(
-      `select count(*) as c from sqlite_master where type='table' and name='products_fts'`,
+      `select count(*) as c from pragma_table_info('users') where name = 'store_banner_url'`,
     );
     return !!r[0] && Number(r[0].c) > 0;
   } catch {
@@ -796,6 +794,16 @@ async function migrate(e: Engine): Promise<void> {
     `alter table products add column manual_stock integer`,
     `alter table stock_items add column locked_at ${big}`,
     `alter table order_deliveries add column locked_at ${big}`,
+    // --- Seller storefront (banner/logo/description/socials/announcement) +
+    // response-time metric. Queried by getSellerStoreData / saveStorefrontAction
+    // but were never created in migrate() — added here so the storefront works
+    // on fresh databases. (Sentinel bumped to store_banner_url below.)
+    `alter table users add column store_banner_url text`,
+    `alter table users add column store_logo_url text`,
+    `alter table users add column store_description text`,
+    `alter table users add column store_socials text`,
+    `alter table users add column store_announcement text`,
+    `alter table users add column avg_response_minutes integer not null default 0`,
   ];
 
   for (const stmt of addColumns) {
@@ -1259,6 +1267,23 @@ async function migrate(e: Engine): Promise<void> {
         .catch(() => {});
     }
   }
+
+  // --- PWA: web push subscriptions ---
+  await e
+    .exec(
+      `create table if not exists push_subscriptions (
+        id text primary key,
+        user_id text not null references users(id) on delete cascade,
+        endpoint text not null unique,
+        p256dh text not null,
+        auth text not null,
+        created_at ${big} not null
+      )`,
+    )
+    .catch(() => {});
+  await e
+    .exec(`create index if not exists idx_push_subs_user on push_subscriptions(user_id)`)
+    .catch(() => {});
 
   // seed a sane default set if empty
   const seeded = await e.q<{ c: number }>(`select count(*) as c from fx_rates`);

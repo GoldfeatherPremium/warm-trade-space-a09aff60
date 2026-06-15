@@ -43,6 +43,7 @@ export const metadata: Metadata = {
   description:
     "Buy and sell digital goods with buyer protection: game top-ups, gift cards, subscriptions, accounts and more. USDT payments, instant delivery from verified sellers.",
   applicationName: "X-VAULT",
+  manifest: "/manifest.webmanifest",
   openGraph: {
     type: "website",
     siteName: "X-VAULT",

@@ -108,6 +108,12 @@ export async function notify(
     `insert into notifications (id, user_id, type, title, body, link, created_at) values (?,?,?,?,?,?,?)`,
     [uid(), userId, type, title, body, link ?? null, now()],
   );
+  // Fire-and-forget web push — non-fatal if VAPID keys are not configured
+  import("@/lib/server/push.server")
+    .then(({ sendPush }) =>
+      sendPush(userId, { title, body: body.slice(0, 120), url: link, tag: type }),
+    )
+    .catch(() => {});
 }
 
 export async function audit(

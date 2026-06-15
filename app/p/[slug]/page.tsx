@@ -21,6 +21,7 @@ import { getProductBySlug } from "@/server/queries/catalog";
 import { usdt, timeAgo } from "@/lib/format";
 import { PublicShell } from "../../_components/site-shell";
 import { productImage } from "../../_lib/product-image";
+import { SellerBadge } from "../../_components/seller-badge";
 import { BuyBox } from "./buy-box";
 import { RelatedProducts } from "./related-products";
 import { ViewBeacon } from "./view-beacon";
@@ -425,6 +426,20 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               outOfStock={outOfStock}
               stockCount={product.stock_count}
             />
+
+            {/* Trust strip */}
+            <div className="mt-4 pt-4 border-t border-border/60 grid grid-cols-3 gap-2 text-center">
+              {[
+                { icon: Lock, label: "Escrow secured" },
+                { icon: ShieldCheck, label: "Buyer protected" },
+                { icon: RefreshCw, label: `${product.warranty_hours}h warranty` },
+              ].map((t) => (
+                <div key={t.label} className="flex flex-col items-center gap-1">
+                  <t.icon className="size-4 text-primary" />
+                  <span className="text-[9px] text-muted-foreground leading-tight">{t.label}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Seller card */}

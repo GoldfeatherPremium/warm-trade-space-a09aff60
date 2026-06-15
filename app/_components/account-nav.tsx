@@ -5,11 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Bell, MessageSquare } from "lucide-react";
 import { logoutAction } from "@/server/actions/auth";
+import { useLiveCounts } from "./live-updates";
 
 type Me = { id: string; username: string; role: string; seller_status: string } | null;
 
 const STAFF = ["admin", "support", "finance"];
-const UNREAD_POLL_MS = 30_000;
 
 function Badge({ count }: { count: number }) {
   if (count <= 0) return null;
@@ -20,12 +20,17 @@ function Badge({ count }: { count: number }) {
   );
 }
 
+/**
+ * Header account island. Fetches the session client-side so the public pages
+ * it lives in stay statically prerendered (no per-request cookie read).
+ * Unread counts are streamed via SSE (LiveUpdatesProvider).
+ */
 export function AccountNav() {
   const router = useRouter();
   const [me, setMe] = useState<Me | undefined>(undefined);
   const [open, setOpen] = useState(false);
-  const [unread, setUnread] = useState({ messages: 0, notifications: 0 });
   const ref = useRef<HTMLDivElement>(null);
+  const { unreadMessages, unreadNotifications } = useLiveCounts();
 
   useEffect(() => {
     let alive = true;
@@ -37,26 +42,6 @@ export function AccountNav() {
       alive = false;
     };
   }, []);
-
-  // Poll unread counts once logged in
-  useEffect(() => {
-    if (!me) return;
-    let alive = true;
-    const poll = () =>
-      fetch("/api/unread", { cache: "no-store" })
-        .then((r) => r.json())
-        .then(
-          (d) =>
-            alive && setUnread({ messages: d.messages ?? 0, notifications: d.notifications ?? 0 }),
-        )
-        .catch(() => {});
-    poll();
-    const id = setInterval(poll, UNREAD_POLL_MS);
-    return () => {
-      alive = false;
-      clearInterval(id);
-    };
-  }, [me]);
 
   useEffect(() => {
     if (!open) return;
@@ -111,20 +96,20 @@ export function AccountNav() {
         aria-label="Messages"
       >
         <MessageSquare className="size-4" />
-        <Badge count={unread.messages} />
+        <Badge count={unreadMessages} />
       </Link>
 
-      {/* Notifications */}
+      {/* Notifications icon */}
       <Link
         href="/notifications"
         className="relative size-9 rounded-md grid place-items-center text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
         aria-label="Notifications"
       >
         <Bell className="size-4" />
-        <Badge count={unread.notifications} />
+        <Badge count={unreadNotifications} />
       </Link>
 
-      {/* Account avatar */}
+      {/* Account avatar + dropdown */}
       <div className="relative" ref={ref}>
         <button
           onClick={() => setOpen((v) => !v)}

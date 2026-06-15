@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { updateProfileAction, updatePreferencesAction } from "@/server/actions/account";
+import { PushOptIn } from "../_components/live-updates";
 
 type User = {
   username: string;
@@ -112,6 +113,15 @@ export function AccountClient({ user }: { user: User }) {
             {busy ? "Saving…" : "Save profile"}
           </button>
         </div>
+      </div>
+
+      {/* Notifications */}
+      <div className="bg-card border border-border rounded-xl p-5 space-y-3">
+        <h2 className="text-xs font-bold tracking-widest">NOTIFICATIONS</h2>
+        <p className="text-[11px] text-muted-foreground">
+          Get push notifications for new messages and order updates — even when the app is closed.
+        </p>
+        <PushOptIn />
       </div>
 
       {/* Preferences */}

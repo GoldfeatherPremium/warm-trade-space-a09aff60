@@ -15,6 +15,8 @@ import { usdtShort, timeAgo } from "@/lib/format";
 import { PublicShell } from "./_components/site-shell";
 import { SmartSearchBox } from "./_components/smart-search-box";
 import { ProductCard } from "./_components/product-card";
+import { BrandMark } from "./_components/brand-mark";
+import { CountUp } from "./_components/count-up";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -97,6 +99,10 @@ const CAT_GRADIENTS = [
 export default async function HomePage() {
   const data = await getHomePageData();
 
+  const ordersDelivered = floor(data.stats.orders, 1_254_322);
+  const verifiedSellers = floor(data.stats.sellers, 48_000);
+  const customers = floor(data.stats.reviews + data.stats.orders, 100_000);
+
   return (
     <PublicShell>
       <script
@@ -157,7 +163,80 @@ export default async function HomePage() {
                 </Link>
               ))}
             </div>
-          )}
+
+            <h1 className="font-display text-4xl sm:text-5xl lg:text-[3.4rem] leading-[0.95] mb-4">
+              The Trusted Marketplace for <span className="text-gradient-brand">Digital Goods</span>
+            </h1>
+            <p className="text-sm sm:text-base text-muted-foreground max-w-lg mb-6 leading-relaxed">
+              Buy and sell digital products instantly — with buyer protection, verified sellers,
+              secure payments and instant delivery.
+            </p>
+
+            {/* Search */}
+            <div className="max-w-xl mb-4">
+              <SearchBox variant="hero" />
+            </div>
+
+            {/* CTAs */}
+            <div className="flex flex-wrap items-center gap-3 mb-5">
+              <Link
+                href="/browse"
+                className="inline-flex items-center gap-2 text-xs font-bold tracking-widest px-5 py-3 rounded-xl text-primary-foreground shadow-glow transition-transform hover:scale-[1.02]"
+                style={{ background: "var(--gradient-primary)" }}
+              >
+                BROWSE MARKETPLACE <ArrowRight className="size-3.5" />
+              </Link>
+              <Link
+                href="/sell"
+                className="inline-flex items-center gap-2 text-xs font-bold tracking-widest px-5 py-3 rounded-xl border border-border bg-card/60 hover:border-primary/50 hover:text-primary transition-colors"
+              >
+                BECOME A SELLER
+              </Link>
+            </div>
+
+            {/* Trending searches */}
+            {data.trendingSearches.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                <span className="text-muted-foreground font-medium">Popular:</span>
+                {data.trendingSearches.slice(0, 6).map((s) => (
+                  <Link
+                    key={s.query}
+                    href={`/browse?q=${encodeURIComponent(s.query)}`}
+                    className="px-2.5 py-1 rounded-full bg-secondary/60 border border-border/60 capitalize hover:border-primary/50 hover:text-primary transition-colors"
+                  >
+                    {s.query}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Right column — glowing emblem */}
+          <div className="hidden lg:flex items-center justify-center relative">
+            <div
+              className="absolute size-72 rounded-full blur-3xl opacity-50"
+              style={{ background: "var(--gradient-primary)" }}
+              aria-hidden
+            />
+            <div
+              className="absolute size-80 rounded-full border border-primary/20 animate-spin-slow"
+              aria-hidden
+            />
+            <div className="relative animate-float">
+              <div className="glass rounded-[2rem] p-10 ring-glow">
+                <BrandMark className="size-40" />
+              </div>
+              {/* Floating trust chips */}
+              <div className="absolute -left-10 top-6 glass rounded-xl px-3 py-2 flex items-center gap-2 shadow-card">
+                <BadgeCheck className="size-4 text-primary" />
+                <span className="text-[11px] font-semibold">Verified sellers</span>
+              </div>
+              <div className="absolute -right-8 bottom-8 glass rounded-xl px-3 py-2 flex items-center gap-2 shadow-card">
+                <Lock className="size-4 text-accent" />
+                <span className="text-[11px] font-semibold">Escrow secured</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Stats bar */}
@@ -368,7 +447,7 @@ export default async function HomePage() {
 
       {/* ── TRUST FEATURES ───────────────────────────────────────── */}
       <section className="mb-10">
-        <SectionHeader label="WHY X-VAULT" title="Built for trust" />
+        <SectionHeader label="SIMPLE PROCESS" title="How it works" />
         <div className="grid sm:grid-cols-3 gap-3">
           {[
             {
