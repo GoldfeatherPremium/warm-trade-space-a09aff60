@@ -13,7 +13,8 @@ const securityHeaders = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      // unsafe-eval removed; not needed in production Next.js 15 builds
+      "script-src 'self' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline'",
       // Allow next/image optimized images (/_next/image) and uploaded images
       "img-src 'self' data: blob:",

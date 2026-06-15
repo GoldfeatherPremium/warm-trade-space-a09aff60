@@ -12,7 +12,7 @@ const ACTION_STATUSES = ["awaiting_payment", "delivered"];
 
 export async function getBuyerDashboardData(id: string) {
   await appContext();
-  const [byStatus, recent, favRow, followRow, wallet, credits, loyalty] = await Promise.all([
+  const [byStatus, recent, countsRow, wallet, credits, loyalty] = await Promise.all([
     q<{ status: string; c: number; s: number }>(
       `select status, count(*) as c, coalesce(sum(total_cents), 0) as s
          from orders where buyer_id = ? group by status`,
@@ -34,8 +34,12 @@ export async function getBuyerDashboardData(id: string) {
         where o.buyer_id = ? order by o.created_at desc limit 6`,
       [id],
     ),
-    q<{ c: number }>(`select count(*) as c from favorites where user_id = ?`, [id]),
-    q<{ c: number }>(`select count(*) as c from seller_follows where user_id = ?`, [id]),
+    // Single round-trip for both counts instead of two separate queries
+    q<{ favorites: number; following: number }>(
+      `select (select count(*) from favorites where user_id = ?) as favorites,
+              (select count(*) from seller_follows where user_id = ?) as following`,
+      [id, id],
+    ),
     getWallet(id),
     getBuyerCredits(id),
     getLoyaltySnapshot(id),
@@ -67,8 +71,8 @@ export async function getBuyerDashboardData(id: string) {
       actionNeeded,
       openDisputes,
       totalSpentCents,
-      favorites: Number(favRow[0]?.c ?? 0),
-      following: Number(followRow[0]?.c ?? 0),
+      favorites: Number(countsRow[0]?.favorites ?? 0),
+      following: Number(countsRow[0]?.following ?? 0),
     },
     wallet: { available_cents: wallet.available_cents },
     credits: { balance_cents: credits.balance_cents },
