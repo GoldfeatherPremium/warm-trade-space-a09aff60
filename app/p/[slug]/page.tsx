@@ -7,6 +7,7 @@ import { usdt, timeAgo } from "@/lib/format";
 import { PublicShell } from "../../_components/site-shell";
 import { ProductCard } from "../../_components/product-card";
 import { productImage } from "../../_lib/product-image";
+import { BuyBox } from "./buy-box";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -142,37 +143,21 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
             <p className="font-mono text-3xl text-accent mt-4">{usdt(product.price_cents)}</p>
 
-            {variants.length > 0 && (
-              <div className="mt-3 space-y-1">
-                <p className="text-[10px] font-bold tracking-widest text-muted-foreground">
-                  OPTIONS
-                </p>
-                {variants.map((v) => (
-                  <div
-                    key={v.id}
-                    className="flex justify-between text-xs border border-border rounded-md px-2 py-1.5"
-                  >
-                    <span>{v.title}</span>
-                    <span className="font-mono text-accent">{usdt(v.price_cents)}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <Link
-              href="/auth"
-              className={`mt-4 w-full inline-block text-center text-sm font-bold rounded-lg py-3 ${
-                outOfStock
-                  ? "bg-secondary text-muted-foreground pointer-events-none"
-                  : "bg-primary text-primary-foreground hover:bg-primary/90"
-              }`}
-            >
-              {outOfStock ? "Out of stock" : "Sign in to buy"}
-            </Link>
-            <p className="text-[10px] text-muted-foreground mt-2 flex items-center gap-1 justify-center">
-              <ShieldCheck className="size-3 text-accent" /> Buyer-protected · USDT · funds released
-              after warranty
-            </p>
+            <BuyBox
+              productId={product.id}
+              slug={product.slug}
+              basePriceCents={product.price_cents}
+              minQty={product.min_qty}
+              maxQty={product.max_qty}
+              deliveryType={product.delivery_type}
+              requiresInfo={!!product.required_info}
+              variants={variants.map((v) => ({
+                id: v.id,
+                title: v.title,
+                price_cents: v.price_cents,
+              }))}
+              outOfStock={outOfStock}
+            />
           </div>
 
           {/* Seller card */}
