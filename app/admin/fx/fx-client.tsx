@@ -29,7 +29,9 @@ export function FxClient() {
     });
   }
 
-  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    load();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function upsert(e: React.FormEvent) {
     e.preventDefault();
@@ -107,7 +109,9 @@ export function FxClient() {
       <div className="rounded-lg border border-border bg-card overflow-hidden">
         <div className="px-4 py-2 border-b border-border flex items-center justify-between">
           <h2 className="text-xs font-bold tracking-widest">FX RATES (relative to base)</h2>
-          <span className="text-[10px] text-muted-foreground">1 {data.baseCurrency} = rate × foreign</span>
+          <span className="text-[10px] text-muted-foreground">
+            1 {data.baseCurrency} = rate × foreign
+          </span>
         </div>
         <table className="w-full text-xs">
           <thead className="bg-secondary/40 text-[10px] tracking-widest text-muted-foreground">
@@ -200,7 +204,11 @@ export function FxClient() {
             />
           </div>
         </div>
-        <button type="submit" disabled={busy} className={`${BTN} bg-primary text-primary-foreground`}>
+        <button
+          type="submit"
+          disabled={busy}
+          className={`${BTN} bg-primary text-primary-foreground`}
+        >
           Save rate
         </button>
       </form>

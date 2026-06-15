@@ -49,7 +49,9 @@ export function RiskClient() {
   useEffect(() => {
     loadOverview();
     intervalRef.current = setInterval(loadOverview, 30_000);
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -60,10 +62,18 @@ export function RiskClient() {
 
   const pills = overview
     ? [
-        { label: "Held orders", value: String(overview.heldOrders), tone: overview.heldOrders > 0 ? "alert" : undefined },
+        {
+          label: "Held orders",
+          value: String(overview.heldOrders),
+          tone: overview.heldOrders > 0 ? "alert" : undefined,
+        },
         { label: "Held GMV", value: usdt(overview.heldGmvCents) },
         { label: "Events 24h", value: String(overview.events24h) },
-        { label: "High-risk 24h", value: String(overview.highBand24h), tone: overview.highBand24h > 0 ? "warn" : undefined },
+        {
+          label: "High-risk 24h",
+          value: String(overview.highBand24h),
+          tone: overview.highBand24h > 0 ? "warn" : undefined,
+        },
         { label: "Events 7d", value: String(overview.events7d) },
       ]
     : [];
@@ -131,7 +141,9 @@ export function RiskClient() {
           <tbody>
             {loadingEvents && (
               <tr>
-                <td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">Loading…</td>
+                <td colSpan={6} className="px-3 py-6 text-center text-muted-foreground">
+                  Loading…
+                </td>
               </tr>
             )}
             {!loadingEvents && events.length === 0 && (
@@ -149,12 +161,16 @@ export function RiskClient() {
                 <td className="px-3 py-2 font-mono">
                   {e.order_no ?? e.order_id?.slice(0, 8) ?? "—"}
                   {e.order_total_cents != null && (
-                    <div className="text-[10px] text-muted-foreground">{usdt(e.order_total_cents)}</div>
+                    <div className="text-[10px] text-muted-foreground">
+                      {usdt(e.order_total_cents)}
+                    </div>
                   )}
                 </td>
                 <td className="px-3 py-2">
                   <div className="font-bold">{e.buyer_username ?? "?"}</div>
-                  <div className="text-[10px] text-muted-foreground">→ {e.seller_username ?? "?"}</div>
+                  <div className="text-[10px] text-muted-foreground">
+                    → {e.seller_username ?? "?"}
+                  </div>
                 </td>
                 <td className="px-3 py-2 text-right">
                   <span
@@ -179,10 +195,16 @@ export function RiskClient() {
                   </ul>
                 </td>
                 <td className="px-3 py-2 text-[10px]">
-                  <div><span className="text-muted-foreground">order:</span> {e.order_status ?? "—"}</div>
+                  <div>
+                    <span className="text-muted-foreground">order:</span> {e.order_status ?? "—"}
+                  </div>
                   <div>
                     <span className="text-muted-foreground">escrow:</span>{" "}
-                    <span className={e.escrow_status === "on_hold" ? "text-red-400 font-bold" : undefined}>
+                    <span
+                      className={
+                        e.escrow_status === "on_hold" ? "text-red-400 font-bold" : undefined
+                      }
+                    >
                       {e.escrow_status ?? "—"}
                     </span>
                   </div>

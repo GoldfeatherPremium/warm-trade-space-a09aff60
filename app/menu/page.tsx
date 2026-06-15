@@ -12,7 +12,18 @@ export default async function MenuPage() {
   return (
     <PublicShell>
       <MenuClient
-        user={user ? { id: user.id, username: user.username, email: user.email, role: user.role, seller_status: user.seller_status, seller_level: user.seller_level } : null}
+        user={
+          user
+            ? {
+                id: user.id,
+                username: user.username,
+                email: user.email,
+                role: user.role,
+                seller_status: user.seller_status,
+                seller_level: user.seller_level,
+              }
+            : null
+        }
       />
     </PublicShell>
   );

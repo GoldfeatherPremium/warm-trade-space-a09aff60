@@ -66,7 +66,10 @@ function UserCard({ user, onRefresh }: { user: User; onRefresh: () => void }) {
     setError(null);
     startTransition(async () => {
       try {
-        await adminSetUserRoleAction({ userId: user.id, role: role as "buyer" | "seller" | "support" | "finance" | "admin" });
+        await adminSetUserRoleAction({
+          userId: user.id,
+          role: role as "buyer" | "seller" | "support" | "finance" | "admin",
+        });
         onRefresh();
       } catch (e) {
         setError((e as Error)?.message ?? "Failed to update role.");

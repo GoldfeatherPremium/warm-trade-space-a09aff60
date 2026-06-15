@@ -109,9 +109,7 @@ export default function SubscriptionsPage() {
                       </div>
                     </div>
                     <pre className="text-[11px] whitespace-pre-wrap break-all font-mono">
-                      {show
-                        ? s.credentials
-                        : "•".repeat(Math.min(48, s.credentials.length))}
+                      {show ? s.credentials : "•".repeat(Math.min(48, s.credentials.length))}
                     </pre>
                   </div>
                 )}

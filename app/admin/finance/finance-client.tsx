@@ -23,13 +23,7 @@ const BTN_CLS = "px-3 py-1.5 rounded-md text-xs font-bold";
 const INPUT_CLS =
   "bg-secondary border border-border rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50";
 
-function WithdrawalCard({
-  w,
-  onRefresh,
-}: {
-  w: Withdrawal;
-  onRefresh: () => void;
-}) {
+function WithdrawalCard({ w, onRefresh }: { w: Withdrawal; onRefresh: () => void }) {
   const [txHash, setTxHash] = useState("");
   const [showTxInput, setShowTxInput] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -77,9 +71,7 @@ function WithdrawalCard({
         </div>
         <div className="text-right space-y-0.5 shrink-0">
           <div className="font-bold text-sm">{usdt(w.amount_cents)}</div>
-          <div className="text-[10px] text-muted-foreground">
-            Fee: {usdt(w.fee_cents)}
-          </div>
+          <div className="text-[10px] text-muted-foreground">Fee: {usdt(w.fee_cents)}</div>
           <span
             className={`text-[10px] font-bold px-2 py-0.5 rounded ${STATUS_CLS[w.status] ?? "bg-secondary text-muted-foreground"}`}
           >
@@ -204,9 +196,7 @@ export function FinanceClient() {
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`px-3 py-1.5 rounded-md text-xs font-bold ${
-              tab === t.key
-                ? "bg-primary text-primary-foreground"
-                : "bg-secondary text-foreground"
+              tab === t.key ? "bg-primary text-primary-foreground" : "bg-secondary text-foreground"
             }`}
           >
             {t.label}

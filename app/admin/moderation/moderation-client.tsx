@@ -1,17 +1,17 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import {
-  listFlaggedMessagesAction,
-  moderateMessageAction,
-} from "@/server/actions/admin";
+import { listFlaggedMessagesAction, moderateMessageAction } from "@/server/actions/admin";
 import { dateTime } from "@/lib/format";
 
 type FlaggedMessage = Awaited<ReturnType<typeof listFlaggedMessagesAction>>[number];
 
 const FLAG_REASON_META: Record<string, { label: string; cls: string }> = {
   contact_sharing: { label: "Contact sharing", cls: "bg-yellow-500/15 text-yellow-400" },
-  off_platform_payment: { label: "Off-platform payment", cls: "bg-destructive/15 text-destructive" },
+  off_platform_payment: {
+    label: "Off-platform payment",
+    cls: "bg-destructive/15 text-destructive",
+  },
   spam: { label: "Spam", cls: "bg-secondary text-muted-foreground" },
   harassment: { label: "Harassment", cls: "bg-destructive/15 text-destructive" },
 };
@@ -20,19 +20,15 @@ const BTN_CLS = "px-3 py-1.5 rounded-md text-xs font-bold";
 const INPUT_CLS =
   "bg-secondary border border-border rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50";
 
-function MessageCard({
-  msg,
-  onRefresh,
-}: {
-  msg: FlaggedMessage;
-  onRefresh: () => void;
-}) {
+function MessageCard({ msg, onRefresh }: { msg: FlaggedMessage; onRefresh: () => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
-  const flagMeta =
-    FLAG_REASON_META[msg.flag_reason] ?? { label: msg.flag_reason, cls: "bg-secondary text-muted-foreground" };
+  const flagMeta = FLAG_REASON_META[msg.flag_reason] ?? {
+    label: msg.flag_reason,
+    cls: "bg-secondary text-muted-foreground",
+  };
 
   async function moderate(action: "dismiss" | "remove") {
     setBusy(true);

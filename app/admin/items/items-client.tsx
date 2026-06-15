@@ -47,7 +47,9 @@ export function ItemsClient() {
     });
   }
 
-  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    load();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -227,11 +229,19 @@ export function ItemsClient() {
           Active (visible to sellers and buyers)
         </label>
         <div className="flex gap-2">
-          <button type="submit" disabled={saving} className={`${BTN} bg-primary text-primary-foreground`}>
+          <button
+            type="submit"
+            disabled={saving}
+            className={`${BTN} bg-primary text-primary-foreground`}
+          >
             {form.itemId ? "Save changes" : "Create item"}
           </button>
           {form.itemId && (
-            <button type="button" onClick={() => setForm(EMPTY)} className={`${BTN} bg-secondary text-foreground`}>
+            <button
+              type="button"
+              onClick={() => setForm(EMPTY)}
+              className={`${BTN} bg-secondary text-foreground`}
+            >
               Cancel edit
             </button>
           )}

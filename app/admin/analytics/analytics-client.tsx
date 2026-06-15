@@ -159,7 +159,9 @@ export function AnalyticsClient() {
           <div className="grid lg:grid-cols-2 gap-3">
             <Panel title="CATEGORY PERFORMANCE">
               {data.categoryPerf.length === 0 ? (
-                <p className="text-xs text-muted-foreground py-6 text-center">No data in this range.</p>
+                <p className="text-xs text-muted-foreground py-6 text-center">
+                  No data in this range.
+                </p>
               ) : (
                 <div className="space-y-2">
                   {data.categoryPerf.map((c) => {
@@ -174,7 +176,10 @@ export function AnalyticsClient() {
                           </span>
                         </div>
                         <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
-                          <div className="h-full bg-accent rounded-full" style={{ width: `${pct}%` }} />
+                          <div
+                            className="h-full bg-accent rounded-full"
+                            style={{ width: `${pct}%` }}
+                          />
                         </div>
                       </div>
                     );
@@ -185,7 +190,9 @@ export function AnalyticsClient() {
 
             <Panel title="TOP SELLERS">
               {data.topSellers.length === 0 ? (
-                <p className="text-xs text-muted-foreground py-6 text-center">No data in this range.</p>
+                <p className="text-xs text-muted-foreground py-6 text-center">
+                  No data in this range.
+                </p>
               ) : (
                 <div className="space-y-1">
                   {data.topSellers.map((s, i) => (
@@ -206,7 +213,9 @@ export function AnalyticsClient() {
 
           <Panel title="TOP PRODUCTS">
             {data.topProducts.length === 0 ? (
-              <p className="text-xs text-muted-foreground py-6 text-center">No data in this range.</p>
+              <p className="text-xs text-muted-foreground py-6 text-center">
+                No data in this range.
+              </p>
             ) : (
               <div className="space-y-1">
                 <div className="grid grid-cols-[1fr_120px_80px_60px] gap-2 text-[9px] font-bold text-muted-foreground tracking-widest pb-1 border-b border-border">
@@ -231,16 +240,23 @@ export function AnalyticsClient() {
           </Panel>
 
           <div className="grid lg:grid-cols-2 gap-3">
-            <Panel title={`TOP SEARCHES — ${data.search.total} queries · ${data.search.failRate.toFixed(1)}% empty`}>
+            <Panel
+              title={`TOP SEARCHES — ${data.search.total} queries · ${data.search.failRate.toFixed(1)}% empty`}
+            >
               {data.search.top.length === 0 ? (
                 <p className="text-xs text-muted-foreground py-6 text-center">No data.</p>
               ) : (
                 <div className="space-y-1">
                   {data.search.top.map((s) => (
-                    <div key={s.query} className="grid grid-cols-[1fr_60px_70px] gap-2 text-xs py-1 border-b border-border/40 last:border-0">
+                    <div
+                      key={s.query}
+                      className="grid grid-cols-[1fr_60px_70px] gap-2 text-xs py-1 border-b border-border/40 last:border-0"
+                    >
                       <span className="truncate font-mono">{s.query}</span>
                       <span className="text-right font-mono text-muted-foreground">{s.uses}×</span>
-                      <span className="text-right font-mono text-emerald-400">{s.avg_results.toFixed(0)} hits</span>
+                      <span className="text-right font-mono text-emerald-400">
+                        {s.avg_results.toFixed(0)} hits
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -248,11 +264,16 @@ export function AnalyticsClient() {
             </Panel>
             <Panel title="ZERO-RESULT SEARCHES — DEMAND GAPS">
               {data.search.zero.length === 0 ? (
-                <p className="text-xs text-muted-foreground py-6 text-center">No failing searches.</p>
+                <p className="text-xs text-muted-foreground py-6 text-center">
+                  No failing searches.
+                </p>
               ) : (
                 <div className="space-y-1">
                   {data.search.zero.map((s) => (
-                    <div key={s.query} className="grid grid-cols-[1fr_60px] gap-2 text-xs py-1 border-b border-border/40 last:border-0">
+                    <div
+                      key={s.query}
+                      className="grid grid-cols-[1fr_60px] gap-2 text-xs py-1 border-b border-border/40 last:border-0"
+                    >
                       <span className="truncate font-mono text-orange-300">{s.query}</span>
                       <span className="text-right font-mono text-muted-foreground">{s.uses}×</span>
                     </div>
@@ -265,7 +286,10 @@ export function AnalyticsClient() {
           <div className="grid grid-cols-3 gap-3">
             <Kpi label="NEW BUYERS" value={String(data.newSignups.buyers ?? 0)} />
             <Kpi label="NEW SELLERS" value={String(data.newSignups.sellers ?? 0)} />
-            <Kpi label="CATALOG CONV." value={`${data.summary.marketplaceConversion.toFixed(2)}%`} />
+            <Kpi
+              label="CATALOG CONV."
+              value={`${data.summary.marketplaceConversion.toFixed(2)}%`}
+            />
           </div>
         </>
       )}

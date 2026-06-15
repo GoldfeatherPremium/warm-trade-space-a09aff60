@@ -47,8 +47,7 @@ const SCHEMA_EXAMPLE = `{
   ]
 }`;
 
-const BTN =
-  "px-3 py-1.5 rounded-md text-xs font-bold disabled:opacity-50";
+const BTN = "px-3 py-1.5 rounded-md text-xs font-bold disabled:opacity-50";
 const INPUT =
   "bg-secondary border border-border rounded-md px-2 py-1.5 text-xs w-full focus:outline-none focus:ring-1 focus:ring-primary/50";
 
@@ -71,7 +70,9 @@ export function CategoriesClient() {
     });
   }
 
-  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    load();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -171,9 +172,9 @@ export function CategoriesClient() {
                     defaultWarrantyHours: c.default_warranty_hours as number,
                     commissionPct: c.commission_pct as number,
                     riskTier: c.risk_tier as "normal" | "high",
-                    isActive: !!(c.is_active),
+                    isActive: !!c.is_active,
                     submissionSchema: (c.submission_schema as string) ?? "",
-                    requiresSubscription: !!(c.requires_subscription),
+                    requiresSubscription: !!c.requires_subscription,
                     allowedDurations: ((c.allowed_durations as string) ?? "")
                       .split(",")
                       .map((s) => s.trim())
@@ -198,46 +199,92 @@ export function CategoriesClient() {
           {form.categoryId ? "EDIT CATEGORY" : "NEW CATEGORY"}
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          <input required placeholder="Name" value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })} className={INPUT} />
-          <input required placeholder="slug" pattern="[a-z0-9-]+" value={form.slug}
-            onChange={(e) => setForm({ ...form, slug: e.target.value })} className={INPUT} />
-          <input placeholder="Icon (emoji)" value={form.icon}
-            onChange={(e) => setForm({ ...form, icon: e.target.value })} className={INPUT} />
-          <input type="number" min={0} placeholder="Sort order" value={form.sort ?? ""}
-            onChange={(e) => setForm({ ...form, sort: e.target.value === "" ? undefined : Number(e.target.value) })}
-            className={INPUT} />
-          <input type="number" min={1} placeholder="Warranty h" value={form.defaultWarrantyHours}
+          <input
+            required
+            placeholder="Name"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            className={INPUT}
+          />
+          <input
+            required
+            placeholder="slug"
+            pattern="[a-z0-9-]+"
+            value={form.slug}
+            onChange={(e) => setForm({ ...form, slug: e.target.value })}
+            className={INPUT}
+          />
+          <input
+            placeholder="Icon (emoji)"
+            value={form.icon}
+            onChange={(e) => setForm({ ...form, icon: e.target.value })}
+            className={INPUT}
+          />
+          <input
+            type="number"
+            min={0}
+            placeholder="Sort order"
+            value={form.sort ?? ""}
+            onChange={(e) =>
+              setForm({ ...form, sort: e.target.value === "" ? undefined : Number(e.target.value) })
+            }
+            className={INPUT}
+          />
+          <input
+            type="number"
+            min={1}
+            placeholder="Warranty h"
+            value={form.defaultWarrantyHours}
             onChange={(e) => setForm({ ...form, defaultWarrantyHours: Number(e.target.value) })}
-            className={INPUT} />
-          <input type="number" min={0} max={50} step="0.5" placeholder="Fee %" value={form.commissionPct}
+            className={INPUT}
+          />
+          <input
+            type="number"
+            min={0}
+            max={50}
+            step="0.5"
+            placeholder="Fee %"
+            value={form.commissionPct}
             onChange={(e) => setForm({ ...form, commissionPct: Number(e.target.value) })}
-            className={INPUT} />
-          <select value={form.riskTier}
+            className={INPUT}
+          />
+          <select
+            value={form.riskTier}
             onChange={(e) => setForm({ ...form, riskTier: e.target.value as "normal" | "high" })}
-            className={INPUT}>
+            className={INPUT}
+          >
             <option value="normal">normal risk</option>
             <option value="high">high risk</option>
           </select>
         </div>
         <label className="flex items-center gap-2 text-xs">
-          <input type="checkbox" checked={form.isActive}
-            onChange={(e) => setForm({ ...form, isActive: e.target.checked })} />
+          <input
+            type="checkbox"
+            checked={form.isActive}
+            onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
+          />
           Active (visible to buyers and sellers)
         </label>
         <div className="space-y-1.5 pt-2 border-t border-border">
           <p className="text-xs font-bold">Delivery kind</p>
-          <select value={form.deliveryKind}
+          <select
+            value={form.deliveryKind}
             onChange={(e) => setForm({ ...form, deliveryKind: e.target.value })}
-            className={INPUT}>
+            className={INPUT}
+          >
             {DELIVERY_KINDS.map((d) => (
-              <option key={d.value} value={d.value}>{d.label}</option>
+              <option key={d.value} value={d.value}>
+                {d.label}
+              </option>
             ))}
           </select>
         </div>
         <label className="flex items-center gap-2 text-xs">
-          <input type="checkbox" checked={form.requiresSubscription}
-            onChange={(e) => setForm({ ...form, requiresSubscription: e.target.checked })} />
+          <input
+            type="checkbox"
+            checked={form.requiresSubscription}
+            onChange={(e) => setForm({ ...form, requiresSubscription: e.target.checked })}
+          />
           Subscription-based
         </label>
         {form.requiresSubscription && (
@@ -245,13 +292,17 @@ export function CategoriesClient() {
             {DURATION_OPTIONS.map((d) => {
               const on = form.allowedDurations.includes(d);
               return (
-                <button type="button" key={d}
-                  onClick={() => setForm({
-                    ...form,
-                    allowedDurations: on
-                      ? form.allowedDurations.filter((x) => x !== d)
-                      : [...form.allowedDurations, d],
-                  })}
+                <button
+                  type="button"
+                  key={d}
+                  onClick={() =>
+                    setForm({
+                      ...form,
+                      allowedDurations: on
+                        ? form.allowedDurations.filter((x) => x !== d)
+                        : [...form.allowedDurations, d],
+                    })
+                  }
                   className={`text-[10px] font-bold px-2 py-1 rounded border ${on ? "bg-primary text-primary-foreground border-primary" : "bg-secondary border-border text-muted-foreground"}`}
                 >
                   {d}
@@ -263,29 +314,45 @@ export function CategoriesClient() {
         <div className="space-y-1.5 pt-2 border-t border-border">
           <label className="text-xs font-bold flex items-center justify-between">
             <span>Submission schema (JSON, optional)</span>
-            <button type="button" className="text-[10px] text-primary"
-              onClick={() => setForm({ ...form, submissionSchema: SCHEMA_EXAMPLE })}>
+            <button
+              type="button"
+              className="text-[10px] text-primary"
+              onClick={() => setForm({ ...form, submissionSchema: SCHEMA_EXAMPLE })}
+            >
               Insert example →
             </button>
           </label>
-          <textarea rows={8} placeholder={SCHEMA_EXAMPLE} value={form.submissionSchema}
+          <textarea
+            rows={8}
+            placeholder={SCHEMA_EXAMPLE}
+            value={form.submissionSchema}
             onChange={(e) => setForm({ ...form, submissionSchema: e.target.value })}
-            className={`${INPUT} font-mono resize-y`} />
+            className={`${INPUT} font-mono resize-y`}
+          />
         </div>
         <div className="space-y-1.5 pt-2 border-t border-border">
           <label className="text-xs font-bold">Admin description (SEO copy)</label>
-          <textarea rows={3} value={form.adminDescription}
+          <textarea
+            rows={3}
+            value={form.adminDescription}
             onChange={(e) => setForm({ ...form, adminDescription: e.target.value })}
-            className={`${INPUT} resize-y`} />
+            className={`${INPUT} resize-y`}
+          />
         </div>
         <div className="flex gap-2">
-          <button type="submit" disabled={saving}
-            className={`${BTN} bg-primary text-primary-foreground`}>
+          <button
+            type="submit"
+            disabled={saving}
+            className={`${BTN} bg-primary text-primary-foreground`}
+          >
             {form.categoryId ? "Save changes" : "Create category"}
           </button>
           {form.categoryId && (
-            <button type="button" onClick={() => setForm(EMPTY)}
-              className={`${BTN} bg-secondary text-foreground`}>
+            <button
+              type="button"
+              onClick={() => setForm(EMPTY)}
+              className={`${BTN} bg-secondary text-foreground`}
+            >
               Cancel edit
             </button>
           )}

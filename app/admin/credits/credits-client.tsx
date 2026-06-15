@@ -37,7 +37,10 @@ export function CreditsClient() {
 
   // Load user detail when selected changes
   useEffect(() => {
-    if (!selected) { setDetail(null); return; }
+    if (!selected) {
+      setDetail(null);
+      return;
+    }
     startTransition(async () => {
       try {
         const result = await adminGetUserCreditsAction({ userId: selected });
@@ -75,13 +78,26 @@ export function CreditsClient() {
     });
   }
 
-  const ledger = (detail as { ledger?: Array<{ type: string; amount_cents: number; note: string | null; source: string | null; created_at: number }> })?.ledger ?? [];
+  const ledger =
+    (
+      detail as {
+        ledger?: Array<{
+          type: string;
+          amount_cents: number;
+          note: string | null;
+          source: string | null;
+          created_at: number;
+        }>;
+      }
+    )?.ledger ?? [];
 
   return (
     <div className="space-y-4">
       <div>
         <h1 className="text-xl font-display font-semibold">Buyer Credits</h1>
-        <p className="text-xs text-muted-foreground mt-0.5">Adjust credit balances and view ledger history.</p>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          Adjust credit balances and view ledger history.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-[600px]">
@@ -122,9 +138,7 @@ export function CreditsClient() {
                     <p className="text-sm font-medium">{u.username}</p>
                     <p className="text-[10px] text-muted-foreground">{u.email}</p>
                   </div>
-                  <span className="text-sm font-mono font-semibold">
-                    {usdt(u.balance_cents)}
-                  </span>
+                  <span className="text-sm font-mono font-semibold">{usdt(u.balance_cents)}</span>
                 </button>
               ))
             )}
@@ -146,23 +160,34 @@ export function CreditsClient() {
               {/* Header */}
               <div>
                 <p className="text-[9px] font-bold tracking-widest text-muted-foreground">USER</p>
-                <p className="text-lg font-semibold mt-0.5">{(detail as { username?: string }).username}</p>
-                <p className="text-xs text-muted-foreground">{(detail as { email?: string }).email}</p>
+                <p className="text-lg font-semibold mt-0.5">
+                  {(detail as { username?: string }).username}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {(detail as { email?: string }).email}
+                </p>
                 <p className="text-3xl font-display font-bold mt-2 text-accent">
                   {usdt((detail as { balance_cents?: number }).balance_cents ?? 0)}
                 </p>
               </div>
 
               {/* Adjustment form */}
-              <form onSubmit={handleAdjust} className="space-y-3 border border-border rounded-xl p-4">
-                <p className="text-[9px] font-bold tracking-widest text-muted-foreground">ADJUST BALANCE</p>
+              <form
+                onSubmit={handleAdjust}
+                className="space-y-3 border border-border rounded-xl p-4"
+              >
+                <p className="text-[9px] font-bold tracking-widest text-muted-foreground">
+                  ADJUST BALANCE
+                </p>
                 {msg && (
                   <p className="text-xs px-3 py-2 rounded-lg bg-accent/10 text-accent border border-accent/20">
                     {msg}
                   </p>
                 )}
                 <label className="flex flex-col gap-1">
-                  <span className="text-[10px] font-bold text-muted-foreground">AMOUNT (USDT, negative to deduct)</span>
+                  <span className="text-[10px] font-bold text-muted-foreground">
+                    AMOUNT (USDT, negative to deduct)
+                  </span>
                   <input
                     type="number"
                     step="0.01"
@@ -193,7 +218,9 @@ export function CreditsClient() {
 
               {/* Ledger */}
               <div>
-                <p className="text-[9px] font-bold tracking-widest text-muted-foreground mb-2">LEDGER</p>
+                <p className="text-[9px] font-bold tracking-widest text-muted-foreground mb-2">
+                  LEDGER
+                </p>
                 {ledger.length === 0 ? (
                   <p className="text-xs text-muted-foreground">No ledger entries.</p>
                 ) : (
@@ -211,8 +238,11 @@ export function CreditsClient() {
                         {ledger.map((entry, i) => (
                           <tr key={i} className="hover:bg-secondary/30 transition-colors">
                             <td className="px-3 py-2 font-mono">{entry.type}</td>
-                            <td className={`px-3 py-2 text-right font-mono tabular-nums ${entry.amount_cents >= 0 ? "text-accent" : "text-destructive"}`}>
-                              {entry.amount_cents >= 0 ? "+" : ""}{usdt(entry.amount_cents)}
+                            <td
+                              className={`px-3 py-2 text-right font-mono tabular-nums ${entry.amount_cents >= 0 ? "text-accent" : "text-destructive"}`}
+                            >
+                              {entry.amount_cents >= 0 ? "+" : ""}
+                              {usdt(entry.amount_cents)}
                             </td>
                             <td className="px-3 py-2 text-muted-foreground max-w-[160px] truncate">
                               {entry.note ?? entry.source ?? "—"}

@@ -62,7 +62,7 @@ export function SettingsClient() {
           minWithdrawalUsdt: (s.min_withdrawal_cents as number) / 100,
           autoConfirmHours: s.auto_confirm_hours as number,
           paymentWindowMinutes: s.payment_window_minutes as number,
-          maintenanceMode: !!(s.maintenance_mode),
+          maintenanceMode: !!s.maintenance_mode,
           announcement: (s.announcement as string) ?? "",
           creditWithdrawalFeePct: (s.credit_withdrawal_fee_pct as number) ?? 2,
           creditWithdrawalMinFeeUsdt: ((s.credit_withdrawal_min_fee_cents as number) ?? 100) / 100,
@@ -187,7 +187,11 @@ export function SettingsClient() {
 
       {tab === "fees" && (
         <div className="space-y-4">
-          {num("defaultCommissionPct", "Default commission %", "Used when a category has no override.")}
+          {num(
+            "defaultCommissionPct",
+            "Default commission %",
+            "Used when a category has no override.",
+          )}
           {num("withdrawalFeeUsdt", "Seller withdrawal fee (USDT)")}
           {num("minWithdrawalUsdt", "Minimum seller withdrawal (USDT)")}
         </div>
@@ -195,25 +199,64 @@ export function SettingsClient() {
 
       {tab === "escrow" && (
         <div className="space-y-4">
-          {num("autoConfirmHours", "Auto-confirm window (hours)", "Delivered → completed if buyer is silent.", "1")}
-          {num("paymentWindowMinutes", "Payment window (minutes)", "Unpaid orders expire after this.", "1")}
-          {num("disputeSlaHours", "Dispute SLA (hours)", "Staff target for first response on open disputes.", "1")}
+          {num(
+            "autoConfirmHours",
+            "Auto-confirm window (hours)",
+            "Delivered → completed if buyer is silent.",
+            "1",
+          )}
+          {num(
+            "paymentWindowMinutes",
+            "Payment window (minutes)",
+            "Unpaid orders expire after this.",
+            "1",
+          )}
+          {num(
+            "disputeSlaHours",
+            "Dispute SLA (hours)",
+            "Staff target for first response on open disputes.",
+            "1",
+          )}
         </div>
       )}
 
       {tab === "credits" && (
         <div className="space-y-4">
-          {num("creditWithdrawalFeePct", "Credit withdrawal fee (%)", "Applied when buyers cash out store credits.")}
+          {num(
+            "creditWithdrawalFeePct",
+            "Credit withdrawal fee (%)",
+            "Applied when buyers cash out store credits.",
+          )}
           {num("creditWithdrawalMinFeeUsdt", "Credit withdrawal minimum fee (USDT)")}
         </div>
       )}
 
       {tab === "chat" && (
         <div className="space-y-4">
-          {num("presencePingSeconds", "Presence ping interval (seconds)", "How often browsers refresh 'online' status.", "1")}
-          {num("attachmentMaxMb", "Order attachment max size (MB)", "Per-file cap on delivery proof uploads.", "1")}
-          {num("lowStockThreshold", "Low-stock badge threshold", "Products at or below this show a low-stock badge.", "1")}
-          {num("chatRateLimitPerMin", "Chat rate limit (messages / minute / user)", "Hard cap to stop spam.", "1")}
+          {num(
+            "presencePingSeconds",
+            "Presence ping interval (seconds)",
+            "How often browsers refresh 'online' status.",
+            "1",
+          )}
+          {num(
+            "attachmentMaxMb",
+            "Order attachment max size (MB)",
+            "Per-file cap on delivery proof uploads.",
+            "1",
+          )}
+          {num(
+            "lowStockThreshold",
+            "Low-stock badge threshold",
+            "Products at or below this show a low-stock badge.",
+            "1",
+          )}
+          {num(
+            "chatRateLimitPerMin",
+            "Chat rate limit (messages / minute / user)",
+            "Hard cap to stop spam.",
+            "1",
+          )}
           <div className="space-y-1.5">
             <label className={LABEL}>Automod severity</label>
             <select

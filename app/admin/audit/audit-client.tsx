@@ -33,9 +33,7 @@ export function AuditClient() {
         <p className="text-sm text-muted-foreground">Loading…</p>
       ) : (
         <div className="bg-card border border-border rounded-lg p-3 space-y-1">
-          {logs.length === 0 && (
-            <p className="text-sm text-muted-foreground p-2">No entries.</p>
-          )}
+          {logs.length === 0 && <p className="text-sm text-muted-foreground p-2">No entries.</p>}
           {logs.map((l, i) => (
             <div
               key={String(l.id ?? i)}

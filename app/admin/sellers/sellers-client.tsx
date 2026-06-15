@@ -174,9 +174,7 @@ function ApplicationCard({ app, onReviewed }: { app: Application; onReviewed: ()
       )}
 
       {app.admin_note && app.status !== "pending" && (
-        <p className="text-[11px] italic text-muted-foreground">
-          Admin note: {app.admin_note}
-        </p>
+        <p className="text-[11px] italic text-muted-foreground">Admin note: {app.admin_note}</p>
       )}
 
       {/* Actions for pending */}

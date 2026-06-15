@@ -50,7 +50,10 @@ export function OrdersClient() {
     setLoading(true);
     startTransition(async () => {
       try {
-        const data = await adminListOrdersAction({ q: q || undefined, status: status || undefined });
+        const data = await adminListOrdersAction({
+          q: q || undefined,
+          status: status || undefined,
+        });
         setOrders(data);
       } finally {
         setLoading(false);
@@ -64,7 +67,10 @@ export function OrdersClient() {
   }, [q, status]);
 
   async function forceAction(orderId: string, action: "refund" | "release" | "cancel") {
-    if (note.length < 5) { setMsg("Note must be at least 5 characters."); return; }
+    if (note.length < 5) {
+      setMsg("Note must be at least 5 characters.");
+      return;
+    }
     setBusy(true);
     setMsg(null);
     try {
@@ -80,7 +86,12 @@ export function OrdersClient() {
     }
   }
 
-  async function escrow(orderId: string, action: "hold" | "unhold" | "extend", reason: string, hours?: number) {
+  async function escrow(
+    orderId: string,
+    action: "hold" | "unhold" | "extend",
+    reason: string,
+    hours?: number,
+  ) {
     setBusy(true);
     setMsg(null);
     try {
@@ -104,14 +115,12 @@ export function OrdersClient() {
           onChange={(e) => setQ(e.target.value)}
           className={`${INPUT} max-w-xs`}
         />
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          className={INPUT}
-        >
+        <select value={status} onChange={(e) => setStatus(e.target.value)} className={INPUT}>
           <option value="">All statuses</option>
           {Object.entries(STATUS_META).map(([k, v]) => (
-            <option key={k} value={k}>{v.label}</option>
+            <option key={k} value={k}>
+              {v.label}
+            </option>
           ))}
         </select>
       </div>
@@ -125,8 +134,10 @@ export function OrdersClient() {
       ) : (
         <div className="space-y-2">
           {orders.map((o) => {
-            const meta =
-              STATUS_META[(o.status as string)] ?? { label: o.status as string, cls: "bg-muted" };
+            const meta = STATUS_META[o.status as string] ?? {
+              label: o.status as string,
+              cls: "bg-muted",
+            };
             const escrowStatus = o.escrow_status as string | null;
             return (
               <div
@@ -168,7 +179,6 @@ export function OrdersClient() {
                   <span>buyer {o.buyer_name as string}</span>·
                   <span>seller {o.seller_name as string}</span>·
                   <span>{dateTime(o.created_at as number)}</span>
-
                   <span className="ml-auto flex gap-1 flex-wrap">
                     {actionFor === (o.id as string) ? (
                       <>
@@ -189,7 +199,10 @@ export function OrdersClient() {
                           </button>
                         ))}
                         <button
-                          onClick={() => { setActionFor(null); setNote(""); }}
+                          onClick={() => {
+                            setActionFor(null);
+                            setNote("");
+                          }}
                           className={`${BTN} bg-secondary text-foreground`}
                         >
                           ×
@@ -219,25 +232,32 @@ export function OrdersClient() {
                             Lift hold
                           </button>
                         )}
-                        {(escrowStatus === "held" || escrowStatus === "on_hold") && o.warranty_ends_at && (
-                          <button
-                            disabled={busy}
-                            className={`${BTN} bg-secondary text-foreground`}
-                            onClick={() => {
-                              const h = Number(window.prompt("Extend warranty by how many hours?"));
-                              if (!h || h < 1) return;
-                              const reason = window.prompt("Reason (audited):") ?? "Manual extension";
-                              if (reason.length < 5) return;
-                              escrow(o.id as string, "extend", reason, h);
-                            }}
-                          >
-                            Extend
-                          </button>
-                        )}
+                        {(escrowStatus === "held" || escrowStatus === "on_hold") &&
+                          o.warranty_ends_at && (
+                            <button
+                              disabled={busy}
+                              className={`${BTN} bg-secondary text-foreground`}
+                              onClick={() => {
+                                const h = Number(
+                                  window.prompt("Extend warranty by how many hours?"),
+                                );
+                                if (!h || h < 1) return;
+                                const reason =
+                                  window.prompt("Reason (audited):") ?? "Manual extension";
+                                if (reason.length < 5) return;
+                                escrow(o.id as string, "extend", reason, h);
+                              }}
+                            >
+                              Extend
+                            </button>
+                          )}
                         <button
                           disabled={busy}
                           className={`${BTN} bg-secondary text-foreground`}
-                          onClick={() => { setActionFor(o.id as string); setNote(""); }}
+                          onClick={() => {
+                            setActionFor(o.id as string);
+                            setNote("");
+                          }}
                         >
                           Force action
                         </button>

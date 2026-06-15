@@ -3,18 +3,27 @@
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  adminUpdateProductAction,
-  adminGetCategorySchemaAction,
-} from "@/server/actions/admin";
+import { adminUpdateProductAction, adminGetCategorySchemaAction } from "@/server/actions/admin";
 
-type InitialData = Awaited<ReturnType<typeof import("@/server/actions/admin").adminGetProductAction>>;
-type SchemaField = { key: string; label: string; type: string; required?: boolean; help?: string; options?: string[] };
+type InitialData = Awaited<
+  ReturnType<typeof import("@/server/actions/admin").adminGetProductAction>
+>;
+type SchemaField = {
+  key: string;
+  label: string;
+  type: string;
+  required?: boolean;
+  help?: string;
+  options?: string[];
+};
 
-const INPUT = "w-full bg-secondary border border-border rounded-md px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50";
+const INPUT =
+  "w-full bg-secondary border border-border rounded-md px-2 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50";
 
 function DynamicFields({
-  fields, values, onChange,
+  fields,
+  values,
+  onChange,
 }: {
   fields: SchemaField[];
   values: Record<string, string>;
@@ -48,7 +57,9 @@ function DynamicFields({
             >
               <option value="">Select…</option>
               {(f.options ?? []).map((o) => (
-                <option key={o} value={o}>{o}</option>
+                <option key={o} value={o}>
+                  {o}
+                </option>
               ))}
             </select>
           ) : (
@@ -90,17 +101,33 @@ export function EditProductClient({
     minQty: (p.min_qty as number) ?? 1,
     maxQty: (p.max_qty as number) ?? 50,
     maxOrdersAtOnce: (p.max_orders_at_once as number) ?? 10,
-    subscriptionDuration: ((p.subscription_duration as string) ?? "") as "" | "7d" | "14d" | "1m" | "3m" | "6m" | "12m" | "lifetime",
+    subscriptionDuration: ((p.subscription_duration as string) ?? "") as
+      | ""
+      | "7d"
+      | "14d"
+      | "1m"
+      | "3m"
+      | "6m"
+      | "12m"
+      | "lifetime",
     region: (p.region as string) ?? "",
     platform: (p.platform as string) ?? "",
     requiredInfo: (p.required_info as string) ?? "",
     adminSeoDescription: (p.admin_seo_description as string) ?? "",
-    status: ((p.status as string) ?? "active") as "active" | "paused" | "rejected" | "out_of_stock" | "pending_review",
+    status: ((p.status as string) ?? "active") as
+      | "active"
+      | "paused"
+      | "rejected"
+      | "out_of_stock"
+      | "pending_review",
   });
 
   const [categoryAttrs, setCategoryAttrs] = useState<Record<string, string>>(() => {
-    try { return JSON.parse((p.category_attrs as string) ?? "{}") as Record<string, string>; }
-    catch { return {}; }
+    try {
+      return JSON.parse((p.category_attrs as string) ?? "{}") as Record<string, string>;
+    } catch {
+      return {};
+    }
   });
 
   const [sellerFields, setSellerFields] = useState<SchemaField[]>([]);
@@ -109,17 +136,17 @@ export function EditProductClient({
 
   useEffect(() => {
     if (!form.categoryId) return;
-    adminGetCategorySchemaAction(form.categoryId).then((r) => {
-      setSellerFields(r.schema?.sellerFields ?? []);
-      setAllowedDurations(r.config?.allowedDurations ?? []);
-      setRequiresSubscription(r.config?.requiresSubscription ?? false);
-    }).catch(() => {});
+    adminGetCategorySchemaAction(form.categoryId)
+      .then((r) => {
+        setSellerFields(r.schema?.sellerFields ?? []);
+        setAllowedDurations(r.config?.allowedDurations ?? []);
+        setRequiresSubscription(r.config?.requiresSubscription ?? false);
+      })
+      .catch(() => {});
   }, [form.categoryId]);
 
   const allowedItemIds = new Set(
-    initial.itemCategories
-      .filter((m) => m.category_id === form.categoryId)
-      .map((m) => m.item_id),
+    initial.itemCategories.filter((m) => m.category_id === form.categoryId).map((m) => m.item_id),
   );
   const mappedItemIds = new Set(initial.itemCategories.map((m) => m.item_id));
   const visibleItems = initial.items.filter(
@@ -167,7 +194,10 @@ export function EditProductClient({
             Seller: {p.seller_name as string} · ID: {productId}
           </p>
         </div>
-        <Link href="/admin/products" className="text-[10px] text-muted-foreground hover:text-foreground">
+        <Link
+          href="/admin/products"
+          className="text-[10px] text-muted-foreground hover:text-foreground"
+        >
           ← Back to queue
         </Link>
       </div>
@@ -200,7 +230,9 @@ export function EditProductClient({
             className={INPUT}
           >
             {initial.categories.map((c) => (
-              <option key={c.id} value={c.id}>{c.name} ({c.commission_pct}% fee)</option>
+              <option key={c.id} value={c.id}>
+                {c.name} ({c.commission_pct}% fee)
+              </option>
             ))}
           </select>
         </div>
@@ -213,7 +245,9 @@ export function EditProductClient({
           >
             <option value="">— None —</option>
             {visibleItems.map((i) => (
-              <option key={i.id} value={i.id}>{i.name}</option>
+              <option key={i.id} value={i.id}>
+                {i.name}
+              </option>
             ))}
           </select>
         </div>
@@ -315,7 +349,8 @@ export function EditProductClient({
         <div className="space-y-1">
           <label className="text-xs font-medium">Min qty</label>
           <input
-            type="number" min={1}
+            type="number"
+            min={1}
             value={form.minQty}
             onChange={(e) => setForm({ ...form, minQty: Number(e.target.value) })}
             className={INPUT}
@@ -324,7 +359,8 @@ export function EditProductClient({
         <div className="space-y-1">
           <label className="text-xs font-medium">Max qty</label>
           <input
-            type="number" min={1}
+            type="number"
+            min={1}
             value={form.maxQty}
             onChange={(e) => setForm({ ...form, maxQty: Number(e.target.value) })}
             className={INPUT}
@@ -333,7 +369,8 @@ export function EditProductClient({
         <div className="space-y-1">
           <label className="text-xs font-medium">Max orders per checkout</label>
           <input
-            type="number" min={1}
+            type="number"
+            min={1}
             value={form.maxOrdersAtOnce}
             onChange={(e) => setForm({ ...form, maxOrdersAtOnce: Number(e.target.value) })}
             className={INPUT}
@@ -344,11 +381,20 @@ export function EditProductClient({
             <label className="text-xs font-medium">Subscription duration</label>
             <select
               value={form.subscriptionDuration}
-              onChange={(e) => setForm({ ...form, subscriptionDuration: e.target.value as typeof form.subscriptionDuration })}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  subscriptionDuration: e.target.value as typeof form.subscriptionDuration,
+                })
+              }
               className={INPUT}
             >
               <option value="">— Use seller's pick —</option>
-              {allowedDurations.map((d) => <option key={d} value={d}>{d}</option>)}
+              {allowedDurations.map((d) => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
             </select>
           </div>
         )}

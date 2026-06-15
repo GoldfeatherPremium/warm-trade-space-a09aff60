@@ -67,8 +67,6 @@ export function WalletClient({ initial }: { initial: WalletData }) {
     }
     setAmount("");
     setSuccess(true);
-    // Optimistically update the data to reflect frozen withdrawal
-    const { getWalletData } = await import("@/server/queries/wallet");
   }
 
   const exportCsv = () => {

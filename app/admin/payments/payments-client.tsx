@@ -23,7 +23,9 @@ export function PaymentsClient() {
     });
   }
 
-  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    load();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function toggle(code: string, enabled: boolean) {
     setBusy(true);
@@ -71,7 +73,9 @@ export function PaymentsClient() {
                     </span>
                   )}
                 </p>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{m.kind}</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                  {m.kind}
+                </p>
               </div>
               <span
                 className={`text-[10px] font-bold ${m.enabled ? "text-accent" : "text-muted-foreground"}`}

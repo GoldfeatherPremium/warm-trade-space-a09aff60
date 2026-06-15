@@ -2,10 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import {
-  listProductReviewQueueAction,
-  reviewProductAction,
-} from "@/server/actions/admin";
+import { listProductReviewQueueAction, reviewProductAction } from "@/server/actions/admin";
 import { usdt, dateTime } from "@/lib/format";
 
 type Product = Awaited<ReturnType<typeof listProductReviewQueueAction>>[number];
@@ -22,7 +19,10 @@ const INPUT_CLS =
 const BTN_CLS = "px-3 py-1.5 rounded-md text-xs font-bold";
 
 function StatusBadge({ status }: { status: string }) {
-  const meta = PRODUCT_STATUS_META[status] ?? { label: status, cls: "bg-secondary text-muted-foreground" };
+  const meta = PRODUCT_STATUS_META[status] ?? {
+    label: status,
+    cls: "bg-secondary text-muted-foreground",
+  };
   return (
     <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${meta.cls}`}>
       {meta.label.toUpperCase()}
@@ -30,13 +30,7 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function ProductCard({
-  product,
-  onRefresh,
-}: {
-  product: Product;
-  onRefresh: () => void;
-}) {
+function ProductCard({ product, onRefresh }: { product: Product; onRefresh: () => void }) {
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);

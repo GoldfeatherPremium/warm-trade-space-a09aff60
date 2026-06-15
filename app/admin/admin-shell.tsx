@@ -149,8 +149,7 @@ function PulseHeader({ role }: { role: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fmt = (n: number | undefined) =>
-    n == null ? "—" : n.toLocaleString("en-US");
+  const fmt = (n: number | undefined) => (n == null ? "—" : n.toLocaleString("en-US"));
   const fmtMoney = (cents: number | undefined) =>
     cents == null ? "—" : `$${(cents / 100).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
 
@@ -199,7 +198,16 @@ function PulseHeader({ role }: { role: string }) {
           },
         ]
       : Array.from({ length: 8 }, (_, i) => ({
-          label: ["Orders 24h", "GMV 24h", "Refunds 24h", "Funds on hold", "Open disputes", "New users 24h", "Withdrawals pending", "Avg trust"][i],
+          label: [
+            "Orders 24h",
+            "GMV 24h",
+            "Refunds 24h",
+            "Funds on hold",
+            "Open disputes",
+            "New users 24h",
+            "Withdrawals pending",
+            "Avg trust",
+          ][i],
           value: "…",
           tone: "neutral" as const,
         }));
@@ -213,9 +221,7 @@ function PulseHeader({ role }: { role: string }) {
         {pills.map((p) => (
           <Pill key={p.label} label={p.label} value={p.value} tone={p.tone} />
         ))}
-        <span className="text-[9px] text-muted-foreground shrink-0 ml-2 capitalize">
-          {role}
-        </span>
+        <span className="text-[9px] text-muted-foreground shrink-0 ml-2 capitalize">{role}</span>
       </div>
     </div>
   );
@@ -225,13 +231,7 @@ function PulseHeader({ role }: { role: string }) {
 // Command palette
 // ---------------------------------------------------------------------------
 
-function CommandPalette({
-  open,
-  onClose,
-}: {
-  open: boolean;
-  onClose: () => void;
-}) {
+function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [query, setQuery] = useState("");
   const pathname = usePathname();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -252,9 +252,7 @@ function CommandPalette({
   }, [onClose]);
 
   const filtered = query.trim()
-    ? ALL_NAV_ITEMS.filter((item) =>
-        item.label.toLowerCase().includes(query.toLowerCase())
-      )
+    ? ALL_NAV_ITEMS.filter((item) => item.label.toLowerCase().includes(query.toLowerCase()))
     : ALL_NAV_ITEMS;
 
   if (!open) return null;
@@ -322,13 +320,7 @@ function CommandPalette({
 // AdminShell
 // ---------------------------------------------------------------------------
 
-export function AdminShell({
-  children,
-  role,
-}: {
-  children: React.ReactNode;
-  role: string;
-}) {
+export function AdminShell({ children, role }: { children: React.ReactNode; role: string }) {
   const pathname = usePathname();
   const [paletteOpen, setPaletteOpen] = useState(false);
 

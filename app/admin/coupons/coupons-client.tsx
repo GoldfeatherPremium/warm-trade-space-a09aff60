@@ -39,7 +39,9 @@ export function CouponsClient() {
     });
   }
 
-  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    load();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -72,14 +74,11 @@ export function CouponsClient() {
         <p className="text-sm text-muted-foreground">Loading…</p>
       ) : (
         <div className="space-y-2">
-          {coupons.length === 0 && (
-            <p className="text-sm text-muted-foreground">No coupons yet.</p>
-          )}
+          {coupons.length === 0 && <p className="text-sm text-muted-foreground">No coupons yet.</p>}
           {coupons.map((c) => {
             const expired = c.expires_at && (c.expires_at as number) < Date.now();
             const usedUp =
-              (c.max_uses as number) > 0 &&
-              (c.used_count as number) >= (c.max_uses as number);
+              (c.max_uses as number) > 0 && (c.used_count as number) >= (c.max_uses as number);
             return (
               <div
                 key={c.id as string}
@@ -96,7 +95,9 @@ export function CouponsClient() {
                   {c.expires_at ? ` · expires ${dateTime(c.expires_at as number)}` : ""}
                 </span>
                 {!c.is_active && (
-                  <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-muted">DISABLED</span>
+                  <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-muted">
+                    DISABLED
+                  </span>
                 )}
                 {expired ? (
                   <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-destructive/15 text-destructive">
@@ -121,7 +122,7 @@ export function CouponsClient() {
                       minTotalUsdt: (c.min_total_cents as number) / 100,
                       maxUses: c.max_uses as number,
                       expiresInDays: 0,
-                      isActive: !!(c.is_active),
+                      isActive: !!c.is_active,
                     })
                   }
                 >
@@ -141,36 +142,72 @@ export function CouponsClient() {
           {form.couponId ? "EDIT COUPON" : "NEW COUPON"}
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          <input required placeholder="CODE (e.g. SAVE10)" value={form.code}
+          <input
+            required
+            placeholder="CODE (e.g. SAVE10)"
+            value={form.code}
             pattern="[A-Za-z0-9_-]+"
             onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
-            className={`${INPUT} font-mono`} />
-          <input type="number" min={1} max={100} step="0.5" placeholder="% off" value={form.pctOff}
+            className={`${INPUT} font-mono`}
+          />
+          <input
+            type="number"
+            min={1}
+            max={100}
+            step="0.5"
+            placeholder="% off"
+            value={form.pctOff}
             onChange={(e) => setForm({ ...form, pctOff: Number(e.target.value) })}
-            className={INPUT} />
-          <input type="number" min={0} placeholder="Min order USDT (0=none)" value={form.minTotalUsdt}
+            className={INPUT}
+          />
+          <input
+            type="number"
+            min={0}
+            placeholder="Min order USDT (0=none)"
+            value={form.minTotalUsdt}
             onChange={(e) => setForm({ ...form, minTotalUsdt: Number(e.target.value) })}
-            className={INPUT} />
-          <input type="number" min={0} placeholder="Max uses (0=unlimited)" value={form.maxUses}
+            className={INPUT}
+          />
+          <input
+            type="number"
+            min={0}
+            placeholder="Max uses (0=unlimited)"
+            value={form.maxUses}
             onChange={(e) => setForm({ ...form, maxUses: Number(e.target.value) })}
-            className={INPUT} />
-          <input type="number" min={0} max={365} placeholder="Expires in days (0=never)" value={form.expiresInDays}
+            className={INPUT}
+          />
+          <input
+            type="number"
+            min={0}
+            max={365}
+            placeholder="Expires in days (0=never)"
+            value={form.expiresInDays}
             onChange={(e) => setForm({ ...form, expiresInDays: Number(e.target.value) })}
-            className={INPUT} />
+            className={INPUT}
+          />
           <label className="flex items-center gap-2 text-xs">
-            <input type="checkbox" checked={form.isActive}
-              onChange={(e) => setForm({ ...form, isActive: e.target.checked })} />
+            <input
+              type="checkbox"
+              checked={form.isActive}
+              onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
+            />
             Active
           </label>
         </div>
         <div className="flex gap-2">
-          <button type="submit" disabled={saving}
-            className={`${BTN} bg-primary text-primary-foreground`}>
+          <button
+            type="submit"
+            disabled={saving}
+            className={`${BTN} bg-primary text-primary-foreground`}
+          >
             {form.couponId ? "Save changes" : "Create coupon"}
           </button>
           {form.couponId && (
-            <button type="button" onClick={() => setForm(EMPTY)}
-              className={`${BTN} bg-secondary text-foreground`}>
+            <button
+              type="button"
+              onClick={() => setForm(EMPTY)}
+              className={`${BTN} bg-secondary text-foreground`}
+            >
               Cancel edit
             </button>
           )}

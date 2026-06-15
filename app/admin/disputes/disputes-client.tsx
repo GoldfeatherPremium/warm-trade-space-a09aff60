@@ -66,7 +66,9 @@ export function DisputesClient() {
   useEffect(() => {
     load();
     intervalRef.current = setInterval(load, 15_000);
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -74,7 +76,10 @@ export function DisputesClient() {
     disputeId: string,
     resolution: "refund_full" | "refund_partial" | "release_seller",
   ) {
-    if (note.length < 5) { setMsg("Decision note required (min 5 chars)."); return; }
+    if (note.length < 5) {
+      setMsg("Decision note required (min 5 chars).");
+      return;
+    }
     if (resolution === "refund_partial" && !partial) {
       setMsg("Enter USDT amount for partial refund.");
       return;
@@ -128,19 +133,16 @@ export function DisputesClient() {
               >
                 {(dd.status as string).replaceAll("_", " ").toUpperCase()}
               </span>
-              <SlaBadge
-                openedAt={dd.created_at as number}
-                resolved={dd.status === "resolved"}
-              />
-              <span className="font-mono text-accent ml-auto">{usdt(dd.total_cents as number)}</span>
+              <SlaBadge openedAt={dd.created_at as number} resolved={dd.status === "resolved"} />
+              <span className="font-mono text-accent ml-auto">
+                {usdt(dd.total_cents as number)}
+              </span>
             </div>
 
             <p className="text-[10px] text-muted-foreground">
               buyer {dd.buyer_name as string} vs seller {dd.seller_name as string} · opened{" "}
               {dateTime(dd.created_at as number)} · reason:{" "}
-              <b className="text-foreground">
-                {(dd.reason as string)?.replaceAll("_", " ")}
-              </b>
+              <b className="text-foreground">{(dd.reason as string)?.replaceAll("_", " ")}</b>
             </p>
 
             {dd.description && (
@@ -192,7 +194,11 @@ export function DisputesClient() {
                     Release to seller
                   </button>
                   <button
-                    onClick={() => { setResolving(null); setNote(""); setPartial(""); }}
+                    onClick={() => {
+                      setResolving(null);
+                      setNote("");
+                      setPartial("");
+                    }}
                     className={`${BTN} bg-secondary text-foreground`}
                   >
                     Cancel
@@ -201,7 +207,10 @@ export function DisputesClient() {
               ) : (
                 <button
                   className={`${BTN} bg-secondary text-foreground`}
-                  onClick={() => { setResolving(dd.id as string); setNote(""); }}
+                  onClick={() => {
+                    setResolving(dd.id as string);
+                    setNote("");
+                  }}
                 >
                   Resolve…
                 </button>

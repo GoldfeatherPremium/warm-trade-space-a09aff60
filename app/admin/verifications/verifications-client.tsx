@@ -1,10 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import {
-  listVerificationsAction,
-  reviewVerificationAction,
-} from "@/server/actions/admin";
+import { listVerificationsAction, reviewVerificationAction } from "@/server/actions/admin";
 import { dateTime } from "@/lib/format";
 
 type Verification = Awaited<ReturnType<typeof listVerificationsAction>>[number];
@@ -26,20 +23,20 @@ const BTN_CLS = "px-3 py-1.5 rounded-md text-xs font-bold";
 const INPUT_CLS =
   "bg-secondary border border-border rounded-md px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-primary/50";
 
-function VerificationRow({
-  v,
-  onRefresh,
-}: {
-  v: Verification;
-  onRefresh: () => void;
-}) {
+function VerificationRow({ v, onRefresh }: { v: Verification; onRefresh: () => void }) {
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
-  const tierMeta = TIER_META[v.tier_requested] ?? { label: v.tier_requested, cls: "bg-secondary text-muted-foreground" };
-  const statusMeta = STATUS_META[v.status] ?? { label: v.status, cls: "bg-secondary text-muted-foreground" };
+  const tierMeta = TIER_META[v.tier_requested] ?? {
+    label: v.tier_requested,
+    cls: "bg-secondary text-muted-foreground",
+  };
+  const statusMeta = STATUS_META[v.status] ?? {
+    label: v.status,
+    cls: "bg-secondary text-muted-foreground",
+  };
 
   async function decide(decision: "approved" | "rejected") {
     setBusy(true);
@@ -72,13 +69,9 @@ function VerificationRow({
               {statusMeta.label.toUpperCase()}
             </span>
           </div>
-          {v.evidence && (
-            <p className="text-xs text-muted-foreground line-clamp-2">{v.evidence}</p>
-          )}
+          {v.evidence && <p className="text-xs text-muted-foreground line-clamp-2">{v.evidence}</p>}
         </div>
-        <div className="text-[10px] text-muted-foreground shrink-0">
-          {dateTime(v.created_at)}
-        </div>
+        <div className="text-[10px] text-muted-foreground shrink-0">{dateTime(v.created_at)}</div>
       </div>
 
       {v.status === "pending" && (

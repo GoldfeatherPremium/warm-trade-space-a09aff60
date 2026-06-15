@@ -4,9 +4,23 @@ import { type ComponentType, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ShoppingBag, Layers, Scale, Megaphone, Ticket, Settings,
-  Heart, Wallet, Bell, Star, Boxes, PlusCircle, LayoutDashboard,
-  Gavel, LogOut, ChevronRight, ChevronDown,
+  ShoppingBag,
+  Layers,
+  Scale,
+  Megaphone,
+  Ticket,
+  Settings,
+  Heart,
+  Wallet,
+  Bell,
+  Star,
+  Boxes,
+  PlusCircle,
+  LayoutDashboard,
+  Gavel,
+  LogOut,
+  ChevronRight,
+  ChevronDown,
 } from "lucide-react";
 import { logoutAction } from "@/server/actions/auth";
 
@@ -21,11 +35,21 @@ const LOCALES = [
 const CURRENCIES = ["USD", "EUR", "GBP", "INR", "PKR", "BDT"] as const;
 
 type Entry = { label: string; href: string; icon?: ComponentType<{ className?: string }> };
-type Section = { id: string; label: string; icon: ComponentType<{ className?: string }>; color: string; entries: Entry[] };
+type Section = {
+  id: string;
+  label: string;
+  icon: ComponentType<{ className?: string }>;
+  color: string;
+  entries: Entry[];
+};
 
 type User = {
-  id: string; username: string; email: string; role: string;
-  seller_status: string | null; seller_level: number | null;
+  id: string;
+  username: string;
+  email: string;
+  role: string;
+  seller_status: string | null;
+  seller_level: number | null;
 };
 
 function LocaleSwitcher() {
@@ -36,7 +60,9 @@ function LocaleSwitcher() {
     try {
       setLocale(localStorage.getItem("xv_locale") ?? "en");
       setCurrency(localStorage.getItem("xv_currency") ?? "USD");
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   function applyLocale(v: string) {
@@ -45,12 +71,18 @@ function LocaleSwitcher() {
       localStorage.setItem("xv_locale", v);
       document.documentElement.lang = v;
       document.documentElement.dir = v === "ar" ? "rtl" : "ltr";
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
 
   function applyCurrency(v: string) {
     setCurrency(v);
-    try { localStorage.setItem("xv_currency", v); } catch { /* ignore */ }
+    try {
+      localStorage.setItem("xv_currency", v);
+    } catch {
+      /* ignore */
+    }
   }
 
   return (
@@ -65,7 +97,9 @@ function LocaleSwitcher() {
             className="w-full h-9 rounded-md bg-secondary text-sm px-2 border border-border"
           >
             {LOCALES.map((l) => (
-              <option key={l.code} value={l.code}>{l.label}</option>
+              <option key={l.code} value={l.code}>
+                {l.label}
+              </option>
             ))}
           </select>
         </label>
@@ -77,7 +111,9 @@ function LocaleSwitcher() {
             className="w-full h-9 rounded-md bg-secondary text-sm px-2 border border-border"
           >
             {CURRENCIES.map((c) => (
-              <option key={c} value={c}>{c}</option>
+              <option key={c} value={c}>
+                {c}
+              </option>
             ))}
           </select>
         </label>
@@ -89,7 +125,12 @@ function LocaleSwitcher() {
 function Accordion({ sections }: { sections: Section[] }) {
   const [open, setOpen] = useState<Set<string>>(new Set());
   const toggle = (id: string) =>
-    setOpen((prev) => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
+    setOpen((prev) => {
+      const s = new Set(prev);
+      if (s.has(id)) s.delete(id);
+      else s.add(id);
+      return s;
+    });
 
   return (
     <div className="space-y-2">
@@ -103,7 +144,9 @@ function Accordion({ sections }: { sections: Section[] }) {
               <s.icon className={`size-5 ${s.color}`} />
               {s.label}
             </span>
-            <ChevronDown className={`size-4 text-muted-foreground transition-transform ${open.has(s.id) ? "rotate-180" : ""}`} />
+            <ChevronDown
+              className={`size-4 text-muted-foreground transition-transform ${open.has(s.id) ? "rotate-180" : ""}`}
+            />
           </button>
           {open.has(s.id) && (
             <div className="divide-y divide-border/60 border-t border-border">

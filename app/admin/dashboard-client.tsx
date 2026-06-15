@@ -1,12 +1,6 @@
 "use client";
 
-import React, {
-  lazy,
-  Suspense,
-  useEffect,
-  useTransition,
-  useState,
-} from "react";
+import React, { lazy, Suspense, useEffect, useTransition, useState } from "react";
 import Link from "next/link";
 import { DollarSign, ShoppingBag, Coins, Lock, Trophy } from "lucide-react";
 import { getAdminDashboardAction } from "@/server/actions/admin";
@@ -25,15 +19,7 @@ type Dashboard = Awaited<ReturnType<typeof getAdminDashboardAction>>;
 const GmvChart = lazy(() =>
   import("recharts").then((m) => ({
     default: function Chart({ data }: { data: Dashboard["daily"] }) {
-      const {
-        BarChart,
-        Bar,
-        XAxis,
-        YAxis,
-        CartesianGrid,
-        Tooltip,
-        ResponsiveContainer,
-      } = m;
+      const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } = m;
       return (
         <ResponsiveContainer width="100%" height={200}>
           <BarChart data={data} margin={{ top: 4, right: 8, left: 8, bottom: 0 }}>
@@ -70,20 +56,8 @@ const GmvChart = lazy(() =>
 
 const OrdersStatusChart = lazy(() =>
   import("recharts").then((m) => ({
-    default: function Chart({
-      data,
-    }: {
-      data: Array<{ status: string; c: number }>;
-    }) {
-      const {
-        BarChart,
-        Bar,
-        XAxis,
-        YAxis,
-        CartesianGrid,
-        Tooltip,
-        ResponsiveContainer,
-      } = m;
+    default: function Chart({ data }: { data: Array<{ status: string; c: number }> }) {
+      const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } = m;
       return (
         <ResponsiveContainer width="100%" height={200}>
           <BarChart
@@ -91,7 +65,11 @@ const OrdersStatusChart = lazy(() =>
             data={data}
             margin={{ top: 4, right: 16, left: 8, bottom: 0 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" horizontal={false} />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="rgba(255,255,255,0.06)"
+              horizontal={false}
+            />
             <XAxis
               type="number"
               tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
@@ -155,15 +133,7 @@ function StatCard({
 // QueueCounter
 // ---------------------------------------------------------------------------
 
-function QueueCounter({
-  label,
-  count,
-  href,
-}: {
-  label: string;
-  count: number;
-  href: string;
-}) {
+function QueueCounter({ label, count, href }: { label: string; count: number; href: string }) {
   const highlight = count > 0;
   return (
     <Link
@@ -336,11 +306,7 @@ export function AdminDashboardClient() {
             ORDERS BY STATUS
           </p>
           <Suspense fallback={<ChartSkeleton />}>
-            {statusRows.length > 0 ? (
-              <OrdersStatusChart data={statusRows} />
-            ) : (
-              <ChartSkeleton />
-            )}
+            {statusRows.length > 0 ? <OrdersStatusChart data={statusRows} /> : <ChartSkeleton />}
           </Suspense>
         </div>
 

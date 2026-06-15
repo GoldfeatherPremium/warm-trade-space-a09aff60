@@ -88,7 +88,9 @@ export function BuyBox({
     <div className="mt-4 space-y-3">
       {variants.length > 0 && (
         <label className="block space-y-1">
-          <span className="text-[10px] font-bold tracking-widest text-muted-foreground">OPTION</span>
+          <span className="text-[10px] font-bold tracking-widest text-muted-foreground">
+            OPTION
+          </span>
           <select
             value={variantId}
             onChange={(e) => setVariantId(e.target.value)}
@@ -105,7 +107,9 @@ export function BuyBox({
       )}
 
       <label className="block space-y-1">
-        <span className="text-[10px] font-bold tracking-widest text-muted-foreground">QUANTITY</span>
+        <span className="text-[10px] font-bold tracking-widest text-muted-foreground">
+          QUANTITY
+        </span>
         <input
           type="number"
           min={minQty || 1}

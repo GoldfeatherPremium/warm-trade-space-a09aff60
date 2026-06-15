@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { adminListConversationsAction, adminGetConversationMessagesAction } from "@/server/actions/admin";
+import {
+  adminListConversationsAction,
+  adminGetConversationMessagesAction,
+} from "@/server/actions/admin";
 import { timeAgo, dateTime, usdt } from "@/lib/format";
 import { ShieldAlert } from "lucide-react";
 
@@ -26,7 +29,7 @@ function ConversationViewer({ conversationId }: { conversationId: string }) {
         setLoading(false);
       }
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId]);
 
   useEffect(() => {
@@ -58,7 +61,8 @@ function ConversationViewer({ conversationId }: { conversationId: string }) {
         </div>
         {order && (
           <div className="text-[10px] text-muted-foreground font-mono">
-            Order #{order.order_no} · {order.status.replace("_", " ").toUpperCase()} · {usdt(order.total_cents)}
+            Order #{order.order_no} · {order.status.replace("_", " ").toUpperCase()} ·{" "}
+            {usdt(order.total_cents)}
           </div>
         )}
       </div>
@@ -83,10 +87,7 @@ function ConversationViewer({ conversationId }: { conversationId: string }) {
           }
 
           return (
-            <div
-              key={m.id}
-              className={`flex ${isBuyer ? "justify-start" : "justify-end"}`}
-            >
+            <div key={m.id} className={`flex ${isBuyer ? "justify-start" : "justify-end"}`}>
               <div
                 className={`max-w-[75%] rounded-lg px-3 py-2 text-xs space-y-0.5 ${
                   isFlagged
@@ -143,7 +144,9 @@ export function ChatsClient() {
   useEffect(() => {
     load(q, flaggedOnly);
     intervalRef.current = setInterval(() => load(q, flaggedOnly), 15_000);
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q, flaggedOnly]);
 
@@ -191,8 +194,7 @@ export function ChatsClient() {
               >
                 <div className="flex items-center gap-2 text-xs">
                   <span className="font-bold truncate flex-1">
-                    {c.buyer_name}{" "}
-                    <span className="text-muted-foreground font-normal">↔</span>{" "}
+                    {c.buyer_name} <span className="text-muted-foreground font-normal">↔</span>{" "}
                     {c.seller_name}
                   </span>
                   {flaggedCount > 0 && (
@@ -205,9 +207,7 @@ export function ChatsClient() {
                   {c.last_body ? c.last_body.slice(0, 80) : <em>No messages yet</em>}
                 </p>
                 <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-1">
-                  {c.order_no && (
-                    <span className="text-primary">#{c.order_no}</span>
-                  )}
+                  {c.order_no && <span className="text-primary">#{c.order_no}</span>}
                   <span>{msgCount} msgs</span>
                   {lastTs > 0 && <span>· {timeAgo(lastTs)}</span>}
                 </div>
