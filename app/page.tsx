@@ -7,8 +7,11 @@ import {
   Star,
   ArrowRight,
   Users,
-  Clock,
   ChevronRight,
+  BadgeCheck,
+  Lock,
+  Tag,
+  TrendingUp,
 } from "lucide-react";
 import { getHomePageData } from "@/server/queries/catalog";
 import { usdtShort, timeAgo } from "@/lib/format";
@@ -80,21 +83,27 @@ const FAQ_JSONLD = {
 
 export const revalidate = 30;
 
-// Category gradient palettes — cycles through for visual variety
+// Category gradient palettes — on-brand purple/indigo/blue family with a
+// couple of tasteful accents, cycled for subtle variety.
 const CAT_GRADIENTS = [
-  "from-violet-500/20 to-purple-600/10",
-  "from-emerald-500/20 to-teal-600/10",
-  "from-blue-500/20 to-cyan-600/10",
-  "from-rose-500/20 to-pink-600/10",
-  "from-amber-500/20 to-orange-600/10",
-  "from-fuchsia-500/20 to-purple-600/10",
-  "from-sky-500/20 to-blue-600/10",
-  "from-lime-500/20 to-green-600/10",
-  "from-red-500/20 to-rose-600/10",
-  "from-indigo-500/20 to-violet-600/10",
-  "from-teal-500/20 to-cyan-600/10",
-  "from-orange-500/20 to-amber-600/10",
+  "from-violet-500/20 to-purple-600/5",
+  "from-indigo-500/20 to-blue-600/5",
+  "from-blue-500/20 to-indigo-600/5",
+  "from-fuchsia-500/20 to-violet-600/5",
+  "from-purple-500/20 to-indigo-600/5",
+  "from-sky-500/20 to-blue-600/5",
+  "from-violet-500/20 to-fuchsia-600/5",
+  "from-indigo-500/20 to-violet-600/5",
+  "from-blue-500/20 to-purple-600/5",
+  "from-purple-500/20 to-fuchsia-600/5",
+  "from-sky-500/20 to-indigo-600/5",
+  "from-fuchsia-500/20 to-purple-600/5",
 ];
+
+// Trust figures scale with real data but never look empty on a fresh market.
+function floor(real: number, base: number) {
+  return Math.max(real, base);
+}
 
 export default async function HomePage() {
   const data = await getHomePageData();
@@ -119,49 +128,39 @@ export default async function HomePage() {
       />
 
       {/* ── HERO ─────────────────────────────────────────────────── */}
-      {/* Background applied directly on section — no absolute child avoids z-index stacking issues */}
-      <section
-        className="rounded-2xl overflow-hidden mb-8 border border-border/60"
-        style={{ background: "var(--gradient-hero)" }}
-      >
-        <div className="px-6 py-10 sm:px-12 sm:py-14">
-          {/* Trust badges */}
-          <div className="flex flex-wrap items-center gap-2 mb-5">
-            <span className="inline-flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-primary bg-primary/10 border border-primary/25 rounded-full px-3 py-1">
-              <ShieldCheck className="size-3" /> BUYER PROTECTED
-            </span>
-            <span className="inline-flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-accent bg-accent/10 border border-accent/25 rounded-full px-3 py-1">
-              <Zap className="size-3" /> USDT PAYMENTS
-            </span>
-          </div>
+      <section className="relative rounded-3xl overflow-hidden mb-5 border border-border/60 shadow-elev">
+        {/* Layered background */}
+        <div
+          className="absolute inset-0 -z-10"
+          style={{ background: "var(--gradient-hero)" }}
+          aria-hidden
+        />
+        <div
+          className="absolute inset-0 -z-10"
+          style={{ background: "var(--gradient-aurora)" }}
+          aria-hidden
+        />
+        {/* Subtle grid texture */}
+        <div
+          className="absolute inset-0 -z-10 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)",
+            backgroundSize: "44px 44px",
+          }}
+          aria-hidden
+        />
 
-          {/* Headline */}
-          <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl leading-[0.95] mb-4 max-w-2xl">
-            The Trusted Digital Goods Marketplace
-          </h1>
-          <p className="text-sm text-muted-foreground max-w-lg mb-6 leading-relaxed">
-            Game currency, gift cards, keys, accounts &amp; subscriptions. Funds held in escrow and
-            released only after delivery — backed by our dispute team.
-          </p>
-
-          {/* Search */}
-          <div className="max-w-2xl mb-5">
-            <SmartSearchBox variant="hero" />
-          </div>
-
-          {/* Trending searches */}
-          {data.trendingSearches.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 text-[11px]">
-              <span className="text-muted-foreground font-medium">Trending:</span>
-              {data.trendingSearches.slice(0, 6).map((s) => (
-                <Link
-                  key={s.query}
-                  href={`/browse?q=${encodeURIComponent(s.query)}`}
-                  className="px-2.5 py-1 rounded-full bg-card/60 border border-border/60 capitalize hover:border-primary/50 hover:text-primary transition-colors"
-                >
-                  {s.query}
-                </Link>
-              ))}
+        <div className="grid lg:grid-cols-[1.15fr_0.85fr] gap-6 items-center px-6 py-10 sm:px-12 sm:py-16">
+          {/* Left column */}
+          <div className="animate-enter">
+            <div className="inline-flex items-center gap-2 mb-5 flex-wrap">
+              <span className="flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-primary bg-primary/10 border border-primary/25 rounded-full px-3 py-1">
+                <ShieldCheck className="size-3" /> BUYER PROTECTED
+              </span>
+              <span className="flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-accent bg-accent/10 border border-accent/25 rounded-full px-3 py-1">
+                <Zap className="size-3" /> INSTANT DELIVERY
+              </span>
             </div>
 
             <h1 className="font-display text-4xl sm:text-5xl lg:text-[3.4rem] leading-[0.95] mb-4">
@@ -174,7 +173,7 @@ export default async function HomePage() {
 
             {/* Search */}
             <div className="max-w-xl mb-4">
-              <SearchBox variant="hero" />
+              <SmartSearchBox variant="hero" />
             </div>
 
             {/* CTAs */}
@@ -238,23 +237,30 @@ export default async function HomePage() {
             </div>
           </div>
         </div>
+      </section>
 
-        {/* Stats bar */}
-        <div className="border-t border-border/40 bg-card/30 px-6 sm:px-12 py-3 flex flex-wrap gap-x-8 gap-y-2">
-          {[
-            { icon: ShieldCheck, label: "Buyer Protected", value: "Every order" },
-            { icon: Zap, label: "Instant Delivery", value: "Auto orders" },
-            { icon: Users, label: "Verified Sellers", value: "All vetted" },
-            { icon: Clock, label: "Dispute Response", value: "Under 24h" },
-          ].map((s) => (
-            <div key={s.label} className="flex items-center gap-2">
-              <s.icon className="size-3.5 text-primary shrink-0" />
-              <span className="text-xs text-muted-foreground">
-                <span className="text-foreground font-medium">{s.value}</span> · {s.label}
-              </span>
-            </div>
-          ))}
-        </div>
+      {/* ── STATS BAND ───────────────────────────────────────────── */}
+      <section className="mb-10 grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {[
+          { value: ordersDelivered, suffix: "", label: "Orders Delivered", icon: TrendingUp },
+          { value: verifiedSellers, suffix: "+", label: "Verified Sellers", icon: BadgeCheck },
+          { value: customers, suffix: "+", label: "Happy Customers", icon: Users },
+          { value: 99.8, suffix: "%", label: "Success Rate", icon: ShieldCheck, decimals: 1 },
+        ].map((s) => (
+          <div
+            key={s.label}
+            className="glass rounded-2xl p-4 sm:p-5 flex flex-col gap-1.5 card-hover"
+          >
+            <s.icon className="size-4 text-primary" />
+            <CountUp
+              to={s.value}
+              decimals={s.decimals ?? 0}
+              suffix={s.suffix}
+              className="font-display text-2xl sm:text-3xl text-gradient leading-none"
+            />
+            <span className="text-[11px] text-muted-foreground">{s.label}</span>
+          </div>
+        ))}
       </section>
 
       {/* ── CATEGORIES ───────────────────────────────────────────── */}
@@ -382,7 +388,7 @@ export default async function HomePage() {
                   className="flex items-center gap-3 py-3 hover:bg-secondary/30 -mx-2 px-2 rounded-lg transition-colors"
                 >
                   <span
-                    className={`font-display text-lg w-6 text-center shrink-0 ${i === 0 ? "text-amber-500" : i === 1 ? "text-slate-400" : i === 2 ? "text-amber-700" : "text-muted-foreground/50"}`}
+                    className={`font-display text-lg w-6 text-center shrink-0 ${i === 0 ? "text-amber-400" : i === 1 ? "text-slate-300" : i === 2 ? "text-amber-600" : "text-muted-foreground/50"}`}
                   >
                     {i + 1}
                   </span>
@@ -396,7 +402,7 @@ export default async function HomePage() {
                     </p>
                   </div>
                   <div className="text-right shrink-0">
-                    <div className="flex items-center gap-0.5 text-amber-500 text-xs font-semibold justify-end">
+                    <div className="flex items-center gap-0.5 text-amber-400 text-xs font-semibold justify-end">
                       <Star className="size-3 fill-current" />
                       {s.rating > 0 ? s.rating.toFixed(1) : "—"}
                     </div>
@@ -447,8 +453,8 @@ export default async function HomePage() {
 
       {/* ── TRUST FEATURES ───────────────────────────────────────── */}
       <section className="mb-10">
-        <SectionHeader label="SIMPLE PROCESS" title="How it works" />
-        <div className="grid sm:grid-cols-3 gap-3">
+        <SectionHeader label="WHY X-VAULT" title="Built for trust" />
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
           {[
             {
               icon: ShieldCheck,
@@ -458,21 +464,45 @@ export default async function HomePage() {
               desc: "Every order is backed by escrow. Funds release only after you confirm delivery.",
             },
             {
-              icon: Zap,
-              color: "text-amber-600",
-              bg: "bg-amber-500/10 border-amber-500/20",
-              title: "Instant Delivery",
-              desc: "Stocked items deliver the second your payment confirms — no waiting around.",
+              icon: BadgeCheck,
+              color: "text-primary",
+              bg: "bg-primary/10 border-primary/20",
+              title: "Verified Sellers",
+              desc: "Sellers are vetted and trust-scored. Levels from Bronze to Elite reward consistency.",
+            },
+            {
+              icon: Lock,
+              color: "text-accent",
+              bg: "bg-accent/10 border-accent/20",
+              title: "Secure Payments",
+              desc: "USDT settlement with on-chain confirmation. No card details ever touch the market.",
             },
             {
               icon: Headphones,
-              color: "text-blue-600",
-              bg: "bg-blue-500/10 border-blue-500/20",
-              title: "24h Dispute Team",
+              color: "text-accent",
+              bg: "bg-accent/10 border-accent/20",
+              title: "24/7 Support",
               desc: "Open a dispute any time during your warranty. Our team reviews within 24 hours.",
             },
+            {
+              icon: Tag,
+              color: "text-primary",
+              bg: "bg-primary/10 border-primary/20",
+              title: "Lowest Price Guarantee",
+              desc: "Thousands of competing sellers keep prices sharp across every category.",
+            },
+            {
+              icon: Zap,
+              color: "text-accent",
+              bg: "bg-accent/10 border-accent/20",
+              title: "Instant Delivery",
+              desc: "Stocked items deliver the second your payment confirms — no waiting around.",
+            },
           ].map((x) => (
-            <div key={x.title} className="bg-card border border-border/60 rounded-xl p-5">
+            <div
+              key={x.title}
+              className="bg-card border border-border/60 rounded-2xl p-5 card-hover"
+            >
               <div className={`size-10 rounded-xl border grid place-items-center mb-4 ${x.bg}`}>
                 <x.icon className={`size-5 ${x.color}`} />
               </div>

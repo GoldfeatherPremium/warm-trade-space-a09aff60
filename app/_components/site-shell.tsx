@@ -4,6 +4,7 @@ import { SmartSearchBox } from "./smart-search-box";
 import { AccountNav } from "./account-nav";
 import { CategoryBar } from "./category-bar";
 import { ThemeToggle } from "./theme-toggle";
+import { BottomNav } from "./bottom-nav";
 
 function SiteHeader() {
   return (
