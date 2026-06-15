@@ -145,10 +145,15 @@ export async function getHomePageData(): Promise<HomePageData> {
     ] = await Promise.all([
       q<HomeCategory>(
         `select c.id, c.name, c.slug, c.icon, c.default_warranty_hours, c.commission_pct, c.risk_tier,
-              (select count(*) from products p join users u on u.id = p.seller_id
-                 where p.category_id = c.id and p.status = 'active'
-                   and u.vacation_mode = 0 and u.is_banned = 0) as product_count
-       from categories c where c.is_active = 1 order by c.sort`,
+              coalesce(pc.product_count, 0) as product_count
+         from categories c
+         left join (
+           select p.category_id, count(*) as product_count
+             from products p join users u on u.id = p.seller_id
+            where p.status = 'active' and u.vacation_mode = 0 and u.is_banned = 0
+            group by p.category_id
+         ) pc on pc.category_id = c.id
+        where c.is_active = 1 order by c.sort`,
       ),
       q(
         `${productSelect} where p.status = 'active' and ${PUBLIC_SELLER_COND}
@@ -319,24 +324,36 @@ export async function getSellerLeaderboardData(
   await appContext();
   const dayMs = 86_400_000;
   const since = range === "all" ? 0 : Date.now() - (range === "30d" ? 30 : 90) * dayMs;
+  // Single query with LEFT JOINs replaces 3 correlated subqueries per seller row
   const rows = await q<Record<string, unknown>>(
     `select u.id, u.username, u.seller_level, u.rating, u.rating_count, u.total_sales,
             u.completion_rate, u.vacation_mode, u.created_at, u.verification_tier,
             u.trust_score, u.refund_count, u.dispute_count,
-            coalesce((select sum(o.total_cents) from orders o
-                        where o.seller_id = u.id and o.paid_at > ?
-                          and o.status not in ('cancelled','expired','refunded')),0) as gmv_cents,
-            coalesce((select count(*) from orders o
-                        where o.seller_id = u.id and o.paid_at > ?
-                          and o.status not in ('cancelled','expired','refunded')),0) as recent_orders,
-            (select c.name from products p join categories c on c.id = p.category_id
-               where p.seller_id = u.id and p.status = 'active'
-               group by c.id, c.name order by sum(p.sold_count) desc limit 1) as category_name
+            coalesce(os.gmv_cents, 0) as gmv_cents,
+            coalesce(os.recent_orders, 0) as recent_orders,
+            pc.category_name
        from users u
+       left join (
+         select seller_id,
+                sum(total_cents) as gmv_cents,
+                count(*) as recent_orders
+           from orders
+          where paid_at > ?
+            and status not in ('cancelled','expired','refunded')
+          group by seller_id
+       ) os on os.seller_id = u.id
+       left join (
+         select p.seller_id, c.name as category_name
+           from products p
+           join categories c on c.id = p.category_id
+          where p.status = 'active'
+          group by p.seller_id
+          order by sum(p.sold_count) desc
+       ) pc on pc.seller_id = u.id
       where u.seller_status = 'approved' and u.is_banned = 0 and u.vacation_mode = 0 and u.total_sales > 0
       order by (u.trust_score * 0.7 + (case when u.total_sales < 500 then u.total_sales else 500 end) * 0.3) desc, u.total_sales desc
       limit ?`,
-    [since, since, limit],
+    [since, limit],
   );
   return rows.map((r, i) => ({
     id: r.id as string,

@@ -1,7 +1,35 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { Archivo_Black, Hind, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
+const archivoBlack = Archivo_Black({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--nf-display",
+  display: "swap",
+});
+
+const hind = Hind({
+  weight: ["400", "500", "600", "700"],
+  subsets: ["latin"],
+  variable: "--nf-body",
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  weight: ["400", "500", "700"],
+  subsets: ["latin"],
+  variable: "--nf-mono",
+  display: "swap",
+});
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#0f0f0f",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -16,23 +44,17 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "X-VAULT",
     url: SITE_URL,
+    images: [{ url: `${SITE_URL}/assets/og-default.jpg`, width: 1200, height: 630 }],
   },
   twitter: { card: "summary_large_image" },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark">
-      <head>
-        {/* Fonts are loaded at runtime via a stylesheet link (not next/font) so
-            the build needs no network access. Preconnect for faster fetch. */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Hind:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html
+      lang="en"
+      className={`dark ${archivoBlack.variable} ${hind.variable} ${jetbrainsMono.variable}`}
+    >
       <body>{children}</body>
     </html>
   );

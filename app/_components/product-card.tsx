@@ -1,14 +1,10 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Zap, Clock, Star } from "lucide-react";
 import type { PublicProduct } from "@/lib/api/catalog";
 import { usdtShort } from "@/lib/format";
 import { productImage } from "../_lib/product-image";
 
-/**
- * Public product card — a pure Server Component (zero client JS). The favorite
- * button (the only interactive bit) is logged-in only and will be added as a
- * small client island in Phase 3; anonymous/public pages render none.
- */
 export function ProductCard({ product, priority }: { product: PublicProduct; priority?: boolean }) {
   const lowStock = 5;
   const auto = product.delivery_type === "auto";
@@ -18,13 +14,14 @@ export function ProductCard({ product, priority }: { product: PublicProduct; pri
       className="bg-card border border-border rounded-lg overflow-hidden hover:border-primary/50 transition-colors group flex flex-col"
     >
       <div className="aspect-[16/10] bg-secondary overflow-hidden relative">
-        <img
+        <Image
           src={productImage(product.image_key)}
           alt={product.title}
-          loading={priority ? "eager" : "lazy"}
-          fetchPriority={priority ? "high" : "auto"}
-          decoding="async"
-          className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition"
+          fill
+          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+          priority={priority}
+          className="object-cover opacity-90 group-hover:opacity-100 transition"
+          unoptimized={product.image_key?.startsWith("upload:") ? false : false}
         />
         <span
           className={`absolute top-2 left-2 text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 ${
