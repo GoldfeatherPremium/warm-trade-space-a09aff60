@@ -6,6 +6,8 @@ import { PublicShell } from "../_components/site-shell";
 import { SearchBox } from "../_components/search-box";
 import { ProductCard } from "../_components/product-card";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
 export async function generateMetadata({
   searchParams,
 }: {
@@ -18,6 +20,14 @@ export async function generateMetadata({
     description:
       "Browse digital goods on X-VAULT — game top-ups, gift cards, subscriptions, software keys and accounts. Buyer-protected, USDT payments, instant delivery.",
     alternates: { canonical: "/browse" },
+    openGraph: {
+      title: "Browse digital goods — X-VAULT",
+      description:
+        "Browse digital goods on X-VAULT — game top-ups, gift cards, subscriptions, software keys and accounts. Buyer-protected, USDT payments, instant delivery.",
+      url: `${SITE_URL}/browse`,
+      images: [{ url: `${SITE_URL}/assets/og-default.jpg`, width: 1200, height: 630 }],
+    },
+    twitter: { card: "summary_large_image" },
     ...(activeFilters > 1 ? { robots: { index: false, follow: true } } : {}),
   };
 }
@@ -76,7 +86,7 @@ export default async function BrowsePage({
       <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
         <h1 className="font-display text-2xl">
           {params.q
-            ? `Results for “${params.q}”`
+            ? `Results for "${params.q}"`
             : params.category
               ? `Category: ${params.category}`
               : "All listings"}

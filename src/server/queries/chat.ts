@@ -32,7 +32,21 @@ export async function listConversations(user: SessionUser) {
     last_is_system: number | null;
     unread: number;
   }>(
-    `select cv.id, cv.order_id, cv.product_id, cv.last_message_at, cv.created_at,
+    // CTE collapses the 3 duplicate correlated subqueries (last_body / last_sender_id /
+    // last_is_system) into a single ranked scan of messages, reducing per-row DB work
+    // from 4 subqueries to 1 (only unread count remains correlated).
+    `with lm as (
+       select m.conversation_id,
+              m.body        as last_body,
+              m.sender_id   as last_sender_id,
+              m.is_system   as last_is_system,
+              row_number() over (partition by m.conversation_id order by m.created_at desc) as rn
+       from messages m
+       where m.conversation_id in (
+         select id from conversations where buyer_id = ? or seller_id = ?
+       )
+     )
+     select cv.id, cv.order_id, cv.product_id, cv.last_message_at, cv.created_at,
             case when cv.buyer_id = ? then cv.buyer_last_read_at else cv.seller_last_read_at end as my_last_read,
             ub.username as buyer_name, us.username as seller_name,
             coalesce(ub.last_seen_at, 0) as buyer_last_seen,
@@ -41,9 +55,7 @@ export async function listConversations(user: SessionUser) {
             o.order_no, o.product_title, o.status as order_status, o.total_cents as order_total_cents,
             p.title as product_title_presale, p.price_cents as product_price_cents, p.slug as product_slug,
             coalesce(o.image_key, p.image_key) as image_key,
-            (select body from messages m where m.conversation_id = cv.id order by m.created_at desc limit 1) as last_body,
-            (select sender_id from messages m where m.conversation_id = cv.id order by m.created_at desc limit 1) as last_sender_id,
-            (select is_system from messages m where m.conversation_id = cv.id order by m.created_at desc limit 1) as last_is_system,
+            lm.last_body, lm.last_sender_id, lm.last_is_system,
             (select count(*) from messages m where m.conversation_id = cv.id
                and m.created_at > case when cv.buyer_id = ? then cv.buyer_last_read_at else cv.seller_last_read_at end
                and (m.sender_id is null or m.sender_id != ?)) as unread
@@ -52,9 +64,10 @@ export async function listConversations(user: SessionUser) {
      join users us on us.id = cv.seller_id
      left join orders o on o.id = cv.order_id
      left join products p on p.id = cv.product_id
+     left join lm on lm.conversation_id = cv.id and lm.rn = 1
      where cv.buyer_id = ? or cv.seller_id = ?
      order by coalesce(cv.last_message_at, cv.created_at) desc limit 100`,
-    [id, id, id, id, id],
+    [id, id, id, id, id, id, id],
   );
 }
 

@@ -18,7 +18,9 @@ export const metadata: Metadata = {
     title: "X-VAULT — Buy & Sell Digital Goods with USDT",
     description: "Buyer-protected digital marketplace. Pay in USDT, instant delivery.",
     url: SITE_URL + "/",
+    images: [{ url: `${SITE_URL}/assets/og-default.jpg`, width: 1200, height: 630 }],
   },
+  twitter: { card: "summary_large_image" },
 };
 
 const ORG_JSONLD = {

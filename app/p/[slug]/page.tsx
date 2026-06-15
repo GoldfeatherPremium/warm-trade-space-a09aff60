@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { Star, Zap, Clock, ShieldCheck } from "lucide-react";
-import { getProductBySlug, getRelatedProductsData } from "@/server/queries/catalog";
+import { getProductBySlug } from "@/server/queries/catalog";
 import { usdt, timeAgo } from "@/lib/format";
 import { PublicShell } from "../../_components/site-shell";
-import { ProductCard } from "../../_components/product-card";
 import { productImage } from "../../_lib/product-image";
 import { BuyBox } from "./buy-box";
+import { RelatedProducts } from "./related-products";
+import { ViewBeacon } from "./view-beacon";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -43,7 +45,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const { slug } = await params;
   const { product, reviews, variants } = await getProductBySlug(slug);
   if (!product) notFound();
-  const related = await getRelatedProductsData(product.id, 8);
   const auto = product.delivery_type === "auto";
   const outOfStock = auto && product.stock_count === 0;
 
@@ -211,16 +212,15 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </aside>
       </div>
 
-      {related.length > 0 && (
-        <section className="mt-10">
-          <h2 className="font-display text-2xl mb-3">Related listings</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-            {related.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
-        </section>
-      )}
+      <Suspense
+        fallback={
+          <div className="mt-10 h-40 rounded-xl bg-secondary/50 animate-pulse" />
+        }
+      >
+        <RelatedProducts productId={product.id} />
+      </Suspense>
+
+      <ViewBeacon productId={product.id} />
     </PublicShell>
   );
 }
