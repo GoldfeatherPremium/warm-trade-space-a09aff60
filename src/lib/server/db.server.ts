@@ -219,7 +219,23 @@ async function schemaAlreadyMigrated(e: Engine): Promise<boolean> {
 }
 
 async function getEngine(): Promise<Engine> {
-  if (!engine) engine = await (isPostgres() ? createPostgresEngine() : createSqliteEngine());
+  if (!engine) {
+    // Fail fast if a production *runtime* has no DATABASE_URL — a silent SQLite
+    // fallback in serverless means data is written to an ephemeral disk and lost.
+    // Skip during `next build` (NEXT_PHASE=phase-production-build): prerendering
+    // has no DB and is already handled by per-query graceful fallbacks.
+    if (
+      process.env.NODE_ENV === "production" &&
+      process.env.NEXT_PHASE !== "phase-production-build" &&
+      !process.env.DATABASE_URL
+    ) {
+      throw new Error(
+        "DATABASE_URL is required in production. SQLite is only suitable for local development. " +
+          "Set DATABASE_URL to a Postgres connection string (e.g. Supabase, Neon, Railway).",
+      );
+    }
+    engine = await (isPostgres() ? createPostgresEngine() : createSqliteEngine());
+  }
   if (isPostgres()) {
     if (!migratedFlag) {
       if (!(await schemaAlreadyMigrated(engine))) await migrate(engine);
@@ -1099,6 +1115,30 @@ async function migrate(e: Engine): Promise<void> {
   // status + created_at scans used by admin pulse, recent-sales, and order listings
   await e
     .exec(`create index if not exists idx_orders_status_created on orders(status, created_at)`)
+    .catch(() => {});
+
+  // --- Lifecycle sweep hot-path + dispute/seller covering indexes ---
+  // sweepLifecycle scans orders by (status, expires_at/auto_confirm_at/warranty_ends_at)
+  // and products by (status, expires_at); without these each sweep is a full scan.
+  await e
+    .exec(`create index if not exists idx_orders_sweep_expires on orders(status, expires_at)`)
+    .catch(() => {});
+  await e
+    .exec(`create index if not exists idx_orders_sweep_confirm on orders(status, auto_confirm_at)`)
+    .catch(() => {});
+  await e
+    .exec(`create index if not exists idx_orders_sweep_release on orders(status, warranty_ends_at)`)
+    .catch(() => {});
+  await e
+    .exec(`create index if not exists idx_products_sweep_expires on products(status, expires_at)`)
+    .catch(() => {});
+  // disputes.order_id is hit by every dispute lookup (orders, queries, lifecycle, trust)
+  await e
+    .exec(`create index if not exists idx_disputes_order on disputes(order_id)`)
+    .catch(() => {});
+  // seller dashboard order counts filter by (seller_id, status)
+  await e
+    .exec(`create index if not exists idx_orders_seller_status on orders(seller_id, status)`)
     .catch(() => {});
 
   // --- Phase E (perf audit): full-text search acceleration ---

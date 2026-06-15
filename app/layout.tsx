@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo_Black, Hind, JetBrains_Mono } from "next/font/google";
+import { Archivo_Black, Inter, JetBrains_Mono } from "next/font/google";
 import { LiveUpdatesProvider, PwaInstallBanner } from "./_components/live-updates";
 import "./globals.css";
 
@@ -12,7 +12,7 @@ const archivoBlack = Archivo_Black({
   display: "swap",
 });
 
-const hind = Hind({
+const inter = Inter({
   weight: ["400", "500", "600", "700"],
   subsets: ["latin"],
   variable: "--nf-body",
@@ -55,7 +55,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`dark ${archivoBlack.variable} ${hind.variable} ${jetbrainsMono.variable}`}
+      className={`dark ${archivoBlack.variable} ${inter.variable} ${jetbrainsMono.variable}`}
     >
       <body>
         <LiveUpdatesProvider>

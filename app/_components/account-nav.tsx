@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Bell, MessageSquare } from "lucide-react";
 import { logoutAction } from "@/server/actions/auth";
 import { useLiveCounts } from "./live-updates";
 
@@ -10,13 +11,23 @@ type Me = { id: string; username: string; role: string; seller_status: string } 
 
 const STAFF = ["admin", "support", "finance"];
 
+function Badge({ count }: { count: number }) {
+  if (count <= 0) return null;
+  return (
+    <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-0.5 rounded-full bg-accent text-accent-foreground text-[9px] font-bold grid place-items-center leading-none">
+      {count > 99 ? "99+" : count}
+    </span>
+  );
+}
+
 /**
  * Header account island. Fetches the session client-side so the public pages
  * it lives in stay statically prerendered (no per-request cookie read).
+ * Unread counts are streamed via SSE (LiveUpdatesProvider).
  */
 export function AccountNav() {
   const router = useRouter();
-  const [me, setMe] = useState<Me | undefined>(undefined); // undefined = loading
+  const [me, setMe] = useState<Me | undefined>(undefined);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const { unreadMessages, unreadNotifications } = useLiveCounts();
@@ -58,16 +69,13 @@ export function AccountNav() {
 
   const isStaff = STAFF.includes(me.role);
   const isSeller = me.seller_status === "approved";
-  const totalUnread = unreadMessages + unreadNotifications;
 
-  const links: Array<{ href: string; label: string; badge?: number }> = [
+  const links: Array<{ href: string; label: string }> = [
     { href: "/dashboard", label: "Dashboard" },
     { href: "/orders", label: "My orders" },
     { href: "/wallet", label: "Wallet" },
-    { href: "/chat", label: "Messages", badge: unreadMessages },
     ...(isSeller ? [{ href: "/seller", label: "Seller center" }] : []),
     ...(isStaff ? [{ href: "/admin", label: "Admin" }] : []),
-    { href: "/notifications", label: "Notifications", badge: unreadNotifications },
     { href: "/account", label: "Account" },
   ];
 
@@ -80,49 +88,62 @@ export function AccountNav() {
   }
 
   return (
-    <div className="ml-auto sm:ml-0 relative shrink-0" ref={ref}>
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="relative size-9 rounded-full bg-primary/20 border border-primary/40 grid place-items-center text-xs font-bold text-primary uppercase"
-        aria-label="Account menu"
-        aria-expanded={open}
+    <div className="ml-auto sm:ml-0 flex items-center gap-1 shrink-0">
+      {/* Chat icon */}
+      <Link
+        href="/chat"
+        className="relative size-9 rounded-md grid place-items-center text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
+        aria-label="Messages"
       >
-        {me.username.slice(0, 2)}
-        {totalUnread > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 size-4 rounded-full bg-destructive text-[9px] font-bold text-white grid place-items-center leading-none">
-            {totalUnread > 99 ? "99+" : totalUnread}
-          </span>
-        )}
-      </button>
-      {open && (
-        <div className="absolute right-0 mt-2 w-52 bg-card border border-border rounded-lg shadow-xl overflow-hidden z-50">
-          <div className="px-3 py-2 border-b border-border">
-            <p className="text-xs font-bold truncate">{me.username}</p>
-            <p className="text-[10px] text-muted-foreground capitalize">{me.role}</p>
-          </div>
-          {links.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              onClick={() => setOpen(false)}
-              className="flex items-center justify-between px-3 py-2 text-xs hover:bg-secondary/60"
+        <MessageSquare className="size-4" />
+        <Badge count={unreadMessages} />
+      </Link>
+
+      {/* Notifications icon */}
+      <Link
+        href="/notifications"
+        className="relative size-9 rounded-md grid place-items-center text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
+        aria-label="Notifications"
+      >
+        <Bell className="size-4" />
+        <Badge count={unreadNotifications} />
+      </Link>
+
+      {/* Account avatar + dropdown */}
+      <div className="relative" ref={ref}>
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className="size-9 rounded-full bg-primary/20 border border-primary/40 grid place-items-center text-xs font-bold text-primary uppercase hover:bg-primary/30 transition-colors"
+          aria-label="Account menu"
+          aria-expanded={open}
+        >
+          {me.username.slice(0, 2)}
+        </button>
+        {open && (
+          <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-xl overflow-hidden z-50">
+            <div className="px-3 py-2 border-b border-border">
+              <p className="text-xs font-bold truncate">{me.username}</p>
+              <p className="text-[10px] text-muted-foreground capitalize">{me.role}</p>
+            </div>
+            {links.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                onClick={() => setOpen(false)}
+                className="block px-3 py-2 text-xs hover:bg-secondary/60"
+              >
+                {l.label}
+              </Link>
+            ))}
+            <button
+              onClick={signOut}
+              className="block w-full text-left px-3 py-2 text-xs text-destructive hover:bg-secondary/60 border-t border-border"
             >
-              <span>{l.label}</span>
-              {l.badge && l.badge > 0 ? (
-                <span className="size-4 rounded-full bg-destructive text-[9px] font-bold text-white grid place-items-center">
-                  {l.badge > 99 ? "99+" : l.badge}
-                </span>
-              ) : null}
-            </Link>
-          ))}
-          <button
-            onClick={signOut}
-            className="block w-full text-left px-3 py-2 text-xs text-destructive hover:bg-secondary/60 border-t border-border"
-          >
-            Sign out
-          </button>
-        </div>
-      )}
+              Sign out
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
