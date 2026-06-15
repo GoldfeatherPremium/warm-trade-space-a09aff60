@@ -155,7 +155,10 @@ export default async function StorePage({ params }: { params: Promise<{ username
                 value: fmtMins(seller.avg_response_minutes),
               },
             ].map((s) => (
-              <div key={s.label} className="glass rounded-xl p-3 flex flex-col gap-1">
+              <div
+                key={s.label}
+                className="bg-secondary border border-border/60 rounded-xl p-3 flex flex-col gap-1"
+              >
                 <s.icon className="size-3.5 text-primary" />
                 <span className="text-base font-bold leading-none">{s.value}</span>
                 <span className="text-[10px] text-muted-foreground">{s.label}</span>

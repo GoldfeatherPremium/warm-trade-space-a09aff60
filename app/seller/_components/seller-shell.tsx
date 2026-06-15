@@ -39,21 +39,22 @@ export function SellerShell({
   const pathname = usePathname();
   return (
     <PublicShell>
-      <div className="space-y-4">
-        <div className="flex gap-1 overflow-x-auto no-scrollbar border-b border-border pb-2">
+      <div className="space-y-5">
+        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-1">
           {NAV.map((n) => {
             const active = n.exact ? pathname === n.href : pathname.startsWith(n.href);
             return (
               <Link
                 key={n.href}
                 href={n.href}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-bold whitespace-nowrap ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${
                   active
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-secondary hover:bg-border text-foreground"
+                    ? "bg-primary text-primary-foreground shadow-card"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/80"
                 }`}
               >
-                <n.icon className="size-3.5" /> {n.label}
+                <n.icon className="size-3.5" />
+                {n.label}
               </Link>
             );
           })}

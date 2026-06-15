@@ -174,8 +174,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               { icon: Eye, label: "Views", value: product.views.toLocaleString() },
               { icon: ShieldCheck, label: "Warranty", value: `${product.warranty_hours}h` },
             ].map((s) => (
-              <div key={s.label} className="glass rounded-xl p-3 flex flex-col gap-1">
-                <s.icon className="size-3.5 text-primary" />
+              <div
+                key={s.label}
+                className="bg-secondary border border-border/60 rounded-xl p-3 flex flex-col gap-1"
+              >
+                <s.icon className="size-3.5 text-primary shrink-0" />
                 <span className="text-sm font-bold leading-none">{s.value}</span>
                 <span className="text-[10px] text-muted-foreground">{s.label}</span>
               </div>
@@ -185,7 +188,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <div className="bg-card border border-border rounded-2xl p-5">
             <h2 className="font-display text-lg mb-3">About this listing</h2>
             <p className="text-sm text-foreground/85 whitespace-pre-wrap leading-relaxed">
-              {product.description}
+              {product.description
+                .replace(/^(?:#+\s*)?about\s+this\s+listing\s*[\r\n]*/i, "")
+                .trim()}
             </p>
             {(product.platform || product.region || product.item_name) && (
               <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-border/60">

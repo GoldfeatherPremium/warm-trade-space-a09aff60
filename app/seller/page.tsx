@@ -14,6 +14,9 @@ import {
   Boxes,
   AlertTriangle,
   PackageCheck,
+  ArrowUpRight,
+  ArrowDownRight,
+  Zap,
 } from "lucide-react";
 import { getSellerOverviewAction } from "@/server/actions/seller";
 import { usdt } from "@/lib/format";
@@ -22,43 +25,73 @@ const SalesAreaChart = lazy(() => import("@/components/charts/sales-area-chart")
 
 type Overview = Awaited<ReturnType<typeof getSellerOverviewAction>>;
 
-function StatCard({
+function KpiCard({
   label,
-  icon: Icon,
   value,
   sub,
-  tone,
   delta,
-  valueCls,
-  to,
+  tone,
+  icon: Icon,
+  accent = false,
+  href,
 }: {
   label: string;
-  icon?: React.ComponentType<{ className?: string }>;
   value: string;
   sub?: string;
-  tone?: "up" | "down" | "neutral";
   delta?: string;
-  valueCls?: string;
-  to?: string;
+  tone?: "up" | "down" | "neutral";
+  icon?: React.ComponentType<{ className?: string }>;
+  accent?: boolean;
+  href?: string;
 }) {
-  const body = (
-    <div className="bg-card border border-border rounded-lg p-4">
-      <p className="text-[9px] font-bold tracking-widest text-muted-foreground flex items-center gap-1.5">
-        {Icon && <Icon className="size-3.5" />}
+  const inner = (
+    <div
+      className={`relative bg-card border rounded-2xl p-4 overflow-hidden h-full ${href ? "card-hover border-border" : "border-border"}`}
+    >
+      <div className="flex items-start justify-between mb-3">
+        {Icon && (
+          <div
+            className={`size-8 rounded-lg grid place-items-center ${accent ? "bg-primary/20" : "bg-secondary"}`}
+          >
+            <Icon className={`size-4 ${accent ? "text-primary" : "text-muted-foreground"}`} />
+          </div>
+        )}
+        {delta && (
+          <span
+            className={`inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-md ${
+              tone === "up"
+                ? "bg-emerald-500/15 text-emerald-400"
+                : tone === "down"
+                  ? "bg-destructive/15 text-destructive"
+                  : "bg-secondary text-muted-foreground"
+            }`}
+          >
+            {tone === "up" ? (
+              <ArrowUpRight className="size-2.5" />
+            ) : tone === "down" ? (
+              <ArrowDownRight className="size-2.5" />
+            ) : null}
+            {delta}
+          </span>
+        )}
+      </div>
+      <p className={`font-mono text-xl font-bold ${accent ? "text-gradient-brand" : ""}`}>
+        {value}
+      </p>
+      <p className="text-[9px] font-bold tracking-widest text-muted-foreground mt-1 uppercase">
         {label}
       </p>
-      <p className={`font-mono text-lg mt-1.5 ${valueCls ?? ""}`}>{value}</p>
-      {sub && <p className="text-[10px] text-muted-foreground mt-1">{sub}</p>}
-      {delta && (
-        <p
-          className={`text-[10px] font-bold mt-0.5 ${tone === "up" ? "text-accent" : tone === "down" ? "text-destructive" : "text-muted-foreground"}`}
-        >
-          {delta}
-        </p>
-      )}
+      {sub && <p className="text-[10px] text-muted-foreground mt-0.5">{sub}</p>}
     </div>
   );
-  return to ? <Link href={to}>{body}</Link> : body;
+
+  return href ? (
+    <Link href={href} className="block group">
+      {inner}
+    </Link>
+  ) : (
+    inner
+  );
 }
 
 export default function SellerOverviewPage() {
@@ -72,160 +105,215 @@ export default function SellerOverviewPage() {
     });
   }, []);
 
-  if (!data)
+  if (!data) {
     return (
       <div className="space-y-5 animate-pulse">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-20 rounded-lg bg-card border border-border" />
+            <div key={i} className="h-24 rounded-2xl bg-card border border-border" />
           ))}
         </div>
-        <div className="h-44 rounded-lg bg-card border border-border" />
+        <div className="h-64 rounded-2xl bg-card border border-border" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-20 rounded-2xl bg-card border border-border" />
+          ))}
+        </div>
       </div>
     );
+  }
 
   const intel = data.intelligence;
-  const completionTone =
+  const completionTone: "up" | "down" | "neutral" =
     data.profile.completionRate >= 95
       ? "up"
       : data.profile.completionRate >= 85
         ? "neutral"
         : "down";
+  const wowTone: "up" | "down" | "neutral" =
+    intel.wowPct > 0 ? "up" : intel.wowPct < 0 ? "down" : "neutral";
 
   return (
     <div className="space-y-5">
+      {/* Alerts */}
       {(data.needsDelivery > 0 || data.openDisputes > 0) && (
         <div className="grid sm:grid-cols-2 gap-3">
           {data.needsDelivery > 0 && (
             <Link
               href="/seller/orders"
-              className="flex items-center gap-3 bg-blue-500/10 border border-blue-500/40 rounded-lg p-3 hover:border-blue-500/70 transition-colors"
+              className="flex items-center gap-3 bg-primary/10 border border-primary/30 rounded-xl p-3.5 hover:border-primary/60 transition-colors"
             >
-              <PackageCheck className="size-5 text-blue-400 shrink-0" />
-              <p className="text-sm font-bold text-blue-400">
-                {data.needsDelivery} order{data.needsDelivery > 1 ? "s" : ""} awaiting delivery
-              </p>
+              <PackageCheck className="size-5 text-primary shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-primary">
+                  {data.needsDelivery} order{data.needsDelivery > 1 ? "s" : ""} awaiting delivery
+                </p>
+                <p className="text-[10px] text-primary/60">Fulfill now to maintain SLA</p>
+              </div>
+              <ArrowUpRight className="size-4 text-primary shrink-0" />
             </Link>
           )}
           {data.openDisputes > 0 && (
             <Link
               href="/seller/orders"
-              className="flex items-center gap-3 bg-destructive/10 border border-destructive/40 rounded-lg p-3 hover:border-destructive/70 transition-colors"
+              className="flex items-center gap-3 bg-destructive/10 border border-destructive/30 rounded-xl p-3.5 hover:border-destructive/60 transition-colors"
             >
               <AlertTriangle className="size-5 text-destructive shrink-0" />
-              <p className="text-sm font-bold text-destructive">
-                {data.openDisputes} open dispute{data.openDisputes > 1 ? "s" : ""}
-              </p>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-destructive">
+                  {data.openDisputes} open dispute{data.openDisputes > 1 ? "s" : ""}
+                </p>
+                <p className="text-[10px] text-destructive/60">Respond within 24h</p>
+              </div>
+              <ArrowUpRight className="size-4 text-destructive shrink-0" />
             </Link>
           )}
         </div>
       )}
 
+      {/* Primary KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard
-          label="SALES TODAY"
+        <KpiCard
+          label="Sales Today"
           icon={ShoppingCart}
           value={usdt(data.today.s)}
           sub={`${data.today.c} order${data.today.c === 1 ? "" : "s"}`}
+          accent
         />
-        <StatCard
-          label="SALES 7 DAYS"
+        <KpiCard
+          label="Sales 7 Days"
           icon={CalendarDays}
           value={usdt(data.week.s)}
           sub={`${data.week.c} orders`}
         />
-        <StatCard
-          label="SALES 30 DAYS"
+        <KpiCard
+          label="Sales 30 Days"
           icon={BarChart3}
           value={usdt(data.month.s)}
           sub={`${data.month.c} orders`}
         />
-        <StatCard
-          label="RATING"
+        <KpiCard
+          label="Rating"
           icon={Star}
           value={data.profile.rating > 0 ? `★ ${data.profile.rating.toFixed(1)}` : "—"}
           sub={data.profile.rating > 0 ? `${data.profile.ratingCount} reviews` : "no reviews yet"}
         />
       </div>
 
-      <div className="bg-card border border-border rounded-lg p-4 space-y-3">
-        <p className="text-[9px] font-bold tracking-widest text-muted-foreground flex items-center gap-1.5">
-          <BarChart3 className="size-3.5" /> BUSINESS INTELLIGENCE
-        </p>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <StatCard
-            label="THIS WEEK"
-            icon={Activity}
-            value={usdt(intel.thisWeekCents)}
-            sub={`vs ${usdt(intel.lastWeekCents)} last`}
-            tone={intel.wowPct >= 0 ? "up" : "down"}
-            delta={`${intel.wowPct >= 0 ? "+" : ""}${intel.wowPct}% WoW`}
-          />
-          <StatCard
-            label="7-DAY FORECAST"
-            icon={Target}
-            value={usdt(intel.forecast7dCents)}
-            sub={`${usdt(intel.avgDailyCents)} / day avg`}
-          />
-          <StatCard
-            label="CONVERSION"
-            icon={TrendingUp}
-            value={`${intel.conversionPct}%`}
-            sub={`${intel.sold.toLocaleString()} / ${intel.views.toLocaleString()} views`}
-            tone={intel.conversionPct >= 5 ? "up" : "neutral"}
-          />
-          <StatCard
-            label="COMPLETION"
-            icon={Activity}
-            value={`${data.profile.completionRate.toFixed(0)}%`}
-            sub={`Level ${data.profile.level}`}
-            tone={completionTone}
-          />
+      {/* Sales chart */}
+      <div className="bg-card border border-border rounded-2xl p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <p className="text-[10px] font-bold tracking-widest text-muted-foreground flex items-center gap-1.5">
+              <Activity className="size-3.5" /> NET SALES — LAST 14 DAYS
+            </p>
+          </div>
+          <Link
+            href="/seller/analytics"
+            className="text-[10px] font-bold text-primary hover:underline"
+          >
+            Full analytics →
+          </Link>
         </div>
-      </div>
-
-      <div className="bg-card border border-border rounded-lg p-4">
-        <p className="text-[9px] font-bold tracking-widest text-muted-foreground mb-3">
-          NET SALES — LAST 14 DAYS
-        </p>
-        <div className="h-44">
+        <div className="h-48">
           <Suspense
-            fallback={<div className="h-full w-full rounded bg-secondary/40 animate-pulse" />}
+            fallback={<div className="h-full w-full rounded-xl bg-secondary/40 animate-pulse" />}
           >
             <SalesAreaChart data={data.daily} />
           </Suspense>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
-        <StatCard
-          label="AVAILABLE"
-          icon={Wallet}
-          value={usdt(data.wallet.available_cents)}
-          valueCls="text-accent"
-          to="/seller/wallet"
-        />
-        <StatCard
-          label="IN ESCROW"
-          value={usdt(data.wallet.pending_cents)}
-          valueCls="text-yellow-400"
-          to="/seller/wallet"
-        />
-        <StatCard
-          label="FROZEN"
-          value={usdt(data.wallet.frozen_cents)}
-          valueCls="text-destructive"
-          to="/seller/wallet"
-        />
+      {/* Business intelligence */}
+      <div className="bg-card border border-border rounded-2xl p-5">
+        <p className="text-[10px] font-bold tracking-widest text-muted-foreground flex items-center gap-1.5 mb-4">
+          <Zap className="size-3.5 text-primary" /> BUSINESS INTELLIGENCE
+        </p>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <KpiCard
+            label="This Week"
+            icon={Activity}
+            value={usdt(intel.thisWeekCents)}
+            sub={`vs ${usdt(intel.lastWeekCents)} last week`}
+            tone={wowTone}
+            delta={`${intel.wowPct >= 0 ? "+" : ""}${intel.wowPct}% WoW`}
+          />
+          <KpiCard
+            label="7-Day Forecast"
+            icon={Target}
+            value={usdt(intel.forecast7dCents)}
+            sub={`${usdt(intel.avgDailyCents)} / day avg`}
+          />
+          <KpiCard
+            label="Conversion"
+            icon={TrendingUp}
+            value={`${intel.conversionPct}%`}
+            sub={`${intel.sold.toLocaleString()} sales / ${intel.views.toLocaleString()} views`}
+            tone={intel.conversionPct >= 5 ? "up" : "neutral"}
+            delta={intel.conversionPct >= 5 ? "Healthy" : "Needs work"}
+          />
+          <KpiCard
+            label="Completion"
+            icon={Activity}
+            value={`${data.profile.completionRate.toFixed(0)}%`}
+            sub={`Level ${data.profile.level} · ${data.profile.totalSales} sales`}
+            tone={completionTone}
+            delta={
+              completionTone === "up" ? "Excellent" : completionTone === "down" ? "At risk" : "Good"
+            }
+          />
+        </div>
       </div>
 
-      {data.topProducts.length > 0 && (
-        <div className="bg-card border border-border rounded-lg p-4">
-          <p className="text-[9px] font-bold tracking-widest text-muted-foreground flex items-center gap-1.5 mb-3">
-            <Boxes className="size-3.5" /> PRODUCT PERFORMANCE
+      {/* Wallet */}
+      <div className="grid grid-cols-3 gap-3">
+        <KpiCard
+          label="Available"
+          icon={Wallet}
+          value={usdt(data.wallet.available_cents)}
+          accent
+          href="/seller/wallet"
+        />
+        <div className="bg-card border border-border rounded-2xl p-4">
+          <div className="size-8 rounded-lg grid place-items-center bg-yellow-500/15 mb-3">
+            <Wallet className="size-4 text-yellow-400" />
+          </div>
+          <p className="font-mono text-xl font-bold text-yellow-400">
+            {usdt(data.wallet.pending_cents)}
           </p>
-          <div className="space-y-1">
-            <div className="grid grid-cols-[1fr_60px_60px_70px_60px] gap-2 text-[9px] font-bold text-muted-foreground tracking-widest pb-1 border-b border-border">
+          <p className="text-[9px] font-bold tracking-widest text-muted-foreground mt-1 uppercase">
+            In Escrow
+          </p>
+        </div>
+        <div className="bg-card border border-border rounded-2xl p-4">
+          <div className="size-8 rounded-lg grid place-items-center bg-destructive/15 mb-3">
+            <Wallet className="size-4 text-destructive" />
+          </div>
+          <p className="font-mono text-xl font-bold text-destructive">
+            {usdt(data.wallet.frozen_cents)}
+          </p>
+          <p className="text-[9px] font-bold tracking-widest text-muted-foreground mt-1 uppercase">
+            Frozen
+          </p>
+        </div>
+      </div>
+
+      {/* Product performance */}
+      {data.topProducts.length > 0 && (
+        <div className="bg-card border border-border rounded-2xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-[10px] font-bold tracking-widest text-muted-foreground flex items-center gap-1.5">
+              <Boxes className="size-3.5" /> PRODUCT PERFORMANCE
+            </p>
+            <Link
+              href="/seller/products"
+              className="text-[10px] font-bold text-primary hover:underline"
+            >
+              Manage →
+            </Link>
+          </div>
+          <div className="space-y-0">
+            <div className="grid grid-cols-[1fr_56px_56px_64px_52px] gap-2 text-[9px] font-bold text-muted-foreground tracking-widest pb-2 border-b border-border mb-1">
               <span>PRODUCT</span>
               <span className="text-right">VIEWS</span>
               <span className="text-right">SOLD</span>
@@ -234,55 +322,86 @@ export default function SellerOverviewPage() {
             </div>
             {data.topProducts.map((tp) => {
               const conv = tp.views > 0 ? ((tp.sold_count / tp.views) * 100).toFixed(1) : "—";
+              const convNum = Number(conv) || 0;
               return (
-                <div
+                <Link
                   key={tp.id}
-                  className="grid grid-cols-[1fr_60px_60px_70px_60px] gap-2 text-xs py-1 border-b border-border/40 last:border-0 items-center"
+                  href={`/seller/products`}
+                  className="grid grid-cols-[1fr_56px_56px_64px_52px] gap-2 text-xs py-2.5 border-b border-border/30 last:border-0 items-center hover:bg-secondary/30 -mx-1 px-1 rounded-lg transition-colors"
                 >
-                  <span className="truncate font-bold">{tp.title}</span>
-                  <span className="text-right font-mono text-muted-foreground">{tp.views}</span>
-                  <span className="text-right font-mono">{tp.sold_count}</span>
-                  <span
-                    className={`text-right font-mono ${Number(conv) >= 5 ? "text-accent" : "text-muted-foreground"}`}
-                  >
-                    {conv}%
+                  <span className="truncate font-bold text-[11px]">{tp.title}</span>
+                  <span className="text-right font-mono text-muted-foreground text-[11px]">
+                    {tp.views.toLocaleString()}
+                  </span>
+                  <span className="text-right font-mono text-[11px]">
+                    {tp.sold_count.toLocaleString()}
                   </span>
                   <span
-                    className={`text-right font-mono ${tp.delivery_type === "auto" && tp.stock_count <= 5 ? "text-yellow-400" : "text-muted-foreground"}`}
+                    className={`text-right font-mono text-[11px] ${
+                      convNum >= 5
+                        ? "text-emerald-400"
+                        : convNum > 0
+                          ? "text-muted-foreground"
+                          : "text-muted-foreground/50"
+                    }`}
+                  >
+                    {conv === "—" ? "—" : `${conv}%`}
+                  </span>
+                  <span
+                    className={`text-right font-mono text-[11px] ${
+                      tp.delivery_type === "auto" && tp.stock_count <= 5
+                        ? "text-yellow-400 font-bold"
+                        : "text-muted-foreground"
+                    }`}
                   >
                     {tp.delivery_type === "auto" ? tp.stock_count : "∞"}
                   </span>
-                </div>
+                </Link>
               );
             })}
           </div>
         </div>
       )}
 
+      {/* Low stock */}
       {data.lowStock.length > 0 && (
-        <div className="bg-card border border-yellow-500/30 rounded-lg p-4">
-          <p className="text-[9px] font-bold tracking-widest text-muted-foreground mb-3">
-            LOW STOCK
+        <div className="bg-yellow-500/5 border border-yellow-500/30 rounded-2xl p-4">
+          <p className="text-[10px] font-bold tracking-widest text-yellow-400 mb-3 flex items-center gap-1.5">
+            <AlertTriangle className="size-3.5" /> LOW STOCK ALERT
           </p>
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             {data.lowStock.map((p) => (
               <Link
                 key={p.id}
                 href={`/seller/stock/${p.id}`}
-                className="flex justify-between text-xs py-1 hover:text-primary"
+                className="flex justify-between items-center text-xs py-1.5 hover:text-primary transition-colors"
               >
-                <span className="truncate">{p.title}</span>
-                <span className="font-mono text-yellow-400">{p.stock_count} left</span>
+                <span className="truncate text-foreground/80">{p.title}</span>
+                <span className="font-mono text-yellow-400 font-bold shrink-0 ml-2">
+                  {p.stock_count} left
+                </span>
               </Link>
             ))}
           </div>
         </div>
       )}
 
-      <div className="bg-card border border-border rounded-lg p-4 text-xs text-muted-foreground leading-relaxed">
-        <b className="text-foreground">Seller level {data.profile.level}</b> ·{" "}
-        {data.profile.totalSales} lifetime sales · {data.profile.completionRate.toFixed(0)}%
-        completion.
+      {/* Seller level badge */}
+      <div className="bg-card border border-border rounded-2xl px-5 py-4 flex items-center gap-3">
+        <div className="size-10 rounded-xl bg-primary/15 border border-primary/30 grid place-items-center shrink-0">
+          <Star className="size-5 text-primary" />
+        </div>
+        <div className="text-xs text-muted-foreground leading-relaxed flex-1">
+          <span className="text-foreground font-bold">Seller Level {data.profile.level}</span> ·{" "}
+          {data.profile.totalSales.toLocaleString()} lifetime sales ·{" "}
+          {data.profile.completionRate.toFixed(0)}% completion rate
+        </div>
+        <Link
+          href="/seller/analytics"
+          className="text-[10px] font-bold text-primary hover:underline shrink-0"
+        >
+          Analytics →
+        </Link>
       </div>
     </div>
   );
