@@ -282,14 +282,9 @@ export async function q<T = Record<string, unknown>>(sql: string, params?: Param
   try {
     return await (await getEngine()).q<T>(sql, params);
   } catch (e) {
-    console.error(
-      "[db] q failed:",
-      (e as Error)?.message,
-      "sql:",
-      sql,
-      "params:",
-      JSON.stringify(params),
-    );
+    // Params are intentionally omitted — they may contain password_hash, session tokens,
+    // or other credentials that must never appear in logs.
+    console.error("[db] q failed:", (e as Error)?.message, "sql:", sql.slice(0, 200));
     throw e;
   }
 }
@@ -305,14 +300,7 @@ export async function run(sql: string, params?: Params): Promise<void> {
   try {
     return await (await getEngine()).run(sql, params);
   } catch (e) {
-    console.error(
-      "[db] run failed:",
-      (e as Error)?.message,
-      "sql:",
-      sql,
-      "params:",
-      JSON.stringify(params),
-    );
+    console.error("[db] run failed:", (e as Error)?.message, "sql:", sql.slice(0, 200));
     throw e;
   }
 }
@@ -622,6 +610,8 @@ export function schemaSql(dialect: "sqlite" | "postgres"): string {
   create index if not exists idx_conv_order on conversations(order_id);
   create index if not exists idx_disputes_status on disputes(status);
   create index if not exists idx_withdrawals_status on withdrawals(status, created_at);
+  create index if not exists idx_sessions_user on sessions(user_id);
+  create index if not exists idx_sessions_expires on sessions(expires_at);
 
   create table if not exists catalog_items (
     id text primary key,

@@ -61,6 +61,13 @@ export async function currentUser(): Promise<SessionUser | null> {
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
   if (!token) return null;
+
+  // Probabilistic expired-session sweep: runs ~1% of requests to keep the
+  // sessions table bounded without a dedicated cron job.
+  if (Math.random() < 0.01) {
+    run(`delete from sessions where expires_at < ?`, [now()]).catch(() => {});
+  }
+
   const row = await q1<SessionUser & { expires_at: number }>(
     `select u.id, u.email, u.username, u.role, u.seller_status, u.seller_level, u.rating,
             u.rating_count, u.total_sales, u.completion_rate, u.is_banned, u.wallet_frozen,
