@@ -1089,6 +1089,16 @@ async function migrate(e: Engine): Promise<void> {
     .catch(() => {});
   await e.exec(`create index if not exists idx_orders_paid on orders(paid_at)`).catch(() => {});
   await e.exec(`create index if not exists idx_users_created on users(created_at)`).catch(() => {});
+  // composite filter used by PUBLIC_SELLER_COND in every browse / homepage query
+  await e
+    .exec(
+      `create index if not exists idx_users_seller_filter on users(seller_status, is_banned, vacation_mode)`,
+    )
+    .catch(() => {});
+  // status + created_at scans used by admin pulse, recent-sales, and order listings
+  await e
+    .exec(`create index if not exists idx_orders_status_created on orders(status, created_at)`)
+    .catch(() => {});
 
   // --- Phase E (perf audit): full-text search acceleration ---
   // Product search runs `lower(col) like '%term%'`, whose leading wildcard a
