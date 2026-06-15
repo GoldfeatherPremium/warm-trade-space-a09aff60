@@ -1,19 +1,13 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { lazy, Suspense, useEffect, useState, useTransition } from "react";
 import { getSellerAnalyticsAction } from "@/server/actions/seller";
 import { usdt } from "@/lib/format";
+
+// Recharts (~100 kB) is lazy-loaded so it doesn't inflate the initial bundle
+const AnalyticsCharts = lazy(() =>
+  import("./analytics-charts").then((m) => ({ default: m.AnalyticsCharts })),
+);
 
 type Range = "7d" | "30d" | "90d";
 type Analytics = Awaited<ReturnType<typeof getSellerAnalyticsAction>>;
@@ -91,89 +85,18 @@ export default function SellerAnalyticsPage() {
             />
           </div>
 
-          <div className="bg-card border border-border rounded-lg p-4">
-            <h2 className="text-xs font-bold tracking-widest text-muted-foreground mb-3">
-              NET REVENUE — {data.range.toUpperCase()}
-            </h2>
-            <div className="h-56">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={data.daily} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="sa-fill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.5} />
-                      <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid stroke="#27272a" vertical={false} />
-                  <XAxis
-                    dataKey="day"
-                    tick={{ fontSize: 10, fill: "#71717a" }}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 10, fill: "#71717a" }}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(v) => `${(v / 100).toFixed(0)}`}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      background: "#18181b",
-                      border: "1px solid #27272a",
-                      borderRadius: 8,
-                      fontSize: 12,
-                    }}
-                    formatter={(v: number) => [`${(v / 100).toFixed(2)} USDT`, "Net"]}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="v"
-                    stroke="#3b82f6"
-                    strokeWidth={2}
-                    fill="url(#sa-fill)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+          <Suspense
+            fallback={
+              <div className="space-y-3">
+                <div className="bg-card border border-border rounded-lg p-4 h-[280px] animate-pulse" />
+                <div className="bg-card border border-border rounded-lg p-4 h-[220px] animate-pulse" />
+              </div>
+            }
+          >
+            <AnalyticsCharts data={{ daily: data.daily, hours: data.hours, range: data.range }} />
+          </Suspense>
 
           <div className="grid lg:grid-cols-2 gap-3">
-            <div className="bg-card border border-border rounded-lg p-4">
-              <h2 className="text-xs font-bold tracking-widest text-muted-foreground mb-3">
-                ORDERS BY HOUR (UTC)
-              </h2>
-              <div className="h-44">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={data.hours} margin={{ top: 4, right: 8, left: -24, bottom: 0 }}>
-                    <XAxis
-                      dataKey="hour"
-                      tick={{ fontSize: 9, fill: "#71717a" }}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 10, fill: "#71717a" }}
-                      tickLine={false}
-                      axisLine={false}
-                      allowDecimals={false}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        background: "#18181b",
-                        border: "1px solid #27272a",
-                        borderRadius: 8,
-                        fontSize: 12,
-                      }}
-                      formatter={(v: number) => [v, "orders"]}
-                      labelFormatter={(h) => `${h}:00`}
-                    />
-                    <Bar dataKey="n" fill="#22c55e" radius={[2, 2, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
             <div className="bg-card border border-border rounded-lg p-4">
               <h2 className="text-xs font-bold tracking-widest text-muted-foreground mb-3">
                 CATEGORY MIX
@@ -205,43 +128,43 @@ export default function SellerAnalyticsPage() {
                 </div>
               )}
             </div>
-          </div>
 
-          <div className="bg-card border border-border rounded-lg p-4">
-            <h2 className="text-xs font-bold tracking-widest text-muted-foreground mb-3">
-              TOP PRODUCTS
-            </h2>
-            <div className="grid grid-cols-[1fr_70px_60px_70px_70px] gap-2 text-[9px] font-bold text-muted-foreground tracking-widest pb-1 border-b border-border">
-              <span>PRODUCT</span>
-              <span className="text-right">REVENUE</span>
-              <span className="text-right">ORDERS</span>
-              <span className="text-right">VIEWS</span>
-              <span className="text-right">CONV.</span>
-            </div>
-            {data.topProducts.length === 0 ? (
-              <p className="text-xs text-muted-foreground py-6 text-center">No products yet.</p>
-            ) : (
-              data.topProducts.map((p) => {
-                const conv = p.views > 0 ? ((p.sold_count / p.views) * 100).toFixed(1) : "—";
-                return (
-                  <div
-                    key={p.id}
-                    className="grid grid-cols-[1fr_70px_60px_70px_70px] gap-2 text-xs py-1.5 border-b border-border/40 last:border-0"
-                  >
-                    <span className="truncate font-bold">{p.title}</span>
-                    <span className="text-right font-mono">{usdt(p.revenue)}</span>
-                    <span className="text-right font-mono">{p.orders}</span>
-                    <span className="text-right font-mono text-muted-foreground">{p.views}</span>
-                    <span
-                      className={`text-right font-mono ${Number(conv) >= 5 ? "text-accent" : "text-muted-foreground"}`}
+            <div className="bg-card border border-border rounded-lg p-4">
+              <h2 className="text-xs font-bold tracking-widest text-muted-foreground mb-3">
+                TOP PRODUCTS
+              </h2>
+              <div className="grid grid-cols-[1fr_70px_60px_70px_70px] gap-2 text-[9px] font-bold text-muted-foreground tracking-widest pb-1 border-b border-border">
+                <span>PRODUCT</span>
+                <span className="text-right">REVENUE</span>
+                <span className="text-right">ORDERS</span>
+                <span className="text-right">VIEWS</span>
+                <span className="text-right">CONV.</span>
+              </div>
+              {data.topProducts.length === 0 ? (
+                <p className="text-xs text-muted-foreground py-6 text-center">No products yet.</p>
+              ) : (
+                data.topProducts.map((p) => {
+                  const conv = p.views > 0 ? ((p.sold_count / p.views) * 100).toFixed(1) : "—";
+                  return (
+                    <div
+                      key={p.id}
+                      className="grid grid-cols-[1fr_70px_60px_70px_70px] gap-2 text-xs py-1.5 border-b border-border/40 last:border-0"
                     >
-                      {conv}
-                      {p.views > 0 ? "%" : ""}
-                    </span>
-                  </div>
-                );
-              })
-            )}
+                      <span className="truncate font-bold">{p.title}</span>
+                      <span className="text-right font-mono">{usdt(p.revenue)}</span>
+                      <span className="text-right font-mono">{p.orders}</span>
+                      <span className="text-right font-mono text-muted-foreground">{p.views}</span>
+                      <span
+                        className={`text-right font-mono ${Number(conv) >= 5 ? "text-accent" : "text-muted-foreground"}`}
+                      >
+                        {conv}
+                        {p.views > 0 ? "%" : ""}
+                      </span>
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-3 gap-3">

@@ -38,20 +38,31 @@ export function verifyPassword(password: string, stored: string): boolean {
 }
 
 // ---------- stock encryption (AES-256-GCM at rest) ----------
-const STOCK_KEY = createHash("sha256")
-  .update(process.env.STOCK_ENCRYPTION_KEY ?? "dev-only-stock-key-change-in-production")
-  .digest();
+function getStockKey(): Buffer {
+  const rawKey = process.env.STOCK_ENCRYPTION_KEY;
+  if (!rawKey) {
+    throw new Error(
+      "STOCK_ENCRYPTION_KEY env var is not set. " +
+        "Add a long random string to your .env file. " +
+        "See .env.example. Refusing to encrypt/decrypt with an unset key — " +
+        "stock items would be encrypted under a public constant, exposing all sold goods.",
+    );
+  }
+  return createHash("sha256").update(rawKey).digest();
+}
 
 export function encryptStock(plaintext: string): string {
+  const key = getStockKey();
   const iv = randomBytes(12);
-  const cipher = createCipheriv("aes-256-gcm", STOCK_KEY, iv);
+  const cipher = createCipheriv("aes-256-gcm", key, iv);
   const enc = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()]);
   return `${iv.toString("hex")}.${cipher.getAuthTag().toString("hex")}.${enc.toString("hex")}`;
 }
 
 export function decryptStock(stored: string): string {
+  const key = getStockKey();
   const [iv, tag, data] = stored.split(".");
-  const decipher = createDecipheriv("aes-256-gcm", STOCK_KEY, Buffer.from(iv, "hex"));
+  const decipher = createDecipheriv("aes-256-gcm", key, Buffer.from(iv, "hex"));
   decipher.setAuthTag(Buffer.from(tag, "hex"));
   return Buffer.concat([decipher.update(Buffer.from(data, "hex")), decipher.final()]).toString(
     "utf8",

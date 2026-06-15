@@ -63,6 +63,11 @@ export async function registerAction(input: z.infer<typeof registerSchema>): Pro
 
 const loginSchema = z.object({ email: z.string().email(), password: z.string().min(1) });
 
+// Pre-hashed dummy used to ensure scrypt always runs, preventing email-enumeration
+// via timing differences between "email not found" and "wrong password" paths.
+const DUMMY_HASH =
+  "000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000:000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+
 export async function loginAction(input: z.infer<typeof loginSchema>): Promise<ActionResult> {
   try {
     await appContext();
@@ -73,8 +78,10 @@ export async function loginAction(input: z.infer<typeof loginSchema>): Promise<A
       `select id, password_hash, is_banned from users where email = ?`,
       [email],
     );
-    if (!row || !verifyPassword(data.password, row.password_hash))
-      return { ok: false, error: "Invalid email or password." };
+    // Always run hash comparison — even for non-existent emails — to prevent
+    // timing oracle that would allow user enumeration.
+    const match = verifyPassword(data.password, row?.password_hash ?? DUMMY_HASH);
+    if (!row || !match) return { ok: false, error: "Invalid email or password." };
     if (row.is_banned)
       return { ok: false, error: "This account has been banned. Contact support." };
     await createSession(row.id);

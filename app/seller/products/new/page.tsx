@@ -558,7 +558,13 @@ export default function NewProductPage() {
               key={id}
               className="relative size-20 rounded-md overflow-hidden border border-border"
             >
-              <img src={`/api/public/img/${id}`} alt="" className="w-full h-full object-cover" />
+              <img
+                src={`/api/public/img/${id}`}
+                alt=""
+                width={80}
+                height={80}
+                className="w-full h-full object-cover"
+              />
               <button
                 type="button"
                 onClick={() => removeImage(id)}

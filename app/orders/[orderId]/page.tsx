@@ -43,7 +43,13 @@ export default async function OrderDetailPage({
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center gap-3 mb-4">
           <div className="size-12 rounded-md overflow-hidden bg-secondary shrink-0">
-            <img src={productImage(o.image_key)} alt="" className="w-full h-full object-cover" />
+            <img
+              src={productImage(o.image_key)}
+              alt=""
+              width={48}
+              height={48}
+              className="w-full h-full object-cover"
+            />
           </div>
           <div>
             <h1 className="font-display text-xl">{o.product_title}</h1>
