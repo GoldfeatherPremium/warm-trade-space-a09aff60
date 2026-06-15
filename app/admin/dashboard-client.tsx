@@ -305,7 +305,13 @@ export function AdminDashboardClient() {
             ORDERS BY STATUS
           </p>
           <Suspense fallback={<ChartSkeleton />}>
-            {statusRows.length > 0 ? <OrdersStatusChart data={statusRows} /> : <ChartSkeleton />}
+            {!data ? (
+              <ChartSkeleton />
+            ) : statusRows.length > 0 ? (
+              <OrdersStatusChart data={statusRows} />
+            ) : (
+              <p className="text-xs text-muted-foreground py-4 text-center">No orders yet.</p>
+            )}
           </Suspense>
         </div>
 
