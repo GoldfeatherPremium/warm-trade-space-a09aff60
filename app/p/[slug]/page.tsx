@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Star, Zap, Clock, ShieldCheck } from "lucide-react";
@@ -27,7 +28,14 @@ export async function generateMetadata({
     title,
     description,
     alternates: { canonical: `/p/${product.slug}` },
-    openGraph: { title, description, url: `${SITE_URL}/p/${product.slug}`, type: "website" },
+    openGraph: {
+      title,
+      description,
+      url: `${SITE_URL}/p/${product.slug}`,
+      type: "website",
+      images: [{ url: `${SITE_URL}${productImage(product.image_key)}`, width: 1200, height: 630 }],
+    },
+    twitter: { card: "summary_large_image" },
   };
 }
 
@@ -83,12 +91,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       <div className="grid lg:grid-cols-[1.2fr_1fr] gap-6">
         {/* Left: media + description */}
         <div className="space-y-5">
-          <div className="aspect-[16/10] rounded-2xl overflow-hidden border border-border bg-secondary">
-            <img
+          <div className="aspect-[16/10] rounded-2xl overflow-hidden border border-border bg-secondary relative">
+            <Image
               src={productImage(product.image_key)}
               alt={product.title}
-              className="w-full h-full object-cover"
-              fetchPriority="high"
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 55vw"
+              className="object-cover"
             />
           </div>
           <div className="bg-card border border-border rounded-xl p-5">

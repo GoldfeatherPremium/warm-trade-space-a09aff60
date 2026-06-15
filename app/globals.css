@@ -32,9 +32,9 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --font-display: "Archivo Black", sans-serif;
-  --font-body: "Hind", sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
+  --font-display: var(--nf-display, "Archivo Black", sans-serif);
+  --font-body: var(--nf-body, "Hind", sans-serif);
+  --font-mono: var(--nf-mono, "JetBrains Mono", monospace);
 }
 
 :root {
