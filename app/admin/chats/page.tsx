@@ -4,8 +4,25 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Search, ShieldAlert } from "lucide-react";
 import { adminListConversations } from "@/server/actions/admin";
-import { ChatBox } from "@/components/chat-box";
 import { timeAgo } from "@/lib/format";
+
+// ChatBox is TanStack-coupled — will be replaced in Phase 6.
+function ChatBox({
+  conversationId,
+  className,
+}: {
+  conversationId: string;
+  readOnly?: boolean;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`bg-card border border-border rounded-xl grid place-items-center text-xs text-muted-foreground ${className ?? ""}`}
+    >
+      <span>Chat viewer — id: {conversationId} (Phase 6)</span>
+    </div>
+  );
+}
 
 export default function AdminChatsPage() {
   const [q, setQ] = useState("");

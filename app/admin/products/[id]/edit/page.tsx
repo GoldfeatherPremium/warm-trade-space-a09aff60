@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DynamicFields } from "@/components/dynamic-fields";
+import type { CategorySubmissionField } from "@/lib/api/catalog";
 
 export default function AdminProductEditPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -105,7 +106,7 @@ export default function AdminProductEditPage({ params }: { params: Promise<{ id:
     };
   }, [form.categoryId]);
 
-  const sellerFields = schema?.schema?.sellerFields ?? [];
+  const sellerFields = (schema?.schema?.sellerFields ?? []) as CategorySubmissionField[];
 
   const save = () => {
     if (!id) return;
@@ -303,7 +304,10 @@ export default function AdminProductEditPage({ params }: { params: Promise<{ id:
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs">Region</Label>
-          <Input value={form.region} onChange={(e) => setForm({ ...form, region: e.target.value })} />
+          <Input
+            value={form.region}
+            onChange={(e) => setForm({ ...form, region: e.target.value })}
+          />
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs">Platform</Label>

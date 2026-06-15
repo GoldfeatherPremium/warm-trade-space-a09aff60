@@ -30,6 +30,7 @@ export default function AdminCredits() {
 
   useEffect(() => {
     loadList();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q, withBalanceOnly]);
 
   const loadDetail = () => {
