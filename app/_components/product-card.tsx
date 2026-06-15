@@ -21,7 +21,6 @@ export function ProductCard({ product, priority }: { product: PublicProduct; pri
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           priority={priority}
           className="object-cover opacity-90 group-hover:opacity-100 transition"
-          unoptimized={product.image_key?.startsWith("upload:") ? false : false}
         />
         <span
           className={`absolute top-2 left-2 text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 ${

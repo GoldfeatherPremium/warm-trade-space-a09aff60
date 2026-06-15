@@ -6,6 +6,9 @@ import { PublicShell } from "../_components/site-shell";
 import { SearchBox } from "../_components/search-box";
 import { ProductCard } from "../_components/product-card";
 
+// Dynamic page but give CDN a 30-second window to coalesce concurrent requests.
+export const revalidate = 30;
+
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export async function generateMetadata({
