@@ -23,6 +23,9 @@ interface Entry<T = unknown> {
   inflight?: Promise<T>;
 }
 
+// Evict oldest entry (by Map insertion order) when the store exceeds this size.
+// Prevents unbounded growth from per-product / per-seller keys in long-lived isolates.
+const MAX_ENTRIES = 500;
 const store = new Map<string, Entry>();
 
 export async function cached<T>(key: string, ttlMs: number, fn: () => Promise<T>): Promise<T> {
@@ -34,6 +37,10 @@ export async function cached<T>(key: string, ttlMs: number, fn: () => Promise<T>
   const inflight = fn()
     .then((value) => {
       store.set(key, { value, at: Date.now() });
+      if (store.size > MAX_ENTRIES) {
+        const oldest = store.keys().next().value;
+        if (oldest) store.delete(oldest);
+      }
       return value;
     })
     .catch((err) => {
