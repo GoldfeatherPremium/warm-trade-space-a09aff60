@@ -1089,6 +1089,10 @@ async function migrate(e: Engine): Promise<void> {
     .catch(() => {});
   await e.exec(`create index if not exists idx_orders_paid on orders(paid_at)`).catch(() => {});
   await e.exec(`create index if not exists idx_users_created on users(created_at)`).catch(() => {});
+  // orders(order_id, created_at) for deposit lookups with ORDER BY created_at DESC
+  await e
+    .exec(`create index if not exists idx_deposits_order_created on deposits(order_id, created_at)`)
+    .catch(() => {});
   // composite filter used by PUBLIC_SELLER_COND in every browse / homepage query
   await e
     .exec(
