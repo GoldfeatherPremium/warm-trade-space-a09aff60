@@ -21,6 +21,27 @@ export const metadata: Metadata = {
   },
 };
 
+const ORG_JSONLD = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "X-VAULT",
+  url: SITE_URL,
+  logo: `${SITE_URL}/assets/og-default.jpg`,
+  sameAs: [],
+};
+
+const WEBSITE_JSONLD = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "X-VAULT",
+  url: SITE_URL,
+  potentialAction: {
+    "@type": "SearchAction",
+    target: { "@type": "EntryPoint", urlTemplate: `${SITE_URL}/browse?q={search_term_string}` },
+    "query-input": "required name=search_term_string",
+  },
+};
+
 const FAQ_JSONLD = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
@@ -53,6 +74,14 @@ export default async function HomePage() {
 
   return (
     <PublicShell>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(ORG_JSONLD) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(WEBSITE_JSONLD) }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSONLD) }}

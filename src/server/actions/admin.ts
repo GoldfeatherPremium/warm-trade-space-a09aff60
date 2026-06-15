@@ -29,7 +29,7 @@ import {
   getBuyerCredits,
   txCreditGrant,
 } from "@/lib/server/money.server";
-import { invalidateCache } from "@/lib/server/cache.server";
+import { invalidateCache, cached } from "@/lib/server/cache.server";
 import { recomputeSellerTrust } from "@/lib/server/trust.server";
 
 // ---------------------------------------------------------------------------
@@ -169,54 +169,56 @@ export async function getAdminDashboardAction() {
 export async function getAdminPulseAction() {
   await appContext();
   await requireStaff();
-  const t = now();
-  const dayMs = 86_400_000;
-  const since = t - dayMs;
+  return cached("admin:pulse", 15_000, async () => {
+    const t = now();
+    const dayMs = 86_400_000;
+    const since = t - dayMs;
 
-  const [
-    orders24hRow,
-    gmv24hRow,
-    refunds24hRow,
-    escrowOnHoldRow,
-    newUsers24hRow,
-    activeDisputesRow,
-    pendingWithdrawalRow,
-    avgTrustRow,
-  ] = await Promise.all([
-    q1<{ c: number }>(
-      `select count(*) c from orders where paid_at > ? and status not in ('cancelled','expired')`,
-      [since],
-    ),
-    q1<{ s: number }>(
-      `select coalesce(sum(total_cents),0) s from orders where paid_at > ? and status not in ('cancelled','expired')`,
-      [since],
-    ),
-    q1<{ s: number; c: number }>(
-      `select coalesce(sum(total_cents),0) s, count(*) c from orders where status = 'refunded' and coalesce(completed_at, paid_at, created_at) > ?`,
-      [since],
-    ),
-    q1<{ c: number }>(`select count(*) c from orders where escrow_status = 'on_hold'`),
-    q1<{ c: number }>(`select count(*) c from users where created_at > ?`, [since]),
-    q1<{ c: number }>(`select count(*) c from disputes where status != 'resolved'`),
-    q1<{ s: number }>(
-      `select coalesce(sum(amount_cents),0) s from withdrawals where status = 'pending'`,
-    ),
-    q1<{ s: number }>(
-      `select coalesce(avg(trust_score),0) s from users where role in ('seller','admin') and trust_score > 0`,
-    ),
-  ]);
+    const [
+      orders24hRow,
+      gmv24hRow,
+      refunds24hRow,
+      escrowOnHoldRow,
+      newUsers24hRow,
+      activeDisputesRow,
+      pendingWithdrawalRow,
+      avgTrustRow,
+    ] = await Promise.all([
+      q1<{ c: number }>(
+        `select count(*) c from orders where paid_at > ? and status not in ('cancelled','expired')`,
+        [since],
+      ),
+      q1<{ s: number }>(
+        `select coalesce(sum(total_cents),0) s from orders where paid_at > ? and status not in ('cancelled','expired')`,
+        [since],
+      ),
+      q1<{ s: number; c: number }>(
+        `select coalesce(sum(total_cents),0) s, count(*) c from orders where status = 'refunded' and coalesce(completed_at, paid_at, created_at) > ?`,
+        [since],
+      ),
+      q1<{ c: number }>(`select count(*) c from orders where escrow_status = 'on_hold'`),
+      q1<{ c: number }>(`select count(*) c from users where created_at > ?`, [since]),
+      q1<{ c: number }>(`select count(*) c from disputes where status != 'resolved'`),
+      q1<{ s: number }>(
+        `select coalesce(sum(amount_cents),0) s from withdrawals where status = 'pending'`,
+      ),
+      q1<{ s: number }>(
+        `select coalesce(avg(trust_score),0) s from users where role in ('seller','admin') and trust_score > 0`,
+      ),
+    ]);
 
-  return {
-    orders24h: { c: orders24hRow!.c },
-    gmv24h: gmv24hRow!.s,
-    refunds24h: { s: refunds24hRow!.s, c: refunds24hRow!.c },
-    escrowOnHold: escrowOnHoldRow!.c,
-    newUsers24h: newUsers24hRow!.c,
-    activeDisputes: activeDisputesRow!.c,
-    pendingWithdrawalAmt: pendingWithdrawalRow!.s,
-    avgTrust: Math.round(avgTrustRow!.s),
-    ts: t,
-  };
+    return {
+      orders24h: { c: orders24hRow!.c },
+      gmv24h: gmv24hRow!.s,
+      refunds24h: { s: refunds24hRow!.s, c: refunds24hRow!.c },
+      escrowOnHold: escrowOnHoldRow!.c,
+      newUsers24h: newUsers24hRow!.c,
+      activeDisputes: activeDisputesRow!.c,
+      pendingWithdrawalAmt: pendingWithdrawalRow!.s,
+      avgTrust: Math.round(avgTrustRow!.s),
+      ts: t,
+    };
+  });
 }
 
 // ---------------------------------------------------------------------------

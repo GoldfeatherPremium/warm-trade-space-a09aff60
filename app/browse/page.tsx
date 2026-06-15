@@ -6,12 +6,21 @@ import { PublicShell } from "../_components/site-shell";
 import { SearchBox } from "../_components/search-box";
 import { ProductCard } from "../_components/product-card";
 
-export const metadata: Metadata = {
-  title: "Browse listings",
-  description:
-    "Browse digital goods on X-VAULT — game top-ups, gift cards, subscriptions, software keys and accounts. Buyer-protected, USDT payments, instant delivery.",
-  alternates: { canonical: "/browse" },
-};
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}): Promise<Metadata> {
+  const sp = await searchParams;
+  const activeFilters = [sp.category, sp.q, sp.delivery, sp.sort && sp.sort !== "popular" ? sp.sort : undefined, sp.item].filter(Boolean).length;
+  return {
+    title: "Browse listings",
+    description:
+      "Browse digital goods on X-VAULT — game top-ups, gift cards, subscriptions, software keys and accounts. Buyer-protected, USDT payments, instant delivery.",
+    alternates: { canonical: "/browse" },
+    ...(activeFilters > 1 ? { robots: { index: false, follow: true } } : {}),
+  };
+}
 
 const SORTS: Array<{ v: NonNullable<BrowseParams["sort"]>; label: string }> = [
   { v: "popular", label: "Popular" },
