@@ -3,20 +3,28 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Bell, MessageSquare } from "lucide-react";
 import { logoutAction } from "@/server/actions/auth";
 
 type Me = { id: string; username: string; role: string; seller_status: string } | null;
 
 const STAFF = ["admin", "support", "finance"];
+const UNREAD_POLL_MS = 30_000;
 
-/**
- * Header account island. Fetches the session client-side so the public pages
- * it lives in stay statically prerendered (no per-request cookie read).
- */
+function Badge({ count }: { count: number }) {
+  if (count <= 0) return null;
+  return (
+    <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-0.5 rounded-full bg-accent text-accent-foreground text-[9px] font-bold grid place-items-center leading-none">
+      {count > 99 ? "99+" : count}
+    </span>
+  );
+}
+
 export function AccountNav() {
   const router = useRouter();
-  const [me, setMe] = useState<Me | undefined>(undefined); // undefined = loading
+  const [me, setMe] = useState<Me | undefined>(undefined);
   const [open, setOpen] = useState(false);
+  const [unread, setUnread] = useState({ messages: 0, notifications: 0 });
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -29,6 +37,26 @@ export function AccountNav() {
       alive = false;
     };
   }, []);
+
+  // Poll unread counts once logged in
+  useEffect(() => {
+    if (!me) return;
+    let alive = true;
+    const poll = () =>
+      fetch("/api/unread", { cache: "no-store" })
+        .then((r) => r.json())
+        .then(
+          (d) =>
+            alive && setUnread({ messages: d.messages ?? 0, notifications: d.notifications ?? 0 }),
+        )
+        .catch(() => {});
+    poll();
+    const id = setInterval(poll, UNREAD_POLL_MS);
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
+  }, [me]);
 
   useEffect(() => {
     if (!open) return;
@@ -61,7 +89,6 @@ export function AccountNav() {
     { href: "/dashboard", label: "Dashboard" },
     { href: "/orders", label: "My orders" },
     { href: "/wallet", label: "Wallet" },
-    { href: "/chat", label: "Messages" },
     ...(isSeller ? [{ href: "/seller", label: "Seller center" }] : []),
     ...(isStaff ? [{ href: "/admin", label: "Admin" }] : []),
     { href: "/account", label: "Account" },
@@ -76,39 +103,62 @@ export function AccountNav() {
   }
 
   return (
-    <div className="ml-auto sm:ml-0 relative shrink-0" ref={ref}>
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="size-9 rounded-full bg-primary/20 border border-primary/40 grid place-items-center text-xs font-bold text-primary uppercase"
-        aria-label="Account menu"
-        aria-expanded={open}
+    <div className="ml-auto sm:ml-0 flex items-center gap-1 shrink-0">
+      {/* Chat */}
+      <Link
+        href="/chat"
+        className="relative size-9 rounded-md grid place-items-center text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
+        aria-label="Messages"
       >
-        {me.username.slice(0, 2)}
-      </button>
-      {open && (
-        <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-xl overflow-hidden z-50">
-          <div className="px-3 py-2 border-b border-border">
-            <p className="text-xs font-bold truncate">{me.username}</p>
-            <p className="text-[10px] text-muted-foreground capitalize">{me.role}</p>
-          </div>
-          {links.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              onClick={() => setOpen(false)}
-              className="block px-3 py-2 text-xs hover:bg-secondary/60"
+        <MessageSquare className="size-4" />
+        <Badge count={unread.messages} />
+      </Link>
+
+      {/* Notifications */}
+      <Link
+        href="/notifications"
+        className="relative size-9 rounded-md grid place-items-center text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
+        aria-label="Notifications"
+      >
+        <Bell className="size-4" />
+        <Badge count={unread.notifications} />
+      </Link>
+
+      {/* Account avatar */}
+      <div className="relative" ref={ref}>
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className="size-9 rounded-full bg-primary/20 border border-primary/40 grid place-items-center text-xs font-bold text-primary uppercase hover:bg-primary/30 transition-colors"
+          aria-label="Account menu"
+          aria-expanded={open}
+        >
+          {me.username.slice(0, 2)}
+        </button>
+        {open && (
+          <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-lg shadow-xl overflow-hidden z-50">
+            <div className="px-3 py-2 border-b border-border">
+              <p className="text-xs font-bold truncate">{me.username}</p>
+              <p className="text-[10px] text-muted-foreground capitalize">{me.role}</p>
+            </div>
+            {links.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                onClick={() => setOpen(false)}
+                className="block px-3 py-2 text-xs hover:bg-secondary/60"
+              >
+                {l.label}
+              </Link>
+            ))}
+            <button
+              onClick={signOut}
+              className="block w-full text-left px-3 py-2 text-xs text-destructive hover:bg-secondary/60 border-t border-border"
             >
-              {l.label}
-            </Link>
-          ))}
-          <button
-            onClick={signOut}
-            className="block w-full text-left px-3 py-2 text-xs text-destructive hover:bg-secondary/60 border-t border-border"
-          >
-            Sign out
-          </button>
-        </div>
-      )}
+              Sign out
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
