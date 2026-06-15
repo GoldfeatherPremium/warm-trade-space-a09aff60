@@ -804,6 +804,8 @@ async function migrate(e: Engine): Promise<void> {
     `alter table users add column store_socials text`,
     `alter table users add column store_announcement text`,
     `alter table users add column avg_response_minutes integer not null default 0`,
+    // --- Theme persistence (cross-device via users.theme_pref) ---
+    `alter table users add column theme_pref text`,
   ];
 
   for (const stmt of addColumns) {

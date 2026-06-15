@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo_Black, Inter, JetBrains_Mono } from "next/font/google";
+import { currentUser } from "@/server/auth";
+import { ThemeProvider } from "./_components/theme-provider";
 import "./globals.css";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -29,8 +31,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f8f9fa" },
-    { media: "(prefers-color-scheme: dark)", color: "#111827" },
+    { media: "(prefers-color-scheme: light)", color: "#f9f9fb" },
+    { media: "(prefers-color-scheme: dark)", color: "#0f0f14" },
   ],
 };
 
@@ -53,20 +55,27 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image" },
 };
 
-/* Runs before first paint — applies dark class from localStorage or OS preference */
-const THEME_SCRIPT = `(function(){try{var t=localStorage.getItem('xv-theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`;
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Read the logged-in user's saved theme preference (null = use next-themes default).
+  // This runs server-side, so next-themes initialises with the right value on first
+  // render, eliminating cross-device flash for signed-in users.
+  let savedTheme: string | undefined;
+  try {
+    const user = await currentUser();
+    savedTheme = user?.theme_pref ?? undefined;
+  } catch {
+    // not available during static rendering (e.g. build-time pages)
+  }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
       suppressHydrationWarning
       className={`${archivoBlack.variable} ${inter.variable} ${jetbrainsMono.variable}`}
     >
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
-      </head>
-      <body>{children}</body>
+      <body>
+        <ThemeProvider defaultTheme={savedTheme ?? "dark"}>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }
