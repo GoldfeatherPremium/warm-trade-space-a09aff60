@@ -1,10 +1,120 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { adminListConversationsAction } from "@/server/actions/admin";
-import { timeAgo } from "@/lib/format";
+import { adminListConversationsAction, adminGetConversationMessagesAction } from "@/server/actions/admin";
+import { timeAgo, dateTime, usdt } from "@/lib/format";
+import { ShieldAlert } from "lucide-react";
 
 type Conversation = Awaited<ReturnType<typeof adminListConversationsAction>>[number];
+type ChatData = Awaited<ReturnType<typeof adminGetConversationMessagesAction>>;
+type Message = ChatData["messages"][number];
+
+function ConversationViewer({ conversationId }: { conversationId: string }) {
+  const [data, setData] = useState<ChatData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const [, startTransition] = useTransition();
+
+  useEffect(() => {
+    setLoading(true);
+    setData(null);
+    startTransition(async () => {
+      try {
+        const d = await adminGetConversationMessagesAction(conversationId);
+        setData(d);
+      } finally {
+        setLoading(false);
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conversationId]);
+
+  useEffect(() => {
+    if (data) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [data]);
+
+  if (loading) {
+    return (
+      <div className="bg-card border border-border rounded-xl h-full grid place-items-center">
+        <p className="text-sm text-muted-foreground">Loading conversation…</p>
+      </div>
+    );
+  }
+
+  if (!data) return null;
+
+  const { messages, buyerId, buyerName, sellerName, order } = data;
+
+  return (
+    <div className="bg-card border border-border rounded-xl flex flex-col min-h-[600px]">
+      <div className="p-3 border-b border-border space-y-1">
+        <div className="flex items-center gap-2 text-xs font-bold">
+          <span className="text-primary">{buyerName}</span>
+          <span className="text-muted-foreground font-normal">↔</span>
+          <span className="text-accent">{sellerName}</span>
+          <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-secondary text-muted-foreground ml-auto">
+            READ-ONLY
+          </span>
+        </div>
+        {order && (
+          <div className="text-[10px] text-muted-foreground font-mono">
+            Order #{order.order_no} · {order.status.replace("_", " ").toUpperCase()} · {usdt(order.total_cents)}
+          </div>
+        )}
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-3 space-y-2">
+        {messages.length === 0 && (
+          <p className="text-center text-xs text-muted-foreground py-8">No messages yet.</p>
+        )}
+        {messages.map((m: Message) => {
+          const isSystem = !!m.is_system;
+          const isBuyer = m.sender_id === buyerId;
+          const isFlagged = !!m.is_flagged;
+
+          if (isSystem) {
+            return (
+              <div key={m.id} className="text-center">
+                <span className="text-[10px] text-muted-foreground bg-secondary rounded-full px-3 py-1">
+                  {m.body}
+                </span>
+              </div>
+            );
+          }
+
+          return (
+            <div
+              key={m.id}
+              className={`flex ${isBuyer ? "justify-start" : "justify-end"}`}
+            >
+              <div
+                className={`max-w-[75%] rounded-lg px-3 py-2 text-xs space-y-0.5 ${
+                  isFlagged
+                    ? "bg-destructive/15 border border-destructive/30 text-foreground"
+                    : isBuyer
+                      ? "bg-secondary text-foreground"
+                      : "bg-primary/15 text-foreground"
+                }`}
+              >
+                <div className="flex items-center gap-1 text-[9px] text-muted-foreground">
+                  <span className="font-bold">{m.sender_name ?? "Unknown"}</span>
+                  {isFlagged && (
+                    <span className="flex items-center gap-0.5 text-destructive font-bold">
+                      <ShieldAlert className="size-2.5" /> FLAGGED
+                    </span>
+                  )}
+                  <span className="ml-auto">{dateTime(m.created_at)}</span>
+                </div>
+                <p className="whitespace-pre-wrap break-words">{m.body}</p>
+              </div>
+            </div>
+          );
+        })}
+        <div ref={bottomRef} />
+      </div>
+    </div>
+  );
+}
 
 export function ChatsClient() {
   const [q, setQ] = useState("");
@@ -56,19 +166,16 @@ export function ChatsClient() {
               onChange={(e) => setFlaggedOnly(e.target.checked)}
               className="accent-primary"
             />
+            <ShieldAlert className="size-3 text-destructive" />
             Flagged only
           </label>
         </div>
         <div className="flex-1 overflow-y-auto divide-y divide-border">
           {loading && (
-            <p className="p-4 text-xs text-muted-foreground text-center">
-              Loading conversations…
-            </p>
+            <p className="p-4 text-xs text-muted-foreground text-center">Loading conversations…</p>
           )}
           {!loading && conversations.length === 0 && (
-            <p className="p-4 text-xs text-muted-foreground text-center">
-              No conversations match.
-            </p>
+            <p className="p-4 text-xs text-muted-foreground text-center">No conversations match.</p>
           )}
           {conversations.map((c) => {
             const flaggedCount = Number(c.flagged_count ?? 0);
@@ -112,15 +219,7 @@ export function ChatsClient() {
 
       <section className="min-h-[600px]">
         {active ? (
-          <div className="bg-card border border-border rounded-xl h-full p-4">
-            <p className="text-xs text-muted-foreground">
-              Conversation selected:{" "}
-              <span className="font-mono text-foreground">{active}</span>
-            </p>
-            <p className="text-xs text-muted-foreground mt-2">
-              Full chat viewer requires the ChatBox component (available in the TanStack stack).
-            </p>
-          </div>
+          <ConversationViewer key={active} conversationId={active} />
         ) : (
           <div className="bg-card border border-border rounded-xl h-full grid place-items-center text-sm text-muted-foreground">
             Select a conversation to inspect.

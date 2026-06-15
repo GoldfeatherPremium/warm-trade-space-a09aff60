@@ -1615,6 +1615,162 @@ export async function adminSetPaymentMethodAction(input: { code: string; enabled
 // Conversations (admin monitor)
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Admin chat viewer (read-only)
+// ---------------------------------------------------------------------------
+
+export async function adminGetConversationMessagesAction(conversationId: string) {
+  await appContext();
+  const user = await requireUser();
+  if (!isStaff(user)) fail("Staff access required.");
+  const conv = await q1<{
+    id: string; buyer_id: string; seller_id: string; order_id: string | null;
+  }>(`select * from conversations where id = ?`, [conversationId]);
+  if (!conv) fail("Conversation not found.");
+  const messages = await q<{
+    id: string; sender_id: string | null; sender_name: string | null;
+    body: string; is_system: number; is_flagged: number; created_at: number;
+  }>(
+    `select m.id, m.sender_id, u.username as sender_name, m.body,
+            m.is_system, m.is_flagged, m.created_at
+     from messages m left join users u on u.id = m.sender_id
+     where m.conversation_id = ? order by m.created_at limit 500`,
+    [conversationId],
+  );
+  const [buyer, seller] = await Promise.all([
+    q1<{ username: string }>(`select username from users where id = ?`, [conv!.buyer_id]),
+    q1<{ username: string }>(`select username from users where id = ?`, [conv!.seller_id]),
+  ]);
+  const order = conv!.order_id
+    ? await q1<{ order_no: string; status: string; total_cents: number }>(
+        `select order_no, status, total_cents from orders where id = ?`,
+        [conv!.order_id],
+      )
+    : null;
+  return {
+    messages,
+    buyerId: conv!.buyer_id,
+    sellerId: conv!.seller_id,
+    buyerName: buyer?.username ?? "buyer",
+    sellerName: seller?.username ?? "seller",
+    order,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Admin product edit
+// ---------------------------------------------------------------------------
+
+export async function adminGetProductAction(productId: string) {
+  await appContext();
+  await requireStaff();
+  const product = await q1<Record<string, unknown>>(
+    `select p.*, u.username as seller_name, c.name as category_name
+     from products p join users u on u.id = p.seller_id join categories c on c.id = p.category_id
+     where p.id = ?`,
+    [productId],
+  );
+  if (!product) fail("Product not found.");
+  const categories = await q<{
+    id: string; name: string; commission_pct: number; default_warranty_hours: number;
+  }>(`select id, name, commission_pct, default_warranty_hours from categories where is_active = 1 order by sort`);
+  const items = await q<{ id: string; name: string }>(
+    `select id, name from catalog_items where is_active = 1 order by sort, name`,
+  );
+  const itemCategories = await q<{ item_id: string; category_id: string }>(
+    `select item_id, category_id from catalog_item_categories`,
+  );
+  return { product: product!, categories, items, itemCategories };
+}
+
+export async function adminUpdateProductAction(input: {
+  productId: string;
+  title: string;
+  description: string;
+  categoryId: string;
+  itemId?: string | null;
+  priceUsdt: number;
+  warrantyHours?: number | null;
+  minQty: number;
+  maxQty: number;
+  maxOrdersAtOnce?: number;
+  region?: string;
+  platform?: string;
+  requiredInfo?: string;
+  adminSeoDescription?: string;
+  categoryAttrs?: Record<string, string>;
+  status?: "active" | "paused" | "rejected" | "out_of_stock" | "pending_review";
+  subscriptionDuration?: "7d" | "14d" | "1m" | "3m" | "6m" | "12m" | "lifetime" | null;
+}) {
+  await appContext();
+  const staff = await requireAdmin();
+  if (input.minQty > input.maxQty) fail("Min qty exceeds max qty.");
+  if (input.itemId) {
+    const allowed = await q<{ category_id: string }>(
+      `select category_id from catalog_item_categories where item_id = ?`,
+      [input.itemId],
+    );
+    if (allowed.length > 0 && !allowed.some((r) => r.category_id === input.categoryId))
+      fail("That sub-category is not enabled for this category.");
+  }
+  await run(
+    `update products set title = ?, description = ?, category_id = ?, item_id = ?,
+       price_cents = ?, warranty_hours = ?, min_qty = ?, max_qty = ?,
+       region = ?, platform = ?, required_info = ?, admin_seo_description = ?,
+       category_attrs = ?, subscription_duration = ?, max_orders_at_once = ?
+       ${input.status ? ", status = ?" : ""}
+     where id = ?`,
+    [
+      input.title,
+      input.description,
+      input.categoryId,
+      input.itemId ?? null,
+      Math.round(input.priceUsdt * 100),
+      input.warrantyHours ?? null,
+      input.minQty,
+      input.maxQty,
+      input.region ?? null,
+      input.platform ?? null,
+      input.requiredInfo ?? null,
+      input.adminSeoDescription?.trim() || null,
+      input.categoryAttrs && Object.keys(input.categoryAttrs).length
+        ? JSON.stringify(input.categoryAttrs)
+        : null,
+      input.subscriptionDuration ?? null,
+      input.maxOrdersAtOnce ?? 10,
+      ...(input.status ? [input.status] : []),
+      input.productId,
+    ],
+  );
+  await audit(staff.id, "product.admin_edit", "product", input.productId);
+  invalidateCache("home:v1");
+  invalidateCache("catalog-items:v1");
+  return { ok: true };
+}
+
+export async function adminGetCategorySchemaAction(categoryId: string) {
+  await appContext();
+  await requireStaff();
+  const cat = await q1<{ schema: string | null; config: string | null }>(
+    `select schema, config from categories where id = ?`,
+    [categoryId],
+  );
+  if (!cat) return { schema: null, config: null };
+  return {
+    schema: cat.schema
+      ? (JSON.parse(cat.schema as string) as {
+          sellerFields?: Array<{ key: string; label: string; type: string; required?: boolean; help?: string; options?: string[] }>;
+        })
+      : null,
+    config: cat.config
+      ? (JSON.parse(cat.config as string) as {
+          requiresSubscription?: boolean;
+          allowedDurations?: string[];
+        })
+      : null,
+  };
+}
+
 export async function adminListConversationsAction(
   input: { q?: string; flaggedOnly?: boolean; limit?: number } = {},
 ) {
