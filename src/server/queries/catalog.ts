@@ -253,19 +253,36 @@ export async function getRelatedProductsData(
   limit = 8,
 ): Promise<PublicProduct[]> {
   await appContext();
-  const seed = await q1<{ category_id: string; item_id: string | null }>(
-    `select category_id, item_id from products where id = ?`,
-    [productId],
-  );
-  if (!seed) return [];
+  // Single-query CTE: seed lookup + main select in one round-trip instead of two.
+  // coalesce(item_id,'') means a NULL item_id never accidentally matches other products.
   const rows = await q(
-    `${productSelect}
-       where p.status = 'active' and ${PUBLIC_SELLER_COND} and p.id <> ?
-         and (p.item_id = ? or p.category_id = ?)
-       order by (case when p.item_id = ? then 0 else 1 end),
-                p.sold_count desc, u.rating desc
-       limit ?`,
-    [productId, seed.item_id ?? "", seed.category_id, seed.item_id ?? "", limit],
+    `with seed as (
+       select coalesce(item_id, '') as item_id, category_id
+       from products where id = ?
+     )
+     select p.id, p.title, p.slug, p.description, p.image_key, p.delivery_type, p.delivery_sla_minutes,
+            coalesce(p.warranty_hours, c.default_warranty_hours) as warranty_hours,
+            p.price_cents, p.min_qty, p.max_qty, p.stock_count, p.region, p.platform, p.required_info,
+            p.sold_count, p.views, p.status, p.category_id, c.name as category_name, c.slug as category_slug,
+            c.risk_tier, c.submission_schema as category_submission_schema,
+            p.category_attrs, p.admin_seo_description,
+            u.id as s_id, u.username as s_username, u.seller_level as s_level, u.rating as s_rating,
+            u.rating_count as s_rating_count, u.total_sales as s_total_sales,
+            u.completion_rate as s_completion, u.vacation_mode as s_vacation, u.created_at as s_created,
+            u.verification_tier as s_verification, u.trust_score as s_trust,
+            u.refund_count as s_refunds, u.dispute_count as s_disputes,
+            p.item_id, ci.name as item_name, p.insurance_days, p.expires_at, p.featured_until
+     from products p
+     join categories c on c.id = p.category_id
+     join users u on u.id = p.seller_id
+     left join catalog_items ci on ci.id = p.item_id
+     cross join seed
+     where p.status = 'active' and ${PUBLIC_SELLER_COND} and p.id <> ?
+       and (p.item_id = seed.item_id or p.category_id = seed.category_id)
+     order by (case when seed.item_id != '' and p.item_id = seed.item_id then 0 else 1 end),
+              p.sold_count desc, u.rating desc
+     limit ?`,
+    [productId, productId, limit],
   );
   return rows.map(mapProduct);
 }
