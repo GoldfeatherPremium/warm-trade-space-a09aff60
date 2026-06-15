@@ -28,6 +28,9 @@ interface Engine {
 let engine: Engine | null = null;
 let migrated: Promise<void> | null = null;
 
+/** True once migrate() confirms FTS5 is available on SQLite. */
+export let sqliteFts5 = false;
+
 function isPostgres(): boolean {
   return !!process.env.DATABASE_URL;
 }
@@ -209,10 +212,10 @@ async function schemaAlreadyMigrated(e: Engine): Promise<boolean> {
       );
       return !!r[0] && Number(r[0].c) > 0;
     }
-    const r = await e.q<{ name: string }>(
-      `select name from pragma_table_info('seller_applications') where name='display_name'`,
+    const r = await e.q<{ c: number }>(
+      `select count(*) as c from sqlite_master where type='table' and name='products_fts'`,
     );
-    return r.length > 0;
+    return !!r[0] && Number(r[0].c) > 0;
   } catch {
     return false;
   }
@@ -1106,6 +1109,57 @@ async function migrate(e: Engine): Promise<void> {
         `create index if not exists idx_products_desc_trgm on products using gin (lower(description) gin_trgm_ops)`,
       )
       .catch(() => {});
+  }
+
+  // --- SQLite FTS5 full-text search ---
+  // Postgres gets pg_trgm GIN indexes (above); SQLite gets a standalone FTS5
+  // virtual table kept in sync via row-level triggers. All three operations
+  // use .catch(() => {}) so a host compiled without the fts5 extension falls
+  // back gracefully to the existing LIKE scan rather than failing boot.
+  if (dialect === "sqlite") {
+    const ftsOk = await e
+      .exec(
+        `create virtual table if not exists products_fts using fts5(
+           product_id unindexed, title, description, platform, tokenize='unicode61'
+         )`,
+      )
+      .then(() => true)
+      .catch(() => false);
+    if (ftsOk) {
+      sqliteFts5 = true;
+      // Idempotent backfill — only inserts rows not already indexed
+      await e
+        .exec(
+          `insert into products_fts(product_id, title, description, platform)
+             select id, coalesce(title,''), coalesce(description,''), coalesce(platform,'')
+             from products where id not in (select product_id from products_fts)`,
+        )
+        .catch(() => {});
+      await e
+        .exec(
+          `create trigger if not exists fts_products_ai after insert on products begin
+             insert into products_fts(product_id,title,description,platform)
+               values(new.id,coalesce(new.title,''),coalesce(new.description,''),coalesce(new.platform,''));
+           end`,
+        )
+        .catch(() => {});
+      await e
+        .exec(
+          `create trigger if not exists fts_products_au after update on products begin
+             delete from products_fts where product_id=old.id;
+             insert into products_fts(product_id,title,description,platform)
+               values(new.id,coalesce(new.title,''),coalesce(new.description,''),coalesce(new.platform,''));
+           end`,
+        )
+        .catch(() => {});
+      await e
+        .exec(
+          `create trigger if not exists fts_products_ad after delete on products begin
+             delete from products_fts where product_id=old.id;
+           end`,
+        )
+        .catch(() => {});
+    }
   }
 
   // --- Payment methods registry ---
