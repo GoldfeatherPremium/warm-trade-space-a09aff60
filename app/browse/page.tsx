@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PackageSearch } from "lucide-react";
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 import { browseProductsData, type BrowseParams } from "@/server/queries/catalog";
 import { PublicShell } from "../_components/site-shell";
 import { SearchBox } from "../_components/search-box";
 import { ProductCard } from "../_components/product-card";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export async function generateMetadata({
   searchParams,
@@ -86,7 +86,7 @@ export default async function BrowsePage({
       <div className="flex items-center justify-between gap-3 flex-wrap mb-4">
         <h1 className="font-display text-2xl">
           {params.q
-            ? `Results for “${params.q}”`
+            ? `Results for "${params.q}"`
             : params.category
               ? `Category: ${params.category}`
               : "All listings"}
