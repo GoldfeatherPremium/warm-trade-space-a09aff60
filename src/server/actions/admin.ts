@@ -873,6 +873,7 @@ export async function adminSaveCategoryAction(input: {
   }
   await audit(staff.id, "category.save", "category", input.categoryId ?? input.slug);
   invalidateCache("home:v1");
+  invalidateCache("browse:default:v1");
   invalidateCache("catalog-items:v1");
   return { ok: true };
 }
@@ -884,6 +885,7 @@ export async function adminEnsureBaseCategoriesAction() {
   if (added > 0) {
     await audit(staff.id, "category.ensure_base", "category", `+${added}`);
     invalidateCache("home:v1");
+  invalidateCache("browse:default:v1");
     invalidateCache("catalog-items:v1");
   }
   return { added };
@@ -1122,6 +1124,7 @@ export async function adminSaveItemAction(input: {
   await audit(staff.id, "catalog_item.save", "catalog_item", id);
   invalidateCache("catalog-items:v1");
   invalidateCache("home:v1");
+  invalidateCache("browse:default:v1");
   return { itemId: id };
 }
 
@@ -1166,6 +1169,7 @@ export async function reviewItemSuggestionAction(input: {
   if (input.approve) {
     invalidateCache("catalog-items:v1");
     invalidateCache("home:v1");
+  invalidateCache("browse:default:v1");
   }
   return { ok: true };
 }
@@ -1816,6 +1820,7 @@ export async function adminUpdateProductAction(input: {
   );
   await audit(staff.id, "product.admin_edit", "product", input.productId);
   invalidateCache("home:v1");
+  invalidateCache("browse:default:v1");
   invalidateCache("catalog-items:v1");
   return { ok: true };
 }

@@ -424,6 +424,23 @@ export async function browseProductsData(p: BrowseParams): Promise<{
   page: number;
   pageCount: number;
 }> {
+  // Cache the default browse (no filters, page 1, popular sort) for 30 seconds.
+  // This is the highest-traffic path: every unauthenticated visitor lands here first.
+  const isDefault =
+    !p.category && !p.item && !p.q && !p.delivery && !p.minPrice && !p.maxPrice && !p.inStock &&
+    (p.sort === "popular" || !p.sort) && (p.page === 1 || !p.page);
+  if (isDefault) {
+    return cached("browse:default:v1", 30_000, () => _browseProductsData(p));
+  }
+  return _browseProductsData(p);
+}
+
+async function _browseProductsData(p: BrowseParams): Promise<{
+  items: PublicProduct[];
+  total: number;
+  page: number;
+  pageCount: number;
+}> {
   await appContext();
   const { sqliteFts5 } = await import("@/lib/server/db.server");
   const { tokenize, buildSearchClause } = await import("@/lib/server/search.server");
