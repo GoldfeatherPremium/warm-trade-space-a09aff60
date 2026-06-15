@@ -373,18 +373,26 @@ async function attachImages(productId: string, sellerId: string, imageIds: strin
   const existing = await q<{ id: string }>(`select id from product_images where product_id = ?`, [
     productId,
   ]);
-  for (const row of existing) {
-    if (!imageIds.includes(row.id))
-      await run(`delete from product_images where id = ? and seller_id = ?`, [row.id, sellerId]);
+  // Batch delete removed images in a single WHERE IN query instead of N individual DELETEs.
+  const toDelete = existing.map((r) => r.id).filter((id) => !imageIds.includes(id));
+  if (toDelete.length > 0) {
+    const ph = toDelete.map(() => "?").join(",");
+    await run(
+      `delete from product_images where seller_id = ? and id in (${ph})`,
+      [sellerId, ...toDelete],
+    );
   }
-  for (let i = 0; i < imageIds.length; i++) {
-    await run(`update product_images set product_id = ?, sort = ? where id = ? and seller_id = ?`, [
-      productId,
-      i,
-      imageIds[i],
-      sellerId,
-    ]);
-  }
+  // Update sort order in parallel — each is an independent row update.
+  await Promise.all(
+    imageIds.map((imgId, i) =>
+      run(`update product_images set product_id = ?, sort = ? where id = ? and seller_id = ?`, [
+        productId,
+        i,
+        imgId,
+        sellerId,
+      ]),
+    ),
+  );
 }
 
 // ---------------------------------------------------------------------------

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LegalArticle } from "../_components/legal-article";
 
 export const metadata: Metadata = {
-  title: "About X-VAULT — Buyer-protected digital marketplace",
+  title: { absolute: "About X-VAULT — Buyer-protected digital marketplace" },
   description:
     "X-VAULT is a buyer-protected marketplace for digital goods. Learn how we protect buyers and sellers with on-platform chat, instant delivery, and a 24/7 dispute team.",
   alternates: { canonical: "/about" },

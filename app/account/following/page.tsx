@@ -7,7 +7,7 @@ import { q } from "@/lib/server/db.server";
 import { appContext } from "@/lib/server/app.server";
 import { PublicShell } from "../../_components/site-shell";
 
-export const metadata: Metadata = { title: "Following — X-VAULT" };
+export const metadata: Metadata = { title: "Following" };
 export const dynamic = "force-dynamic";
 
 export default async function FollowingPage() {

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { LegalArticle } from "../../_components/legal-article";
 
 export const metadata: Metadata = {
-  title: "Buyer protection — X-VAULT",
+  title: "Buyer protection",
   description:
     "X-VAULT buyer protection: warranty windows, refund-to-credit, insurance days, and what to do when delivery is wrong or missing.",
   alternates: { canonical: "/legal/buyer-protection" },

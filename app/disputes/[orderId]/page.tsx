@@ -8,7 +8,7 @@ import { usdt, dateTime } from "@/lib/format";
 import { PublicShell } from "../../_components/site-shell";
 import { DisputeClient } from "./dispute-client";
 
-export const metadata: Metadata = { title: "Dispute — X-VAULT" };
+export const metadata: Metadata = { title: "Dispute" };
 export const dynamic = "force-dynamic";
 
 const STATUS_CLS: Record<string, string> = {

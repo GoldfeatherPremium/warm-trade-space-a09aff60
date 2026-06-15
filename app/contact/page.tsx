@@ -3,7 +3,7 @@ import Link from "next/link";
 import { LegalArticle } from "../_components/legal-article";
 
 export const metadata: Metadata = {
-  title: "Contact & support — X-VAULT",
+  title: "Contact & support",
   description:
     "Get help from the X-VAULT trust & safety team. Open a dispute, report a listing, or reach support — fastest response inside the order or dispute thread.",
   alternates: { canonical: "/contact" },

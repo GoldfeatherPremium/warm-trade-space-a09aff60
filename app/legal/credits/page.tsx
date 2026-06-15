@@ -3,7 +3,7 @@ import Link from "next/link";
 import { LegalArticle } from "../../_components/legal-article";
 
 export const metadata: Metadata = {
-  title: "Credits & refunds — X-VAULT",
+  title: "Credits & refunds",
   description:
     "How X-VAULT store credit works: refunds default to instant credit, credits apply automatically at checkout, and cash withdrawals are available on request.",
   alternates: { canonical: "/legal/credits" },

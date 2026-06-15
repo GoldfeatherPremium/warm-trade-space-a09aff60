@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LegalArticle } from "../../_components/legal-article";
 
 export const metadata: Metadata = {
-  title: "How buyer protection works — X-VAULT",
+  title: "How buyer protection works",
   description:
     "Step-by-step: how X-VAULT protects buyers and sellers from payment to release, with warranty windows and dispute fallback.",
   alternates: { canonical: "/legal/escrow" },

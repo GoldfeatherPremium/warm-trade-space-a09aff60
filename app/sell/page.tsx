@@ -9,7 +9,7 @@ import { dateTime } from "@/lib/format";
 import { PublicShell } from "../_components/site-shell";
 import { SellForm } from "./sell-form";
 
-export const metadata: Metadata = { title: "Become a Seller — X-VAULT" };
+export const metadata: Metadata = { title: "Become a Seller" };
 export const dynamic = "force-dynamic";
 
 const STATUS_META: Record<string, { label: string; cls: string; note: string }> = {

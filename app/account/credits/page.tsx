@@ -9,7 +9,7 @@ import { appContext } from "@/lib/server/app.server";
 import { usdt, dateTime } from "@/lib/format";
 import { PublicShell } from "../../_components/site-shell";
 
-export const metadata: Metadata = { title: "Store Credits — X-VAULT" };
+export const metadata: Metadata = { title: "Store Credits" };
 export const dynamic = "force-dynamic";
 
 export default async function CreditsPage() {

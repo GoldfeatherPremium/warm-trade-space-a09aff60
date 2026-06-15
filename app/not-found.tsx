@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { PublicShell } from "./_components/site-shell";
 
 export const metadata: Metadata = {
-  title: "Page not found — X-VAULT",
+  title: { absolute: "Page not found — X-VAULT" },
   robots: { index: false },
 };
 

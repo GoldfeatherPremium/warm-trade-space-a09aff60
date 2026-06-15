@@ -9,7 +9,7 @@ import { usdt } from "@/lib/format";
 import { PublicShell } from "../_components/site-shell";
 import { productImage } from "../_lib/product-image";
 
-export const metadata: Metadata = { title: "Favorites — X-VAULT", robots: { index: false } };
+export const metadata: Metadata = { title: "Favorites", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 export default async function FavoritesPage() {

@@ -3,7 +3,7 @@ import { requireUser } from "@/server/auth";
 import { PublicShell } from "../_components/site-shell";
 import { MenuClient } from "./menu-client";
 
-export const metadata: Metadata = { title: "My Account — X-VAULT" };
+export const metadata: Metadata = { title: "My Account" };
 export const dynamic = "force-dynamic";
 
 export default async function MenuPage() {

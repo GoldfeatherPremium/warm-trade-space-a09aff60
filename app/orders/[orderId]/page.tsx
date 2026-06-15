@@ -9,7 +9,7 @@ import { PublicShell } from "../../_components/site-shell";
 import { productImage } from "../../_lib/product-image";
 import { OrderClient } from "./order-client";
 
-export const metadata: Metadata = { title: "Order — X-VAULT" };
+export const metadata: Metadata = { title: "Order" };
 export const dynamic = "force-dynamic";
 
 function Snap({ label, value }: { label: string; value: string | number | null | undefined }) {

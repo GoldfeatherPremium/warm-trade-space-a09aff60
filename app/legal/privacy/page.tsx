@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LegalArticle } from "../../_components/legal-article";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — X-VAULT",
+  title: "Privacy Policy",
   description:
     "What X-VAULT collects, why, and how long we keep it. Chat monitoring, encrypted stock-at-rest, and your rights as a buyer or seller.",
   alternates: { canonical: "/legal/privacy" },

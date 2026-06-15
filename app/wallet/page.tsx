@@ -5,7 +5,7 @@ import { getWalletData } from "@/server/queries/wallet";
 import { PublicShell } from "../_components/site-shell";
 import { WalletClient } from "./wallet-client";
 
-export const metadata: Metadata = { title: "Wallet — X-VAULT", robots: { index: false } };
+export const metadata: Metadata = { title: "Wallet", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 export default async function WalletPage() {

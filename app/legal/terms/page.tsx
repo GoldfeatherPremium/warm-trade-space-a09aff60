@@ -3,7 +3,7 @@ import Link from "next/link";
 import { LegalArticle } from "../../_components/legal-article";
 
 export const metadata: Metadata = {
-  title: "Terms of Service — X-VAULT",
+  title: "Terms of Service",
   description:
     "X-VAULT Terms of Service: account rules, prohibited items, escrow flow, dispute resolution, and the consequences of off-platform contact or fee circumvention.",
   alternates: { canonical: "/legal/terms" },

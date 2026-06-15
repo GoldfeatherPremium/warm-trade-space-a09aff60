@@ -9,7 +9,7 @@ import { usdt, dateTime } from "@/lib/format";
 import { PublicShell } from "../../_components/site-shell";
 import { AffiliateCopyButton } from "./copy-button";
 
-export const metadata: Metadata = { title: "Affiliate — X-VAULT" };
+export const metadata: Metadata = { title: "Affiliate" };
 export const dynamic = "force-dynamic";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
