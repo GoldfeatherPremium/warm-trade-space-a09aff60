@@ -9,7 +9,7 @@ import { usdt } from "@/lib/format";
 import { PublicShell } from "../_components/site-shell";
 import { AccountClient } from "./account-client";
 
-export const metadata: Metadata = { title: "Account — X-VAULT" };
+export const metadata: Metadata = { title: "Account — X-VAULT", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 const TIER_CLS: Record<string, string> = {
