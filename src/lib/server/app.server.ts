@@ -15,10 +15,9 @@ export async function appContext(): Promise<void> {
   const now = Date.now();
   if (now - lastSweep > SWEEP_EVERY_MS) {
     lastSweep = now;
-    try {
-      await sweepLifecycle();
-    } catch (e) {
-      console.error("lifecycle sweep failed:", e);
-    }
+    // Fire-and-forget: sweep runs in the background so it never blocks the
+    // triggering request. Safe because critical flows (payment, delivery) run
+    // inline — the sweep only handles deferred cleanup (expiry, auto-confirm).
+    sweepLifecycle().catch((e) => console.error("lifecycle sweep failed:", e));
   }
 }

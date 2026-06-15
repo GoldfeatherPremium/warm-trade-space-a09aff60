@@ -398,6 +398,7 @@ export async function browseProductsData(p: BrowseParams): Promise<{
   pageCount: number;
 }> {
   await appContext();
+  const { sqliteFts5 } = await import("@/lib/server/db.server");
   const { tokenize, buildSearchClause } = await import("@/lib/server/search.server");
   const where: string[] = [`p.status = 'active'`, PUBLIC_SELLER_COND];
   const params: Array<string | number> = [];
@@ -411,16 +412,21 @@ export async function browseProductsData(p: BrowseParams): Promise<{
   }
   if (p.q) {
     const tokens = tokenize(p.q);
-    const cols = [
-      "p.title",
-      "p.description",
-      "coalesce(p.platform,'')",
-      "u.username",
-      "c.name",
-      "coalesce(ci.name,'')",
-    ];
-    const { sql, params: sp } = buildSearchClause(tokens, cols);
-    if (tokens.length > 0) {
+    if (sqliteFts5 && tokens.length > 0) {
+      // FTS5 index scan — orders of magnitude faster than LIKE on large catalogs
+      const ftsQuery = tokens.map((t) => `"${t.replace(/"/g, '""')}"`).join(" ");
+      where.push(`p.id in (select product_id from products_fts where products_fts match ?)`);
+      params.push(ftsQuery);
+    } else if (tokens.length > 0) {
+      const cols = [
+        "p.title",
+        "p.description",
+        "coalesce(p.platform,'')",
+        "u.username",
+        "c.name",
+        "coalesce(ci.name,'')",
+      ];
+      const { sql, params: sp } = buildSearchClause(tokens, cols);
       where.push(`(${sql})`);
       params.push(...sp);
     } else {
