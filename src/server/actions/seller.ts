@@ -24,6 +24,7 @@ type Row = Record<string, string | number | null>;
 export async function getSellerOverviewAction() {
   await appContext();
   const user = await requireSeller();
+  return cached(`seller:overview:${user.id}`, 2 * 60_000, async () => {
   const t = now();
   const dayMs = 86_400_000;
   const sales = (period: number) =>
@@ -146,6 +147,7 @@ export async function getSellerOverviewAction() {
       completionRate: user.completion_rate,
     },
   };
+  }); // end cached
 }
 
 // ---------------------------------------------------------------------------
