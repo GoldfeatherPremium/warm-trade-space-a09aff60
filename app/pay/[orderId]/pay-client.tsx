@@ -1,0 +1,336 @@
+"use client";
+
+import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import {
+  CreditCard,
+  Zap,
+  ShieldHalf,
+  CircleDollarSign,
+  Check,
+  Copy,
+  Timer,
+  ShieldCheck,
+} from "lucide-react";
+import {
+  simulatePaymentSentAction,
+  cancelUnpaidOrderAction,
+  payWithCreditsAction,
+  payWithWalletAction,
+} from "@/server/actions/orders";
+import { usdt } from "@/lib/format";
+import Link from "next/link";
+
+type PayData = {
+  order: {
+    id: string;
+    order_no: string;
+    status: string;
+    total_cents: number;
+    discount_cents: number;
+    coupon_code: string | null;
+    expires_at: number | null;
+    product_title: string;
+  };
+  deposit: {
+    amount_cents: number;
+    network: string;
+    pay_address: string;
+    status: string;
+  };
+  seller: {
+    username: string;
+    total_sales: number;
+    completion_rate: number;
+    verification_tier: string;
+    trust_score: number;
+    seller_level: number;
+  } | null;
+  warrantyHours: number;
+  walletAvailable: number;
+  creditsAvailable: number;
+};
+
+function countdown(expiresAt: number) {
+  const ms = Math.max(0, expiresAt - Date.now());
+  const s = Math.floor(ms / 1000);
+  const m = Math.floor(s / 60);
+  const ss = s % 60;
+  return `${m}:${String(ss).padStart(2, "0")}`;
+}
+
+function EscrowTimeline({ warrantyHours }: { warrantyHours: number }) {
+  const steps = [
+    { Icon: CreditCard, label: "Pay", sub: "USDT held safe", state: "active" as const },
+    { Icon: Zap, label: "Deliver", sub: "Seller ships goods", state: "next" as const },
+    {
+      Icon: ShieldHalf,
+      label: "Warranty",
+      sub: `${warrantyHours}h to test`,
+      state: "upcoming" as const,
+    },
+    {
+      Icon: CircleDollarSign,
+      label: "Release",
+      sub: "Seller paid out",
+      state: "upcoming" as const,
+    },
+  ];
+  return (
+    <div className="bg-secondary/40 border border-border rounded-md p-3">
+      <p className="text-[9px] font-bold tracking-widest text-muted-foreground mb-2.5 text-center">
+        BUYER PROTECTION — YOUR FUNDS, YOUR CONTROL
+      </p>
+      <div className="grid grid-cols-4 gap-1 relative">
+        <div aria-hidden className="absolute top-3.5 left-[12%] right-[12%] h-px bg-border" />
+        {steps.map(({ Icon, label, sub, state }) => {
+          const isActive = state === "active";
+          const isNext = state === "next";
+          const cls = isActive
+            ? "bg-accent text-accent-foreground border-accent shadow-[0_0_0_4px_rgba(34,197,94,0.18)]"
+            : isNext
+              ? "bg-card text-primary border-primary/60"
+              : "bg-card text-muted-foreground border-border";
+          return (
+            <div key={label} className="relative flex flex-col items-center gap-1.5">
+              <span
+                className={`size-7 rounded-full grid place-items-center border ${cls} relative z-10`}
+              >
+                {isActive ? <Check className="size-3.5" /> : <Icon className="size-3.5" />}
+              </span>
+              <span
+                className={`text-[10px] font-bold tracking-wide ${isActive ? "text-accent" : isNext ? "text-foreground" : "text-muted-foreground"}`}
+              >
+                {label.toUpperCase()}
+              </span>
+              <span className="text-[9px] text-muted-foreground text-center leading-tight">
+                {sub}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+export function PayClient({ initial, orderId }: { initial: PayData; orderId: string }) {
+  const router = useRouter();
+  const [data, setData] = useState(initial);
+  const [copied, setCopied] = useState(false);
+  const [, startTransition] = useTransition();
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [tick, setTick] = useState(0);
+
+  // Poll every 2.5s while awaiting payment
+  useEffect(() => {
+    if (!["awaiting_payment"].includes(data.order.status)) return;
+    const id = setInterval(() => setTick((x) => x + 1), 2500);
+    return () => clearInterval(id);
+  }, [data.order.status]);
+
+  // Re-fetch via server action on each tick
+  useEffect(() => {
+    if (tick === 0) return;
+    startTransition(async () => {
+      const { getPaymentDataAction } = await import("@/server/actions/orders");
+      const res = await getPaymentDataAction(orderId);
+      if (res) setData(res as PayData);
+    });
+  }, [tick, orderId]);
+
+  // Redirect once paid
+  useEffect(() => {
+    if (!["awaiting_payment", "expired"].includes(data.order.status)) {
+      router.push(`/orders/${orderId}`);
+    }
+  }, [data.order.status, orderId, router]);
+
+  const expired =
+    data.order.status === "expired" ||
+    (data.order.expires_at !== null && data.order.expires_at < Date.now());
+
+  async function act(action: "sim" | "wallet" | "credits" | "cancel") {
+    setBusy(action);
+    setError(null);
+    let res: { ok: boolean; error?: string } | undefined;
+    if (action === "sim") res = await simulatePaymentSentAction(orderId);
+    else if (action === "wallet") res = await payWithWalletAction(orderId);
+    else if (action === "credits") res = await payWithCreditsAction(orderId);
+    else if (action === "cancel") res = await cancelUnpaidOrderAction(orderId);
+    setBusy(null);
+    if (!res?.ok) {
+      setError(res?.error ?? "Something went wrong.");
+      return;
+    }
+    if (action === "cancel") {
+      router.push("/browse");
+      return;
+    }
+    router.push(`/orders/${orderId}`);
+  }
+
+  const { order, deposit } = data;
+
+  return (
+    <div className="max-w-md mx-auto py-6 space-y-4">
+      <h1 className="font-display text-3xl text-center">COMPLETE PAYMENT</h1>
+
+      {data.seller && (
+        <Link
+          href={`/s/${data.seller.username}`}
+          className="block bg-card border border-border rounded-lg px-4 py-3 hover:border-primary/50"
+        >
+          <p className="text-[10px] text-muted-foreground tracking-widest font-bold">SELLER</p>
+          <p className="text-sm font-bold">{data.seller.username}</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">
+            {data.seller.total_sales.toLocaleString()} sales ·{" "}
+            {data.seller.completion_rate.toFixed(0)}% completion
+          </p>
+        </Link>
+      )}
+
+      {expired ? (
+        <div className="bg-card border border-destructive/40 rounded-lg p-6 text-center space-y-3">
+          <p className="text-sm text-destructive font-bold">Payment window expired</p>
+          <p className="text-xs text-muted-foreground">
+            The order was cancelled and any reserved stock was returned.
+          </p>
+          <Link href="/browse" className="text-primary text-xs font-bold">
+            Back to market →
+          </Link>
+        </div>
+      ) : (
+        <div className="bg-card border border-border rounded-lg p-5 space-y-4">
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-muted-foreground">{order.order_no}</span>
+            {order.expires_at && (
+              <span className="flex items-center gap-1 text-yellow-400 font-mono font-bold">
+                <Timer className="size-3.5" />
+                {countdown(order.expires_at)}
+              </span>
+            )}
+          </div>
+
+          <div className="text-center py-2">
+            <p className="text-[10px] text-muted-foreground tracking-widest font-bold">
+              SEND EXACTLY
+            </p>
+            <p className="text-3xl font-mono text-accent mt-1">{usdt(deposit.amount_cents)}</p>
+            {(order.discount_cents ?? 0) > 0 && (
+              <p className="text-[10px] text-accent font-bold mt-1">
+                coupon {order.coupon_code}: −{usdt(order.discount_cents)} applied
+              </p>
+            )}
+            <p className="text-[11px] text-muted-foreground mt-1">
+              network: <b className="text-foreground">{deposit.network}</b>
+            </p>
+          </div>
+
+          {/* pseudo-QR */}
+          <div className="mx-auto size-36 bg-foreground rounded-lg p-2 grid place-items-center">
+            <div className="size-full rounded grid grid-cols-8 grid-rows-8 gap-px overflow-hidden">
+              {Array.from({ length: 64 }).map((_, i) => (
+                <div
+                  key={i}
+                  className={
+                    (deposit.pay_address.charCodeAt(i % deposit.pay_address.length) + i * 7) % 3
+                      ? "bg-background"
+                      : "bg-foreground"
+                  }
+                />
+              ))}
+            </div>
+          </div>
+
+          <button
+            className="w-full bg-secondary rounded-md p-3 text-left group"
+            onClick={() => {
+              navigator.clipboard.writeText(deposit.pay_address);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 2000);
+            }}
+          >
+            <p className="text-[9px] text-muted-foreground tracking-widest font-bold mb-1">
+              DEPOSIT ADDRESS (TAP TO COPY)
+            </p>
+            <p className="text-xs font-mono break-all flex items-center gap-2">
+              {deposit.pay_address}
+              {copied ? (
+                <Check className="size-3.5 shrink-0 text-accent" />
+              ) : (
+                <Copy className="size-3.5 shrink-0 text-muted-foreground group-hover:text-foreground" />
+              )}
+            </p>
+          </button>
+
+          <div className="flex items-center gap-2 text-[11px] text-muted-foreground bg-secondary/50 rounded-md p-2.5">
+            <ShieldCheck className="size-4 text-accent shrink-0" />
+            Funds are held securely — the seller is paid only after delivery + warranty.
+          </div>
+
+          <EscrowTimeline warrantyHours={data.warrantyHours} />
+
+          {error && (
+            <p className="text-xs text-destructive bg-destructive/10 border border-destructive/30 rounded-md px-3 py-2">
+              {error}
+            </p>
+          )}
+
+          <div className="space-y-2 pt-1">
+            {data.creditsAvailable >= deposit.amount_cents ? (
+              <button
+                onClick={() => act("credits")}
+                disabled={!!busy}
+                className="w-full py-2.5 text-sm font-bold rounded-lg bg-secondary border border-accent/60 text-accent disabled:opacity-60"
+              >
+                {busy === "credits"
+                  ? "Applying credits…"
+                  : `Pay with store credits (${usdt(data.creditsAvailable)} available)`}
+              </button>
+            ) : data.creditsAvailable > 0 ? (
+              <div className="text-[11px] text-muted-foreground bg-secondary/50 rounded-md p-2.5 text-center">
+                You have <b className="text-accent">{usdt(data.creditsAvailable)}</b> in credits —
+                short {usdt(deposit.amount_cents - data.creditsAvailable)} for full coverage.
+              </div>
+            ) : null}
+
+            {data.walletAvailable >= deposit.amount_cents && (
+              <button
+                onClick={() => act("wallet")}
+                disabled={!!busy}
+                className="w-full py-2.5 text-sm font-bold rounded-lg bg-secondary border border-accent/40 text-accent disabled:opacity-60"
+              >
+                {busy === "wallet"
+                  ? "Paying…"
+                  : `Pay instantly from wallet (${usdt(data.walletAvailable)} available)`}
+              </button>
+            )}
+
+            <button
+              onClick={() => act("sim")}
+              disabled={!!busy}
+              className="w-full py-2.5 text-sm font-bold rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+            >
+              {busy === "sim" ? "Confirming on-chain…" : "I've sent the USDT (demo: confirm now)"}
+            </button>
+
+            <button
+              onClick={() => act("cancel")}
+              disabled={!!busy}
+              className="w-full py-2.5 text-xs text-muted-foreground hover:text-foreground disabled:opacity-60"
+            >
+              Cancel order
+            </button>
+          </div>
+
+          <p className="text-[9px] text-muted-foreground text-center leading-relaxed">
+            Demo build: payment confirmation is simulated. In production this page watches the chain
+            via the payment provider webhook.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
