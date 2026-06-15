@@ -87,9 +87,15 @@ export async function buyerListSubscriptionsAction() {
   await appContext();
   const user = await requireUser();
   const rows = await q<{
-    id: string; product_id: string; product_title: string; seller_username: string;
-    label: string; status: string; order_id: string | null;
-    started_at: number | null; expires_at: number | null;
+    id: string;
+    product_id: string;
+    product_title: string;
+    seller_username: string;
+    label: string;
+    status: string;
+    order_id: string | null;
+    started_at: number | null;
+    expires_at: number | null;
     credentials_encrypted: string;
   }>(
     `select s.*, p.title as product_title, u.username as seller_username

@@ -45,7 +45,12 @@ export default async function StorePage({ params }: { params: Promise<{ username
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
       { "@type": "ListItem", position: 2, name: "Sellers", item: `${SITE_URL}/sellers` },
-      { "@type": "ListItem", position: 3, name: seller.username, item: `${SITE_URL}/s/${seller.username}` },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: seller.username,
+        item: `${SITE_URL}/s/${seller.username}`,
+      },
     ],
   };
 

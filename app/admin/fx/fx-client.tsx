@@ -31,7 +31,7 @@ export function FxClient() {
 
   useEffect(() => {
     load();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   async function upsert(e: React.FormEvent) {
     e.preventDefault();

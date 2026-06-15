@@ -25,128 +25,128 @@ export async function getSellerOverviewAction() {
   await appContext();
   const user = await requireSeller();
   return cached(`seller:overview:${user.id}`, 2 * 60_000, async () => {
-  const t = now();
-  const dayMs = 86_400_000;
-  const sales = (period: number) =>
-    q1<{ c: number; s: number }>(
-      `select count(*) c, coalesce(sum(seller_net_cents),0) s from orders
+    const t = now();
+    const dayMs = 86_400_000;
+    const sales = (period: number) =>
+      q1<{ c: number; s: number }>(
+        `select count(*) c, coalesce(sum(seller_net_cents),0) s from orders
        where seller_id = ? and paid_at > ? and status not in ('refunded','cancelled','expired')`,
-      [user.id, t - period],
-    );
-  const salesBetween = (from: number, to: number) =>
-    q1<{ c: number; s: number }>(
-      `select count(*) c, coalesce(sum(seller_net_cents),0) s from orders
+        [user.id, t - period],
+      );
+    const salesBetween = (from: number, to: number) =>
+      q1<{ c: number; s: number }>(
+        `select count(*) c, coalesce(sum(seller_net_cents),0) s from orders
        where seller_id = ? and paid_at > ? and paid_at <= ? and status not in ('refunded','cancelled','expired')`,
-      [user.id, from, to],
-    );
-  const [
-    today,
-    week,
-    month,
-    prevWeek,
-    wallet,
-    needsDelivery,
-    openDisputes,
-    lowStock,
-    paidOrders,
-    topProducts,
-    funnel,
-  ] = await Promise.all([
-    sales(dayMs),
-    sales(7 * dayMs),
-    sales(30 * dayMs),
-    salesBetween(t - 14 * dayMs, t - 7 * dayMs),
-    getWallet(user.id),
-    q1<{ c: number }>(
-      `select count(*) c from orders where seller_id = ? and status in ('paid','delivering')`,
-      [user.id],
-    ),
-    q1<{ c: number }>(
-      `select count(*) c from disputes dd join orders o on o.id = dd.order_id where o.seller_id = ? and dd.status != 'resolved'`,
-      [user.id],
-    ),
-    q<{ id: string; title: string; stock_count: number }>(
-      `select id, title, stock_count from products where seller_id = ? and delivery_type = 'auto'
+        [user.id, from, to],
+      );
+    const [
+      today,
+      week,
+      month,
+      prevWeek,
+      wallet,
+      needsDelivery,
+      openDisputes,
+      lowStock,
+      paidOrders,
+      topProducts,
+      funnel,
+    ] = await Promise.all([
+      sales(dayMs),
+      sales(7 * dayMs),
+      sales(30 * dayMs),
+      salesBetween(t - 14 * dayMs, t - 7 * dayMs),
+      getWallet(user.id),
+      q1<{ c: number }>(
+        `select count(*) c from orders where seller_id = ? and status in ('paid','delivering')`,
+        [user.id],
+      ),
+      q1<{ c: number }>(
+        `select count(*) c from disputes dd join orders o on o.id = dd.order_id where o.seller_id = ? and dd.status != 'resolved'`,
+        [user.id],
+      ),
+      q<{ id: string; title: string; stock_count: number }>(
+        `select id, title, stock_count from products where seller_id = ? and delivery_type = 'auto'
        and status in ('active','out_of_stock') and stock_count <= 5 order by stock_count`,
-      [user.id],
-    ),
-    q<{ paid_at: number; seller_net_cents: number }>(
-      `select paid_at, seller_net_cents from orders
+        [user.id],
+      ),
+      q<{ paid_at: number; seller_net_cents: number }>(
+        `select paid_at, seller_net_cents from orders
        where seller_id = ? and paid_at > ? and status not in ('refunded','cancelled','expired')`,
-      [user.id, t - 13 * dayMs],
-    ),
-    q<{
-      id: string;
-      title: string;
-      views: number;
-      sold_count: number;
-      price_cents: number;
-      stock_count: number;
-      status: string;
-      delivery_type: string;
-    }>(
-      `select id, title, views, sold_count, price_cents, stock_count, status, delivery_type
+        [user.id, t - 13 * dayMs],
+      ),
+      q<{
+        id: string;
+        title: string;
+        views: number;
+        sold_count: number;
+        price_cents: number;
+        stock_count: number;
+        status: string;
+        delivery_type: string;
+      }>(
+        `select id, title, views, sold_count, price_cents, stock_count, status, delivery_type
          from products where seller_id = ? and status in ('active','out_of_stock','paused')
          order by sold_count desc limit 6`,
-      [user.id],
-    ),
-    q1<{ views: number; sold: number }>(
-      `select coalesce(sum(views),0) views, coalesce(sum(sold_count),0) sold
+        [user.id],
+      ),
+      q1<{ views: number; sold: number }>(
+        `select coalesce(sum(views),0) views, coalesce(sum(sold_count),0) sold
          from products where seller_id = ? and status in ('active','out_of_stock','paused')`,
-      [user.id],
-    ),
-  ]);
-  const daily: Array<{ day: string; sales: number; orders: number }> = [];
-  for (let i = 13; i >= 0; i--) {
-    const d = new Date(t - i * dayMs);
-    daily.push({ day: `${d.getMonth() + 1}/${d.getDate()}`, sales: 0, orders: 0 });
-  }
-  for (const o of paidOrders) {
-    const idx = 13 - Math.min(13, Math.max(0, Math.floor((t - o.paid_at) / dayMs)));
-    daily[idx].sales += o.seller_net_cents / 100;
-    daily[idx].orders += 1;
-  }
-  const trailing14Total = daily.reduce((a, d) => a + d.sales, 0);
-  const forecast7d = Math.round((trailing14Total / 14) * 7 * 100);
-  const thisWeekCents = Number(week?.s ?? 0);
-  const lastWeekCents = Number(prevWeek?.s ?? 0);
-  const wowPct =
-    lastWeekCents > 0
-      ? Math.round(((thisWeekCents - lastWeekCents) / lastWeekCents) * 100)
-      : thisWeekCents > 0
-        ? 100
-        : 0;
-  const views = Number(funnel?.views ?? 0);
-  const sold = Number(funnel?.sold ?? 0);
-  const conversionPct = views > 0 ? Math.round((sold / views) * 1000) / 10 : 0;
-  return {
-    daily,
-    topProducts,
-    today: today!,
-    week: week!,
-    month: month!,
-    wallet,
-    needsDelivery: needsDelivery!.c,
-    openDisputes: openDisputes!.c,
-    lowStock,
-    intelligence: {
-      thisWeekCents,
-      lastWeekCents,
-      wowPct,
-      forecast7dCents: forecast7d,
-      avgDailyCents: Math.round((trailing14Total / 14) * 100),
-      views,
-      sold,
-      conversionPct,
-    },
-    profile: {
-      level: user.seller_level,
-      rating: user.rating,
-      ratingCount: user.rating_count,
-      totalSales: user.total_sales,
-      completionRate: user.completion_rate,
-    },
-  };
+        [user.id],
+      ),
+    ]);
+    const daily: Array<{ day: string; sales: number; orders: number }> = [];
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(t - i * dayMs);
+      daily.push({ day: `${d.getMonth() + 1}/${d.getDate()}`, sales: 0, orders: 0 });
+    }
+    for (const o of paidOrders) {
+      const idx = 13 - Math.min(13, Math.max(0, Math.floor((t - o.paid_at) / dayMs)));
+      daily[idx].sales += o.seller_net_cents / 100;
+      daily[idx].orders += 1;
+    }
+    const trailing14Total = daily.reduce((a, d) => a + d.sales, 0);
+    const forecast7d = Math.round((trailing14Total / 14) * 7 * 100);
+    const thisWeekCents = Number(week?.s ?? 0);
+    const lastWeekCents = Number(prevWeek?.s ?? 0);
+    const wowPct =
+      lastWeekCents > 0
+        ? Math.round(((thisWeekCents - lastWeekCents) / lastWeekCents) * 100)
+        : thisWeekCents > 0
+          ? 100
+          : 0;
+    const views = Number(funnel?.views ?? 0);
+    const sold = Number(funnel?.sold ?? 0);
+    const conversionPct = views > 0 ? Math.round((sold / views) * 1000) / 10 : 0;
+    return {
+      daily,
+      topProducts,
+      today: today!,
+      week: week!,
+      month: month!,
+      wallet,
+      needsDelivery: needsDelivery!.c,
+      openDisputes: openDisputes!.c,
+      lowStock,
+      intelligence: {
+        thisWeekCents,
+        lastWeekCents,
+        wowPct,
+        forecast7dCents: forecast7d,
+        avgDailyCents: Math.round((trailing14Total / 14) * 100),
+        views,
+        sold,
+        conversionPct,
+      },
+      profile: {
+        level: user.seller_level,
+        rating: user.rating,
+        ratingCount: user.rating_count,
+        totalSales: user.total_sales,
+        completionRate: user.completion_rate,
+      },
+    };
   }); // end cached
 }
 
@@ -797,131 +797,131 @@ export async function getSellerAnalyticsAction(range: Range = "30d") {
   await appContext();
   const user = await requireSeller();
   return cached(`seller:analytics:${user.id}:${range}`, 5 * 60_000, async () => {
-  const days = RANGES[range];
-  const t = now();
-  const since = t - days * DAY;
-  const prevSince = since - days * DAY;
+    const days = RANGES[range];
+    const t = now();
+    const since = t - days * DAY;
+    const prevSince = since - days * DAY;
 
-  const [
-    paidRows,
-    summary,
-    prevSummary,
-    topProducts,
-    categoryMix,
-    hourly,
-    buyerStats,
-    productCounts,
-  ] = await Promise.all([
-    q<{ paid_at: number; v: number; n: number }>(
-      `select paid_at, seller_net_cents as v, 1 as n from orders
+    const [
+      paidRows,
+      summary,
+      prevSummary,
+      topProducts,
+      categoryMix,
+      hourly,
+      buyerStats,
+      productCounts,
+    ] = await Promise.all([
+      q<{ paid_at: number; v: number; n: number }>(
+        `select paid_at, seller_net_cents as v, 1 as n from orders
          where seller_id = ? and paid_at > ? and status not in ('cancelled','expired','refunded')`,
-      [user.id, since],
-    ),
-    q1<{ n: number; gross: number; net: number; qty: number; buyers: number }>(
-      `select count(*) n, coalesce(sum(total_cents),0) gross, coalesce(sum(seller_net_cents),0) net,
+        [user.id, since],
+      ),
+      q1<{ n: number; gross: number; net: number; qty: number; buyers: number }>(
+        `select count(*) n, coalesce(sum(total_cents),0) gross, coalesce(sum(seller_net_cents),0) net,
                 coalesce(sum(qty),0) qty, count(distinct buyer_id) buyers
          from orders where seller_id = ? and paid_at > ? and status not in ('cancelled','expired','refunded')`,
-      [user.id, since],
-    ),
-    q1<{ net: number }>(
-      `select coalesce(sum(seller_net_cents),0) net from orders
+        [user.id, since],
+      ),
+      q1<{ net: number }>(
+        `select coalesce(sum(seller_net_cents),0) net from orders
          where seller_id = ? and paid_at > ? and paid_at <= ? and status not in ('cancelled','expired','refunded')`,
-      [user.id, prevSince, since],
-    ),
-    q<{
-      id: string;
-      title: string;
-      revenue: number;
-      orders: number;
-      views: number;
-      sold_count: number;
-    }>(
-      `select p.id, p.title,
+        [user.id, prevSince, since],
+      ),
+      q<{
+        id: string;
+        title: string;
+        revenue: number;
+        orders: number;
+        views: number;
+        sold_count: number;
+      }>(
+        `select p.id, p.title,
                 coalesce(sum(o.seller_net_cents),0) as revenue,
                 count(o.id) as orders,
                 p.views, p.sold_count
          from products p left join orders o on o.product_id = p.id
            and o.paid_at > ? and o.status not in ('cancelled','expired','refunded')
          where p.seller_id = ? group by p.id order by revenue desc limit 10`,
-      [since, user.id],
-    ),
-    q<{ name: string; revenue: number; orders: number }>(
-      `select c.name, coalesce(sum(o.seller_net_cents),0) as revenue, count(*) as orders
+        [since, user.id],
+      ),
+      q<{ name: string; revenue: number; orders: number }>(
+        `select c.name, coalesce(sum(o.seller_net_cents),0) as revenue, count(*) as orders
          from orders o join products p on p.id = o.product_id join categories c on c.id = p.category_id
          where o.seller_id = ? and o.paid_at > ? and o.status not in ('cancelled','expired','refunded')
          group by c.id order by revenue desc`,
-      [user.id, since],
-    ),
-    q<{ hour: number; n: number }>(
-      `select cast(strftime('%H', datetime(paid_at/1000, 'unixepoch')) as integer) as hour, count(*) as n
+        [user.id, since],
+      ),
+      q<{ hour: number; n: number }>(
+        `select cast(strftime('%H', datetime(paid_at/1000, 'unixepoch')) as integer) as hour, count(*) as n
          from orders where seller_id = ? and paid_at > ? and status not in ('cancelled','expired','refunded')
          group by hour order by hour`,
-      [user.id, since],
-    ),
-    q1<{ buyers: number; repeat: number }>(
-      `select count(distinct buyer_id) buyers,
+        [user.id, since],
+      ),
+      q1<{ buyers: number; repeat: number }>(
+        `select count(distinct buyer_id) buyers,
                 count(distinct case when cnt > 1 then buyer_id end) repeat
          from (select buyer_id, count(*) cnt from orders where seller_id = ? and paid_at > ? and status not in ('cancelled','expired','refunded') group by buyer_id)`,
-      [user.id, since],
-    ),
-    q1<{ active: number; paused: number; oos: number }>(
-      `select
+        [user.id, since],
+      ),
+      q1<{ active: number; paused: number; oos: number }>(
+        `select
            sum(case when status = 'active' then 1 else 0 end) as active,
            sum(case when status = 'paused' then 1 else 0 end) as paused,
            sum(case when status = 'out_of_stock' then 1 else 0 end) as oos
          from products where seller_id = ?`,
-      [user.id],
-    ),
-  ]);
+        [user.id],
+      ),
+    ]);
 
-  const daily: Array<{ day: string; v: number; n: number }> = [];
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(t - i * DAY);
-    daily.push({ day: `${d.getMonth() + 1}/${d.getDate()}`, v: 0, n: 0 });
-  }
-  for (const r of paidRows) {
-    const idx = days - 1 - Math.min(days - 1, Math.max(0, Math.floor((t - r.paid_at) / DAY)));
-    daily[idx].v += r.v;
-    daily[idx].n += r.n;
-  }
+    const daily: Array<{ day: string; v: number; n: number }> = [];
+    for (let i = days - 1; i >= 0; i--) {
+      const d = new Date(t - i * DAY);
+      daily.push({ day: `${d.getMonth() + 1}/${d.getDate()}`, v: 0, n: 0 });
+    }
+    for (const r of paidRows) {
+      const idx = days - 1 - Math.min(days - 1, Math.max(0, Math.floor((t - r.paid_at) / DAY)));
+      daily[idx].v += r.v;
+      daily[idx].n += r.n;
+    }
 
-  const hours24: Array<{ hour: string; n: number }> = Array.from({ length: 24 }, (_, i) => ({
-    hour: String(i).padStart(2, "0"),
-    n: 0,
-  }));
-  for (const r of hourly) hours24[r.hour].n += r.n;
+    const hours24: Array<{ hour: string; n: number }> = Array.from({ length: 24 }, (_, i) => ({
+      hour: String(i).padStart(2, "0"),
+      n: 0,
+    }));
+    for (const r of hourly) hours24[r.hour].n += r.n;
 
-  const net = Number(summary?.net ?? 0);
-  const prevNet = Number(prevSummary?.net ?? 0);
-  const growth = prevNet > 0 ? Math.round(((net - prevNet) / prevNet) * 1000) / 10 : null;
-  const orders = Number(summary?.n ?? 0);
-  const qty = Number(summary?.qty ?? 0);
-  const uniqueBuyers = Number(buyerStats?.buyers ?? 0);
-  const repeatBuyers = Number(buyerStats?.repeat ?? 0);
-  const repeatRate = uniqueBuyers > 0 ? Math.round((repeatBuyers / uniqueBuyers) * 100) : 0;
-  const aov = orders > 0 ? net / orders / 100 : 0;
+    const net = Number(summary?.net ?? 0);
+    const prevNet = Number(prevSummary?.net ?? 0);
+    const growth = prevNet > 0 ? Math.round(((net - prevNet) / prevNet) * 1000) / 10 : null;
+    const orders = Number(summary?.n ?? 0);
+    const qty = Number(summary?.qty ?? 0);
+    const uniqueBuyers = Number(buyerStats?.buyers ?? 0);
+    const repeatBuyers = Number(buyerStats?.repeat ?? 0);
+    const repeatRate = uniqueBuyers > 0 ? Math.round((repeatBuyers / uniqueBuyers) * 100) : 0;
+    const aov = orders > 0 ? net / orders / 100 : 0;
 
-  return {
-    range,
-    daily,
-    hours: hours24,
-    summary: {
-      net,
-      orders,
-      qty,
-      uniqueBuyers,
-      repeatRate,
-      aov: Math.round(aov * 100) / 100,
-      growth,
-    },
-    topProducts,
-    categoryMix,
-    productCounts: {
-      active: productCounts?.active ?? 0,
-      paused: productCounts?.paused ?? 0,
-      oos: productCounts?.oos ?? 0,
-    },
-  };
+    return {
+      range,
+      daily,
+      hours: hours24,
+      summary: {
+        net,
+        orders,
+        qty,
+        uniqueBuyers,
+        repeatRate,
+        aov: Math.round(aov * 100) / 100,
+        growth,
+      },
+      topProducts,
+      categoryMix,
+      productCounts: {
+        active: productCounts?.active ?? 0,
+        paused: productCounts?.paused ?? 0,
+        oos: productCounts?.oos ?? 0,
+      },
+    };
   }); // end cached
 }
 

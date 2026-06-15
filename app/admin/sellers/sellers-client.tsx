@@ -230,7 +230,6 @@ export function AdminSellersClient() {
 
   useEffect(() => {
     load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const pending = apps.filter((a) => a.status === "pending");

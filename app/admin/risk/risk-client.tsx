@@ -52,12 +52,10 @@ export function RiskClient() {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     loadEvents(band);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [band]);
 
   const pills = overview
