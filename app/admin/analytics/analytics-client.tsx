@@ -55,7 +55,6 @@ export function AnalyticsClient() {
         setLoading(false);
       }
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [range]);
 
   return (

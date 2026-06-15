@@ -37,41 +37,93 @@ import { recomputeSellerTrust } from "@/lib/server/trust.server";
 // ---------------------------------------------------------------------------
 
 type SellerApplicationRow = {
-  id: string; user_id: string; username: string; email: string;
-  status: string; admin_note: string | null; created_at: number;
-  full_name: string | null; display_name: string | null; country: string | null;
-  years_experience: number | null; monthly_volume: number | null;
-  product_categories: string | null; source_of_goods: string | null;
-  usdt_network: string | null; telegram: string | null; whatsapp: string | null;
-  wechat: string | null; experience: string | null;
-  usdt_payout_address: string | null; portfolio: string | null;
+  id: string;
+  user_id: string;
+  username: string;
+  email: string;
+  status: string;
+  admin_note: string | null;
+  created_at: number;
+  full_name: string | null;
+  display_name: string | null;
+  country: string | null;
+  years_experience: number | null;
+  monthly_volume: number | null;
+  product_categories: string | null;
+  source_of_goods: string | null;
+  usdt_network: string | null;
+  telegram: string | null;
+  whatsapp: string | null;
+  wechat: string | null;
+  experience: string | null;
+  usdt_payout_address: string | null;
+  portfolio: string | null;
 };
 type ProductReviewRow = {
-  id: string; title: string; status: string; slug: string; risk_tier: string;
-  seller_name: string; category_name: string; price_cents: number; created_at: number;
+  id: string;
+  title: string;
+  status: string;
+  slug: string;
+  risk_tier: string;
+  seller_name: string;
+  category_name: string;
+  price_cents: number;
+  created_at: number;
 };
 type FlaggedMessageRow = {
-  id: string; body: string; flag_reason: string; sender_name: string;
-  conversation_id: string; created_at: number; moderated_at: number | null;
+  id: string;
+  body: string;
+  flag_reason: string;
+  sender_name: string;
+  conversation_id: string;
+  created_at: number;
+  moderated_at: number | null;
 };
 type DisputeRow = {
-  id: string; order_no: string; product_title: string; total_cents: number;
-  status: string; created_at: number; buyer_name: string; seller_name: string;
-  reason: string; description: string | null; seller_response: string | null;
-  resolution: string | null; resolution_cents: number | null; resolved_at: number | null;
+  id: string;
+  order_no: string;
+  product_title: string;
+  total_cents: number;
+  status: string;
+  created_at: number;
+  buyer_name: string;
+  seller_name: string;
+  reason: string;
+  description: string | null;
+  seller_response: string | null;
+  resolution: string | null;
+  resolution_cents: number | null;
+  resolved_at: number | null;
 };
 type AdminOrderRow = {
-  id: string; order_no: string; product_title: string; status: string;
-  escrow_status: string | null; escrow_hold_reason: string | null;
-  total_cents: number; buyer_name: string; seller_name: string;
-  created_at: number; warranty_ends_at: number | null;
+  id: string;
+  order_no: string;
+  product_title: string;
+  status: string;
+  escrow_status: string | null;
+  escrow_hold_reason: string | null;
+  total_cents: number;
+  buyer_name: string;
+  seller_name: string;
+  created_at: number;
+  warranty_ends_at: number | null;
 };
 type CategoryRow = {
-  id: string; name: string; slug: string; icon: string | null; sort: number;
-  default_warranty_hours: number; commission_pct: number; risk_tier: string;
-  is_active: number; submission_schema: string | null; requires_subscription: number;
-  allowed_durations: string | null; product_count: number;
-  admin_description: string | null; delivery_kind: string | null;
+  id: string;
+  name: string;
+  slug: string;
+  icon: string | null;
+  sort: number;
+  default_warranty_hours: number;
+  commission_pct: number;
+  risk_tier: string;
+  is_active: number;
+  submission_schema: string | null;
+  requires_subscription: number;
+  allowed_durations: string | null;
+  product_count: number;
+  admin_description: string | null;
+  delivery_kind: string | null;
 };
 
 // ---------------------------------------------------------------------------
@@ -316,10 +368,9 @@ export async function reviewProductAction(input: {
         `select user_id from seller_follows where seller_id = ?`,
         [p!.seller_id],
       );
-      const sellerRow = await q1<{ username: string }>(
-        `select username from users where id = ?`,
-        [p!.seller_id],
-      );
+      const sellerRow = await q1<{ username: string }>(`select username from users where id = ?`, [
+        p!.seller_id,
+      ]);
       const sellerName = sellerRow?.username ?? "A seller you follow";
       const productSlug = await q1<{ slug: string }>(`select slug from products where id = ?`, [
         input.productId,
@@ -569,7 +620,13 @@ export async function reviewWithdrawalAction(input: {
       `update withdrawals set status = 'approved', reviewed_by = ?, reviewed_at = ? where id = ?`,
       [staff.id, now(), w!.id],
     );
-    await notify(w!.user_id, "withdrawal", "Withdrawal approved", "Payout is being processed.", "/seller/wallet");
+    await notify(
+      w!.user_id,
+      "withdrawal",
+      "Withdrawal approved",
+      "Payout is being processed.",
+      "/seller/wallet",
+    );
   } else if (input.action === "mark_sent") {
     if (!["pending", "approved"].includes(w!.status)) fail("Withdrawal is not awaiting payout.");
     if (!input.txHash) fail("Transaction hash is required.");
@@ -681,8 +738,7 @@ export async function adminUserActionAction(input: {
 }) {
   await appContext();
   const staff = await requireAdmin();
-  if (input.userId === staff.id && input.action === "ban")
-    fail("You can't ban your own account.");
+  if (input.userId === staff.id && input.action === "ban") fail("You can't ban your own account.");
   switch (input.action) {
     case "ban":
       await run(`update users set is_banned = 1 where id = ?`, [input.userId]);
@@ -999,9 +1055,14 @@ export async function adminListItemsAction() {
   await appContext();
   await requireStaff();
   const [items, maps, suggestions, categories] = await Promise.all([
-    q<{ id: string; name: string; slug: string; is_active: number; sort: number; created_at: number }>(
-      `select * from catalog_items order by sort, name`,
-    ),
+    q<{
+      id: string;
+      name: string;
+      slug: string;
+      is_active: number;
+      sort: number;
+      created_at: number;
+    }>(`select * from catalog_items order by sort, name`),
     q<{ item_id: string; category_id: string }>(
       `select item_id, category_id from catalog_item_categories`,
     ),
@@ -1125,10 +1186,9 @@ export async function getRiskOverviewAction() {
     ),
     q1<{ c: number }>(`select count(*) c from risk_events where created_at > ?`, [d1]),
     q1<{ c: number }>(`select count(*) c from risk_events where created_at > ?`, [d7]),
-    q1<{ c: number }>(
-      `select count(*) c from risk_events where band = 'high' and created_at > ?`,
-      [d1],
-    ),
+    q1<{ c: number }>(`select count(*) c from risk_events where band = 'high' and created_at > ?`, [
+      d1,
+    ]),
   ]);
   return {
     heldOrders: held?.c ?? 0,
@@ -1139,10 +1199,12 @@ export async function getRiskOverviewAction() {
   };
 }
 
-export async function listRiskEventsAction(input: {
-  band?: "all" | "low" | "medium" | "high";
-  limit?: number;
-} = {}) {
+export async function listRiskEventsAction(
+  input: {
+    band?: "all" | "low" | "medium" | "high";
+    limit?: number;
+  } = {},
+) {
   await appContext();
   await requireStaff();
   const band = input.band ?? "all";
@@ -1302,9 +1364,7 @@ export async function getAdminAnalyticsAction(input: { range?: "7d" | "30d" | "9
   const gmvGrowth = prevGmv > 0 ? ((summary!.gmv - prevGmv) / prevGmv) * 100 : null;
   const aov = summary!.n > 0 ? summary!.gmv / summary!.n / 100 : 0;
   const conv =
-    conversionRow && conversionRow.views > 0
-      ? (conversionRow.sold / conversionRow.views) * 100
-      : 0;
+    conversionRow && conversionRow.views > 0 ? (conversionRow.sold / conversionRow.views) * 100 : 0;
   const totalSearches = Number(searchStats?.total ?? 0);
   const failedSearches = Number(searchStats?.failed ?? 0);
   const searchFailRate = totalSearches > 0 ? (failedSearches / totalSearches) * 100 : 0;
@@ -1418,10 +1478,7 @@ export async function reviewVerificationAction(input: {
 // Buyer credits (admin)
 // ---------------------------------------------------------------------------
 
-export async function adminListCreditsAction(input: {
-  q?: string;
-  withBalanceOnly?: boolean;
-}) {
+export async function adminListCreditsAction(input: { q?: string; withBalanceOnly?: boolean }) {
   await appContext();
   const user = await requireUser();
   if (!isStaff(user)) fail("Staff only.");
@@ -1626,12 +1683,20 @@ export async function adminGetConversationMessagesAction(conversationId: string)
   const user = await requireUser();
   if (!isStaff(user)) fail("Staff access required.");
   const conv = await q1<{
-    id: string; buyer_id: string; seller_id: string; order_id: string | null;
+    id: string;
+    buyer_id: string;
+    seller_id: string;
+    order_id: string | null;
   }>(`select * from conversations where id = ?`, [conversationId]);
   if (!conv) fail("Conversation not found.");
   const messages = await q<{
-    id: string; sender_id: string | null; sender_name: string | null;
-    body: string; is_system: number; is_flagged: number; created_at: number;
+    id: string;
+    sender_id: string | null;
+    sender_name: string | null;
+    body: string;
+    is_system: number;
+    is_flagged: number;
+    created_at: number;
   }>(
     `select m.id, m.sender_id, u.username as sender_name, m.body,
             m.is_system, m.is_flagged, m.created_at
@@ -1674,8 +1739,13 @@ export async function adminGetProductAction(productId: string) {
   );
   if (!product) fail("Product not found.");
   const categories = await q<{
-    id: string; name: string; commission_pct: number; default_warranty_hours: number;
-  }>(`select id, name, commission_pct, default_warranty_hours from categories where is_active = 1 order by sort`);
+    id: string;
+    name: string;
+    commission_pct: number;
+    default_warranty_hours: number;
+  }>(
+    `select id, name, commission_pct, default_warranty_hours from categories where is_active = 1 order by sort`,
+  );
   const items = await q<{ id: string; name: string }>(
     `select id, name from catalog_items where is_active = 1 order by sort, name`,
   );
@@ -1761,7 +1831,14 @@ export async function adminGetCategorySchemaAction(categoryId: string) {
   return {
     schema: cat.schema
       ? (JSON.parse(cat.schema as string) as {
-          sellerFields?: Array<{ key: string; label: string; type: string; required?: boolean; help?: string; options?: string[] }>;
+          sellerFields?: Array<{
+            key: string;
+            label: string;
+            type: string;
+            required?: boolean;
+            help?: string;
+            options?: string[];
+          }>;
         })
       : null,
     config: cat.config

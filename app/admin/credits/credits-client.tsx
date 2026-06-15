@@ -32,7 +32,6 @@ export function CreditsClient() {
         console.error(e);
       }
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q, withBalanceOnly]);
 
   // Load user detail when selected changes
@@ -49,7 +48,6 @@ export function CreditsClient() {
         console.error(e);
       }
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected]);
 
   async function handleAdjust(e: React.FormEvent) {

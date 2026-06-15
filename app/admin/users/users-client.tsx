@@ -301,7 +301,6 @@ export function AdminUsersClient() {
 
   useEffect(() => {
     load(q);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q]);
 
   return (

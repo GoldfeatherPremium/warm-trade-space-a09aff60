@@ -59,7 +59,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         name: product.category_name,
         item: `${SITE_URL}/browse?category=${product.category_slug}`,
       },
-      { "@type": "ListItem", position: 3, name: product.title, item: `${SITE_URL}/p/${product.slug}` },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: product.title,
+        item: `${SITE_URL}/p/${product.slug}`,
+      },
     ],
   };
 
@@ -212,11 +217,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </aside>
       </div>
 
-      <Suspense
-        fallback={
-          <div className="mt-10 h-40 rounded-xl bg-secondary/50 animate-pulse" />
-        }
-      >
+      <Suspense fallback={<div className="mt-10 h-40 rounded-xl bg-secondary/50 animate-pulse" />}>
         <RelatedProducts productId={product.id} />
       </Suspense>
 

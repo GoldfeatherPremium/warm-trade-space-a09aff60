@@ -41,7 +41,7 @@ export function CouponsClient() {
 
   useEffect(() => {
     load();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   async function save(e: React.FormEvent) {
     e.preventDefault();

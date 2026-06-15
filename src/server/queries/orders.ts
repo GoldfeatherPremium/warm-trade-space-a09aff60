@@ -101,8 +101,7 @@ export async function getOrderData(orderId: string, user: SessionUser) {
   const staff = isStaff(user);
   const safeDeliveries = deliveries.map((del) => ({
     ...del,
-    payload:
-      isBuyer || staff ? del.payload : del.payload ? "•••• (visible to buyer)" : null,
+    payload: isBuyer || staff ? del.payload : del.payload ? "•••• (visible to buyer)" : null,
   }));
   let snapshot: Snap | null = null;
   const snapRaw = (o as unknown as { product_snapshot?: string | null }).product_snapshot;

@@ -25,7 +25,7 @@ export function PaymentsClient() {
 
   useEffect(() => {
     load();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   async function toggle(code: string, enabled: boolean) {
     setBusy(true);

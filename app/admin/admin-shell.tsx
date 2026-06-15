@@ -146,7 +146,6 @@ function PulseHeader({ role }: { role: string }) {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fmt = (n: number | undefined) => (n == null ? "—" : n.toLocaleString("en-US"));

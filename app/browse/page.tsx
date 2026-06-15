@@ -14,7 +14,13 @@ export async function generateMetadata({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }): Promise<Metadata> {
   const sp = await searchParams;
-  const activeFilters = [sp.category, sp.q, sp.delivery, sp.sort && sp.sort !== "popular" ? sp.sort : undefined, sp.item].filter(Boolean).length;
+  const activeFilters = [
+    sp.category,
+    sp.q,
+    sp.delivery,
+    sp.sort && sp.sort !== "popular" ? sp.sort : undefined,
+    sp.item,
+  ].filter(Boolean).length;
   return {
     title: "Browse listings",
     description:

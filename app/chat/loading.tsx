@@ -5,7 +5,10 @@ export default function ChatLoading() {
       <div className="grid lg:grid-cols-[320px_1fr] gap-4">
         <div className="space-y-2">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border">
+            <div
+              key={i}
+              className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border"
+            >
               <div className="size-10 rounded-xl bg-secondary shrink-0" />
               <div className="flex-1 space-y-1.5">
                 <div className="h-3 bg-secondary rounded w-3/4" />

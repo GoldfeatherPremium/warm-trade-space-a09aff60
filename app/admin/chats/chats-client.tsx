@@ -29,7 +29,6 @@ function ConversationViewer({ conversationId }: { conversationId: string }) {
         setLoading(false);
       }
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conversationId]);
 
   useEffect(() => {
@@ -147,7 +146,6 @@ export function ChatsClient() {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q, flaggedOnly]);
 
   return (
