@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { getAdminPulse } from "@/server/actions/admin";
+import { getAdminPulseAction as getAdminPulse } from "@/server/actions/admin";
 import { usdt } from "@/lib/format";
 import { PublicShell } from "../../_components/site-shell";
 
@@ -118,8 +118,8 @@ function ControlHeader({ onOpenCmd }: { onOpenCmd: () => void }) {
 
   const pills: Array<{ label: string; value: string; tone?: "warn" | "alert" | "ok" }> = data
     ? [
-        { label: "Orders 24h", value: String(data.orders24h), tone: "ok" },
-        { label: "GMV 24h", value: usdt(data.revenue24h) },
+        { label: "Orders 24h", value: String(data.orders24h.c), tone: "ok" },
+        { label: "GMV 24h", value: usdt(data.gmv24h) },
         {
           label: "Refunds 24h",
           value: `${data.refunds24h.c} · ${usdt(data.refunds24h.s)}`,

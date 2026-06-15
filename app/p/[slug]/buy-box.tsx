@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ShieldCheck } from "lucide-react";
+import { MessageCircle, ShieldCheck } from "lucide-react";
 import { createOrderAction } from "@/server/actions/orders";
+import { startProductConversationAction } from "@/server/actions/chat";
 import { usdt } from "@/lib/format";
 
 type Variant = { id: string; title: string; price_cents: number };
@@ -35,12 +36,26 @@ export function BuyBox({
   const [buyerInfo, setBuyerInfo] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [chatBusy, startChatTransition] = useTransition();
 
   const unit = useMemo(() => {
     const v = variants.find((x) => x.id === variantId);
     return v ? v.price_cents : basePriceCents;
   }, [variantId, variants, basePriceCents]);
   const total = unit * Math.max(1, qty);
+
+  function chat() {
+    startChatTransition(async () => {
+      try {
+        const r = await startProductConversationAction(productId);
+        router.push(`/chat?c=${r.conversationId}`);
+      } catch (e) {
+        const msg = (e as Error).message ?? "";
+        if (/signed in/i.test(msg)) router.push(`/auth?redirect=/p/${slug}`);
+        else setError(msg);
+      }
+    });
+  }
 
   async function buy() {
     if (busy || outOfStock) return;
@@ -73,7 +88,9 @@ export function BuyBox({
     <div className="mt-4 space-y-3">
       {variants.length > 0 && (
         <label className="block space-y-1">
-          <span className="text-[10px] font-bold tracking-widest text-muted-foreground">OPTION</span>
+          <span className="text-[10px] font-bold tracking-widest text-muted-foreground">
+            OPTION
+          </span>
           <select
             value={variantId}
             onChange={(e) => setVariantId(e.target.value)}
@@ -90,7 +107,9 @@ export function BuyBox({
       )}
 
       <label className="block space-y-1">
-        <span className="text-[10px] font-bold tracking-widest text-muted-foreground">QUANTITY</span>
+        <span className="text-[10px] font-bold tracking-widest text-muted-foreground">
+          QUANTITY
+        </span>
         <input
           type="number"
           min={minQty || 1}
@@ -137,6 +156,14 @@ export function BuyBox({
         }`}
       >
         {outOfStock ? "Out of stock" : busy ? "Starting checkout…" : "Buy now"}
+      </button>
+      <button
+        onClick={chat}
+        disabled={chatBusy}
+        className="w-full text-sm font-bold rounded-lg py-2.5 bg-secondary text-foreground hover:bg-secondary/70 disabled:opacity-50 flex items-center justify-center gap-2"
+      >
+        <MessageCircle className="size-4" />
+        {chatBusy ? "Opening chat…" : "Chat with seller"}
       </button>
       <p className="text-[10px] text-muted-foreground flex items-center gap-1 justify-center">
         <ShieldCheck className="size-3 text-accent" /> Buyer-protected · USDT · funds released after
