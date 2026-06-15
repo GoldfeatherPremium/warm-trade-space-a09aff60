@@ -28,7 +28,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#0f0f0f",
+  themeColor: "#f5f7f6",
 };
 
 export const metadata: Metadata = {
@@ -53,7 +53,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`dark ${archivoBlack.variable} ${inter.variable} ${jetbrainsMono.variable}`}
+      className={`${archivoBlack.variable} ${inter.variable} ${jetbrainsMono.variable}`}
     >
       <body>{children}</body>
     </html>

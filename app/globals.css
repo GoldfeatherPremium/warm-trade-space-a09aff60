@@ -36,64 +36,41 @@
 }
 
 :root {
-  --radius: 0.625rem;
+  --radius: 0.5rem;
 
-  /* Crypto Dark — deep navy-black with emerald + gold */
-  --background: oklch(0.09 0.015 265);
-  --foreground: oklch(0.96 0.01 265);
-  --card: oklch(0.13 0.025 265);
-  --card-foreground: oklch(0.96 0.01 265);
-  --popover: oklch(0.12 0.022 265);
-  --popover-foreground: oklch(0.96 0.01 265);
-  --primary: oklch(0.64 0.21 168);
-  --primary-foreground: oklch(0.99 0 0);
-  --primary-glow: oklch(0.74 0.19 168);
-  --secondary: oklch(0.17 0.035 265);
-  --secondary-foreground: oklch(0.96 0.01 265);
-  --muted: oklch(0.15 0.028 265);
-  --muted-foreground: oklch(0.62 0.04 265);
-  --accent: oklch(0.80 0.17 85);
-  --accent-foreground: oklch(0.09 0.015 265);
-  --destructive: oklch(0.62 0.24 25);
-  --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.21 0.038 265);
-  --input: oklch(0.21 0.038 265);
-  --ring: oklch(0.64 0.21 168);
+  /* ── Light Marketplace Theme — G2G / Z2U / Gameflip inspired ── */
+  --background: oklch(0.975 0.003 250);
+  --foreground: oklch(0.14 0.02 265);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.14 0.02 265);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.14 0.02 265);
 
-  --gradient-primary: linear-gradient(135deg, oklch(0.60 0.22 165), oklch(0.72 0.20 175));
-  --gradient-hero: linear-gradient(
-    145deg,
-    oklch(0.09 0.015 265) 0%,
-    oklch(0.11 0.04 210) 50%,
-    oklch(0.09 0.015 265) 100%
-  );
-  --gradient-aurora:
-    radial-gradient(55% 70% at 15% 0%, oklch(0.64 0.21 168 / 0.22), transparent 60%),
-    radial-gradient(45% 60% at 90% 10%, oklch(0.80 0.17 85 / 0.12), transparent 60%);
-  --shadow-glow: 0 20px 60px -20px oklch(0.64 0.21 168 / 0.45);
-  --shadow-card: 0 4px 24px oklch(0 0 0 / 0.35);
-}
+  /* Emerald green — matches G2G's trustworthy brand green */
+  --primary: oklch(0.52 0.2 163);
+  --primary-foreground: oklch(1 0 0);
+  --primary-light: oklch(0.94 0.06 163);
 
-.dark {
-  --background: oklch(0.09 0.015 265);
-  --foreground: oklch(0.96 0.01 265);
-  --card: oklch(0.13 0.025 265);
-  --card-foreground: oklch(0.96 0.01 265);
-  --popover: oklch(0.12 0.022 265);
-  --popover-foreground: oklch(0.96 0.01 265);
-  --primary: oklch(0.64 0.21 168);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.17 0.035 265);
-  --secondary-foreground: oklch(0.96 0.01 265);
-  --muted: oklch(0.15 0.028 265);
-  --muted-foreground: oklch(0.62 0.04 265);
-  --accent: oklch(0.80 0.17 85);
-  --accent-foreground: oklch(0.09 0.015 265);
-  --destructive: oklch(0.62 0.24 25);
-  --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.21 0.038 265);
-  --input: oklch(0.21 0.038 265);
-  --ring: oklch(0.64 0.21 168);
+  --secondary: oklch(0.95 0.005 250);
+  --secondary-foreground: oklch(0.25 0.02 265);
+  --muted: oklch(0.96 0.004 250);
+  --muted-foreground: oklch(0.5 0.025 265);
+
+  /* Orange accent — Z2U-style price/highlight colour */
+  --accent: oklch(0.6 0.21 50);
+  --accent-foreground: oklch(1 0 0);
+
+  --destructive: oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.88 0.008 250);
+  --input: oklch(0.92 0.005 250);
+  --ring: oklch(0.52 0.2 163);
+
+  /* Safe single-layer gradients — no OKLCH radial stacking (avoids render artifacts) */
+  --gradient-primary: linear-gradient(135deg, oklch(0.5 0.21 163), oklch(0.6 0.19 168));
+  --gradient-hero: linear-gradient(160deg, oklch(0.93 0.05 163) 0%, oklch(0.975 0.003 250) 55%);
+  --shadow-card: 0 1px 3px oklch(0 0 0 / 0.08), 0 4px 12px oklch(0 0 0 / 0.06);
+  --shadow-glow: 0 8px 32px oklch(0.52 0.2 163 / 0.25);
 }
 
 @layer base {
@@ -127,34 +104,38 @@
   }
 }
 
-/* Glow pulse for live indicators */
-@keyframes glow-pulse {
-  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 oklch(0.64 0.21 168 / 0.5); }
-  50% { opacity: 0.8; box-shadow: 0 0 0 4px oklch(0.64 0.21 168 / 0); }
-}
-.live-dot {
-  animation: glow-pulse 2s ease-in-out infinite;
-}
-
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .animate-enter {
   animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+@keyframes glow-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
-.animate-fade-in {
-  animation: fadeIn 0.3s ease both;
+.live-dot {
+  animation: glow-pulse 1.8s ease-in-out infinite;
 }
 
-/* Card hover lift */
 .card-hover {
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
 }
 .card-hover:hover {
   transform: translateY(-2px);

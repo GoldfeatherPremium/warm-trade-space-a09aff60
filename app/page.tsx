@@ -120,11 +120,6 @@ export default async function HomePage() {
           style={{ background: "var(--gradient-hero)" }}
           aria-hidden
         />
-        <div
-          className="absolute inset-0 -z-10"
-          style={{ background: "var(--gradient-aurora)" }}
-          aria-hidden
-        />
 
         <div className="px-6 py-10 sm:px-12 sm:py-14">
           {/* Trust badge */}
@@ -169,7 +164,7 @@ export default async function HomePage() {
         </div>
 
         {/* Stats bar */}
-        <div className="border-t border-border/50 bg-black/20 px-6 sm:px-12 py-3 flex flex-wrap gap-x-8 gap-y-2">
+        <div className="border-t border-border/50 bg-primary/5 px-6 sm:px-12 py-3 flex flex-wrap gap-x-8 gap-y-2">
           {[
             { icon: ShieldCheck, label: "Buyer Protected", value: "Every order" },
             { icon: Zap, label: "Instant Delivery", value: "Auto orders" },
@@ -311,7 +306,7 @@ export default async function HomePage() {
                   className="flex items-center gap-3 py-3 hover:bg-secondary/30 -mx-2 px-2 rounded-lg transition-colors"
                 >
                   <span
-                    className={`font-display text-lg w-6 text-center shrink-0 ${i === 0 ? "text-amber-400" : i === 1 ? "text-slate-300" : i === 2 ? "text-amber-600" : "text-muted-foreground/50"}`}
+                    className={`font-display text-lg w-6 text-center shrink-0 ${i === 0 ? "text-amber-500" : i === 1 ? "text-slate-400" : i === 2 ? "text-amber-700" : "text-muted-foreground/50"}`}
                   >
                     {i + 1}
                   </span>
@@ -325,7 +320,7 @@ export default async function HomePage() {
                     </p>
                   </div>
                   <div className="text-right shrink-0">
-                    <div className="flex items-center gap-0.5 text-amber-400 text-xs font-semibold justify-end">
+                    <div className="flex items-center gap-0.5 text-amber-500 text-xs font-semibold justify-end">
                       <Star className="size-3 fill-current" />
                       {s.rating > 0 ? s.rating.toFixed(1) : "—"}
                     </div>
@@ -388,14 +383,14 @@ export default async function HomePage() {
             },
             {
               icon: Zap,
-              color: "text-amber-400",
+              color: "text-amber-600",
               bg: "bg-amber-500/10 border-amber-500/20",
               title: "Instant Delivery",
               desc: "Stocked items deliver the second your payment confirms — no waiting around.",
             },
             {
               icon: Headphones,
-              color: "text-blue-400",
+              color: "text-blue-600",
               bg: "bg-blue-500/10 border-blue-500/20",
               title: "24h Dispute Team",
               desc: "Open a dispute any time during your warranty. Our team reviews within 24 hours.",
