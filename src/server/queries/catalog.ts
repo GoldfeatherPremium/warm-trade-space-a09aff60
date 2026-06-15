@@ -228,24 +228,27 @@ export async function getProductBySlug(slug: string): Promise<{
   reviews: ProductReview[];
   variants: ProductVariant[];
 }> {
-  await appContext();
-  const row = await q1(`${productSelect} where p.slug = ?`, [slug]);
-  if (!row) return { product: null, reviews: [], variants: [] };
-  const product = mapProduct(row);
-  if (product.status !== "active" && product.status !== "out_of_stock")
-    return { product: null, reviews: [], variants: [] };
-  const [reviews, variants] = await Promise.all([
-    q<ProductReview>(
-      `select r.rating, r.comment, r.seller_reply, r.created_at, u.username as buyer
-       from reviews r join users u on u.id = r.buyer_id where r.product_id = ? order by r.created_at desc limit 30`,
-      [product.id],
-    ),
-    q<ProductVariant>(
-      `select id, title, price_cents from product_variants where product_id = ? order by sort`,
-      [product.id],
-    ),
-  ]);
-  return { product, reviews, variants };
+  // Cache product detail pages for 60 seconds. View tracking is async (beacon-driven) and non-blocking.
+  return cached(`product:slug:${slug}`, 60_000, async () => {
+    await appContext();
+    const row = await q1(`${productSelect} where p.slug = ?`, [slug]);
+    if (!row) return { product: null, reviews: [], variants: [] };
+    const product = mapProduct(row);
+    if (product.status !== "active" && product.status !== "out_of_stock")
+      return { product: null, reviews: [], variants: [] };
+    const [reviews, variants] = await Promise.all([
+      q<ProductReview>(
+        `select r.rating, r.comment, r.seller_reply, r.created_at, u.username as buyer
+         from reviews r join users u on u.id = r.buyer_id where r.product_id = ? order by r.created_at desc limit 30`,
+        [product.id],
+      ),
+      q<ProductVariant>(
+        `select id, title, price_cents from product_variants where product_id = ? order by sort`,
+        [product.id],
+      ),
+    ]);
+    return { product, reviews, variants };
+  });
 }
 
 export async function getRelatedProductsData(
@@ -299,36 +302,40 @@ export async function getSellerStoreData(username: string): Promise<{
   products: PublicProduct[];
   reviews: StoreReview[];
 }> {
-  await appContext();
-  const sellerRow = await q1<StoreProfile & { store_socials: unknown }>(
-    `select id, username, seller_level, rating, rating_count, total_sales, completion_rate, vacation_mode, created_at,
-            verification_tier, trust_score, store_banner_url, store_logo_url, store_description,
-            store_socials, store_announcement, avg_response_minutes, avg_delivery_minutes,
-            refund_count, dispute_count
-     from users where lower(username) = lower(?) and seller_status = 'approved' and is_banned = 0`,
-    [username],
-  );
-  if (!sellerRow) return { seller: null, products: [], reviews: [] };
-  const seller: StoreProfile = {
-    ...sellerRow,
-    store_socials:
-      typeof sellerRow.store_socials === "string"
-        ? JSON.parse(sellerRow.store_socials)
-        : ((sellerRow.store_socials as Record<string, string> | null) ?? {}),
-  };
-  const [productRows, reviews] = await Promise.all([
-    q(
-      `${productSelect} where p.seller_id = ? and p.status in ('active','out_of_stock') order by p.sold_count desc`,
-      [seller.id],
-    ),
-    q<StoreReview>(
-      `select r.rating, r.comment, r.seller_reply, r.created_at, u.username as buyer, o.product_title
-       from reviews r join users u on u.id = r.buyer_id join orders o on o.id = r.order_id
-       where r.seller_id = ? order by r.created_at desc limit 50`,
-      [seller.id],
-    ),
-  ]);
-  return { seller, products: productRows.map(mapProduct), reviews };
+  // Cache store pages (seller profile + products + reviews) for 2 minutes.
+  // Store updates are infrequent (ratings accumulate, not instant); users tolerate brief staleness.
+  return cached(`seller:store:${username.toLowerCase()}`, 2 * 60_000, async () => {
+    await appContext();
+    const sellerRow = await q1<StoreProfile & { store_socials: unknown }>(
+      `select id, username, seller_level, rating, rating_count, total_sales, completion_rate, vacation_mode, created_at,
+              verification_tier, trust_score, store_banner_url, store_logo_url, store_description,
+              store_socials, store_announcement, avg_response_minutes, avg_delivery_minutes,
+              refund_count, dispute_count
+       from users where lower(username) = lower(?) and seller_status = 'approved' and is_banned = 0`,
+      [username],
+    );
+    if (!sellerRow) return { seller: null, products: [], reviews: [] };
+    const seller: StoreProfile = {
+      ...sellerRow,
+      store_socials:
+        typeof sellerRow.store_socials === "string"
+          ? JSON.parse(sellerRow.store_socials)
+          : ((sellerRow.store_socials as Record<string, string> | null) ?? {}),
+    };
+    const [productRows, reviews] = await Promise.all([
+      q(
+        `${productSelect} where p.seller_id = ? and p.status in ('active','out_of_stock') order by p.sold_count desc`,
+        [seller.id],
+      ),
+      q<StoreReview>(
+        `select r.rating, r.comment, r.seller_reply, r.created_at, u.username as buyer, o.product_title
+         from reviews r join users u on u.id = r.buyer_id join orders o on o.id = r.order_id
+         where r.seller_id = ? order by r.created_at desc limit 50`,
+        [seller.id],
+      ),
+    ]);
+    return { seller, products: productRows.map(mapProduct), reviews };
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -338,59 +345,62 @@ export async function getSellerLeaderboardData(
   range: "30d" | "90d" | "all" = "30d",
   limit = 25,
 ): Promise<LeaderboardSeller[]> {
-  await appContext();
-  const dayMs = 86_400_000;
-  const since = range === "all" ? 0 : Date.now() - (range === "30d" ? 30 : 90) * dayMs;
-  // Single query with LEFT JOINs replaces 3 correlated subqueries per seller row
-  const rows = await q<Record<string, unknown>>(
-    `select u.id, u.username, u.seller_level, u.rating, u.rating_count, u.total_sales,
-            u.completion_rate, u.vacation_mode, u.created_at, u.verification_tier,
-            u.trust_score, u.refund_count, u.dispute_count,
-            coalesce(os.gmv_cents, 0) as gmv_cents,
-            coalesce(os.recent_orders, 0) as recent_orders,
-            pc.category_name
-       from users u
-       left join (
-         select seller_id,
-                sum(total_cents) as gmv_cents,
-                count(*) as recent_orders
-           from orders
-          where paid_at > ?
-            and status not in ('cancelled','expired','refunded')
-          group by seller_id
-       ) os on os.seller_id = u.id
-       left join (
-         select p.seller_id, c.name as category_name
-           from products p
-           join categories c on c.id = p.category_id
-          where p.status = 'active'
-          group by p.seller_id
-          order by sum(p.sold_count) desc
-       ) pc on pc.seller_id = u.id
-      where u.seller_status = 'approved' and u.is_banned = 0 and u.vacation_mode = 0 and u.total_sales > 0
-      order by (u.trust_score * 0.7 + (case when u.total_sales < 500 then u.total_sales else 500 end) * 0.3) desc, u.total_sales desc
-      limit ?`,
-    [since, limit],
-  );
-  return rows.map((r, i) => ({
-    id: r.id as string,
-    username: r.username as string,
-    seller_level: r.seller_level as number,
-    rating: r.rating as number,
-    rating_count: r.rating_count as number,
-    total_sales: r.total_sales as number,
-    completion_rate: r.completion_rate as number,
-    vacation_mode: r.vacation_mode as number,
-    created_at: r.created_at as number,
-    verification_tier: (r.verification_tier as PublicSeller["verification_tier"]) ?? "unverified",
-    trust_score: Number(r.trust_score ?? 0),
-    refund_count: Number(r.refund_count ?? 0),
-    dispute_count: Number(r.dispute_count ?? 0),
-    rank: i + 1,
-    gmv_cents: Number(r.gmv_cents ?? 0),
-    recent_orders: Number(r.recent_orders ?? 0),
-    category_name: (r.category_name as string | null) ?? null,
-  }));
+  // Cache leaderboard for 10 minutes per range. Rankings are stable; users tolerate brief staleness.
+  return cached(`seller:leaderboard:${range}:${limit}`, 10 * 60_000, async () => {
+    await appContext();
+    const dayMs = 86_400_000;
+    const since = range === "all" ? 0 : Date.now() - (range === "30d" ? 30 : 90) * dayMs;
+    // Single query with LEFT JOINs replaces 3 correlated subqueries per seller row
+    const rows = await q<Record<string, unknown>>(
+      `select u.id, u.username, u.seller_level, u.rating, u.rating_count, u.total_sales,
+              u.completion_rate, u.vacation_mode, u.created_at, u.verification_tier,
+              u.trust_score, u.refund_count, u.dispute_count,
+              coalesce(os.gmv_cents, 0) as gmv_cents,
+              coalesce(os.recent_orders, 0) as recent_orders,
+              pc.category_name
+         from users u
+         left join (
+           select seller_id,
+                  sum(total_cents) as gmv_cents,
+                  count(*) as recent_orders
+             from orders
+            where paid_at > ?
+              and status not in ('cancelled','expired','refunded')
+            group by seller_id
+         ) os on os.seller_id = u.id
+         left join (
+           select p.seller_id, c.name as category_name
+             from products p
+             join categories c on c.id = p.category_id
+            where p.status = 'active'
+            group by p.seller_id
+            order by sum(p.sold_count) desc
+         ) pc on pc.seller_id = u.id
+        where u.seller_status = 'approved' and u.is_banned = 0 and u.vacation_mode = 0 and u.total_sales > 0
+        order by (u.trust_score * 0.7 + (case when u.total_sales < 500 then u.total_sales else 500 end) * 0.3) desc, u.total_sales desc
+        limit ?`,
+      [since, limit],
+    );
+    return rows.map((r, i) => ({
+      id: r.id as string,
+      username: r.username as string,
+      seller_level: r.seller_level as number,
+      rating: r.rating as number,
+      rating_count: r.rating_count as number,
+      total_sales: r.total_sales as number,
+      completion_rate: r.completion_rate as number,
+      vacation_mode: r.vacation_mode as number,
+      created_at: r.created_at as number,
+      verification_tier: (r.verification_tier as PublicSeller["verification_tier"]) ?? "unverified",
+      trust_score: Number(r.trust_score ?? 0),
+      refund_count: Number(r.refund_count ?? 0),
+      dispute_count: Number(r.dispute_count ?? 0),
+      rank: i + 1,
+      gmv_cents: Number(r.gmv_cents ?? 0),
+      recent_orders: Number(r.recent_orders ?? 0),
+      category_name: (r.category_name as string | null) ?? null,
+    }));
+  });
 }
 
 // ---------------------------------------------------------------------------
