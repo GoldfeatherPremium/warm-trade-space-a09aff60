@@ -428,7 +428,9 @@ const disputeSchema = z.object({
   description: z.string().min(10).max(3000),
 });
 
-export async function openDisputeAction(input: z.infer<typeof disputeSchema>): Promise<OrderResult> {
+export async function openDisputeAction(
+  input: z.infer<typeof disputeSchema>,
+): Promise<OrderResult> {
   return guard(async () => {
     await appContext();
     const user = await requireUser();
@@ -506,7 +508,16 @@ export async function leaveReviewAction(input: z.infer<typeof reviewSchema>): Pr
     await tx(async () => {
       await run(
         `insert into reviews (id, order_id, buyer_id, seller_id, product_id, rating, comment, created_at) values (?,?,?,?,?,?,?,?)`,
-        [uid(), data.orderId, user.id, o.seller_id, o.product_id, data.rating, data.comment ?? null, now()],
+        [
+          uid(),
+          data.orderId,
+          user.id,
+          o.seller_id,
+          o.product_id,
+          data.rating,
+          data.comment ?? null,
+          now(),
+        ],
       );
       const agg = (await q1<{ a: number; c: number }>(
         `select avg(rating) a, count(*) c from reviews where seller_id = ?`,
@@ -528,4 +539,80 @@ export async function leaveReviewAction(input: z.infer<typeof reviewSchema>): Pr
     );
     return { ok: true };
   });
+}
+
+// ---------------------------------------------------------------------------
+// Data fetcher for client-side polling (pay page, order detail)
+// ---------------------------------------------------------------------------
+
+export async function getPaymentDataAction(orderId: string) {
+  await appContext();
+  const user = await requireUser();
+  const { getPaymentData } = await import("../queries/orders");
+  const [d, walletRow, creditsRow] = await Promise.all([
+    getPaymentData(orderId, user),
+    getWallet(user.id).catch(() => ({ available_cents: 0 })),
+    getBuyerCredits(user.id).catch(() => ({ balance_cents: 0 })),
+  ]);
+  if (!d) return null;
+  return {
+    ...d,
+    walletAvailable: walletRow.available_cents,
+    creditsAvailable: creditsRow.balance_cents,
+  };
+}
+
+export async function sellerMarkDeliveredAction(
+  orderId: string,
+  proofNote: string,
+  payload?: string,
+): Promise<OrderResult> {
+  return guard(async () => {
+    await appContext();
+    const user = await requireUser();
+    const o = await getOrderRow(orderId);
+    if (!o || o.seller_id !== user.id) return { ok: false, error: "Order not found." };
+    if (!["paid", "delivering"].includes(o.status))
+      return { ok: false, error: "Order cannot be marked as delivered in its current state." };
+    const { markManualDelivered } = await import("@/lib/server/lifecycle.server");
+    await markManualDelivered(orderId, user.id, proofNote, payload);
+    return { ok: true };
+  });
+}
+
+export async function sellerRespondDisputeAction(
+  orderId: string,
+  response: string,
+): Promise<OrderResult> {
+  return guard(async () => {
+    await appContext();
+    const user = await requireUser();
+    const o = await getOrderRow(orderId);
+    if (!o || o.seller_id !== user.id) return { ok: false, error: "Order not found." };
+    const d = await q1<{ id: string; status: string }>(
+      `select id, status from disputes where order_id = ?`,
+      [orderId],
+    );
+    if (!d) return { ok: false, error: "No dispute on this order." };
+    if (d.status === "resolved") return { ok: false, error: "Dispute already resolved." };
+    await run(
+      `update disputes set seller_response = ?, status = 'seller_responded', last_activity_at = ? where id = ?`,
+      [response, now(), d.id],
+    );
+    await notify(
+      o.buyer_id,
+      "dispute_update",
+      "Seller responded to dispute",
+      o.order_no,
+      `/disputes/${orderId}`,
+    );
+    return { ok: true };
+  });
+}
+
+export async function getOrderDataAction(orderId: string) {
+  await appContext();
+  const user = await requireUser();
+  const { getOrderData } = await import("../queries/orders");
+  return getOrderData(orderId, user);
 }
