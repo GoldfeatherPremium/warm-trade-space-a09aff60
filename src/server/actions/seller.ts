@@ -846,7 +846,6 @@ export async function getSellerAnalyticsAction(range: Range = "30d") {
       prevSummary,
       topProducts,
       categoryMix,
-      hourly,
       buyerStats,
       productCounts,
     ] = await Promise.all([
@@ -890,16 +889,10 @@ export async function getSellerAnalyticsAction(range: Range = "30d") {
          group by c.id order by revenue desc`,
         [user.id, since],
       ),
-      q<{ hour: number; n: number }>(
-        `select cast(strftime('%H', datetime(paid_at/1000, 'unixepoch')) as integer) as hour, count(*) as n
-         from orders where seller_id = ? and paid_at > ? and status not in ('cancelled','expired','refunded')
-         group by hour order by hour`,
-        [user.id, since],
-      ),
       q1<{ buyers: number; repeat: number }>(
         `select count(distinct buyer_id) buyers,
                 count(distinct case when cnt > 1 then buyer_id end) repeat
-         from (select buyer_id, count(*) cnt from orders where seller_id = ? and paid_at > ? and status not in ('cancelled','expired','refunded') group by buyer_id)`,
+         from (select buyer_id, count(*) cnt from orders where seller_id = ? and paid_at > ? and status not in ('cancelled','expired','refunded') group by buyer_id) sub`,
         [user.id, since],
       ),
       q1<{ active: number; paused: number; oos: number }>(
@@ -927,7 +920,9 @@ export async function getSellerAnalyticsAction(range: Range = "30d") {
       hour: String(i).padStart(2, "0"),
       n: 0,
     }));
-    for (const r of hourly) hours24[r.hour].n += r.n;
+    // Bucket by UTC hour in JS (portable across SQLite/Postgres; matches the
+    // prior strftime(..., 'unixepoch') behaviour which was UTC-based).
+    for (const r of paidRows) hours24[new Date(r.paid_at).getUTCHours()].n += 1;
 
     const net = Number(summary?.net ?? 0);
     const prevNet = Number(prevSummary?.net ?? 0);
