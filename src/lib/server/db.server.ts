@@ -200,17 +200,18 @@ async function createPostgresEngine(): Promise<Engine> {
 async function schemaAlreadyMigrated(e: Engine): Promise<boolean> {
   // Sentinel: bump whenever you add new tables/columns to migrate() so
   // production databases pick up changes on the next cold start. Currently
-  // points at push_subscriptions (PWA web push feature).
+  // points at users.store_banner_url (seller storefront columns).
   try {
     if (isPostgres()) {
       const r = await e.q<{ c: number }>(
-        `select count(*)::int as c from information_schema.tables
-         where table_schema = 'public' and table_name = 'push_subscriptions'`,
+        `select count(*)::int as c from information_schema.columns
+         where table_schema = 'public' and table_name = 'users'
+           and column_name = 'store_banner_url'`,
       );
       return !!r[0] && Number(r[0].c) > 0;
     }
     const r = await e.q<{ c: number }>(
-      `select count(*) as c from sqlite_master where type='table' and name='push_subscriptions'`,
+      `select count(*) as c from pragma_table_info('users') where name = 'store_banner_url'`,
     );
     return !!r[0] && Number(r[0].c) > 0;
   } catch {
@@ -793,6 +794,16 @@ async function migrate(e: Engine): Promise<void> {
     `alter table products add column manual_stock integer`,
     `alter table stock_items add column locked_at ${big}`,
     `alter table order_deliveries add column locked_at ${big}`,
+    // --- Seller storefront (banner/logo/description/socials/announcement) +
+    // response-time metric. Queried by getSellerStoreData / saveStorefrontAction
+    // but were never created in migrate() — added here so the storefront works
+    // on fresh databases. (Sentinel bumped to store_banner_url below.)
+    `alter table users add column store_banner_url text`,
+    `alter table users add column store_logo_url text`,
+    `alter table users add column store_description text`,
+    `alter table users add column store_socials text`,
+    `alter table users add column store_announcement text`,
+    `alter table users add column avg_response_minutes integer not null default 0`,
   ];
 
   for (const stmt of addColumns) {
