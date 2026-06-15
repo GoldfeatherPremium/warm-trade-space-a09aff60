@@ -198,22 +198,19 @@ async function createPostgresEngine(): Promise<Engine> {
 // Public API
 // ---------------------------------------------------------------------------
 async function schemaAlreadyMigrated(e: Engine): Promise<boolean> {
-  // Sentinel: a column from the most recent additive migration. Bump this
-  // (column or table) whenever you add new columns to migrate() so production
-  // databases pick up the change on the next cold start. Currently points at
-  // seller_applications.display_name (richer seller onboarding) — the newest
-  // additive change in migrate().
+  // Sentinel: bump whenever you add new tables/columns to migrate() so
+  // production databases pick up changes on the next cold start. Currently
+  // points at push_subscriptions (PWA web push feature).
   try {
     if (isPostgres()) {
       const r = await e.q<{ c: number }>(
-        `select count(*)::int as c from information_schema.columns
-         where table_schema = 'public' and table_name = 'seller_applications'
-           and column_name = 'display_name'`,
+        `select count(*)::int as c from information_schema.tables
+         where table_schema = 'public' and table_name = 'push_subscriptions'`,
       );
       return !!r[0] && Number(r[0].c) > 0;
     }
     const r = await e.q<{ c: number }>(
-      `select count(*) as c from sqlite_master where type='table' and name='products_fts'`,
+      `select count(*) as c from sqlite_master where type='table' and name='push_subscriptions'`,
     );
     return !!r[0] && Number(r[0].c) > 0;
   } catch {
@@ -1259,6 +1256,23 @@ async function migrate(e: Engine): Promise<void> {
         .catch(() => {});
     }
   }
+
+  // --- PWA: web push subscriptions ---
+  await e
+    .exec(
+      `create table if not exists push_subscriptions (
+        id text primary key,
+        user_id text not null references users(id) on delete cascade,
+        endpoint text not null unique,
+        p256dh text not null,
+        auth text not null,
+        created_at ${big} not null
+      )`,
+    )
+    .catch(() => {});
+  await e
+    .exec(`create index if not exists idx_push_subs_user on push_subscriptions(user_id)`)
+    .catch(() => {});
 
   // seed a sane default set if empty
   const seeded = await e.q<{ c: number }>(`select count(*) as c from fx_rates`);

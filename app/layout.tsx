@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo_Black, Inter, JetBrains_Mono } from "next/font/google";
+import { LiveUpdatesProvider, PwaInstallBanner } from "./_components/live-updates";
 import "./globals.css";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -40,6 +41,7 @@ export const metadata: Metadata = {
   description:
     "Buy and sell digital goods with buyer protection: game top-ups, gift cards, subscriptions, accounts and more. USDT payments, instant delivery from verified sellers.",
   applicationName: "X-VAULT",
+  manifest: "/manifest.webmanifest",
   openGraph: {
     type: "website",
     siteName: "X-VAULT",
@@ -55,7 +57,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       className={`dark ${archivoBlack.variable} ${inter.variable} ${jetbrainsMono.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        <LiveUpdatesProvider>
+          {children}
+          <PwaInstallBanner />
+        </LiveUpdatesProvider>
+      </body>
     </html>
   );
 }
