@@ -24,7 +24,13 @@ export async function generateMetadata({
     title,
     description,
     alternates: { canonical: `/s/${seller.username}` },
-    openGraph: { title, description, url: `${SITE_URL}/s/${seller.username}` },
+    openGraph: {
+      title,
+      description,
+      url: `${SITE_URL}/s/${seller.username}`,
+      images: [{ url: `${SITE_URL}/assets/og-default.jpg`, width: 1200, height: 630 }],
+    },
+    twitter: { card: "summary_large_image" },
   };
 }
 
