@@ -17,6 +17,7 @@ export async function generateMetadata({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }): Promise<Metadata> {
   const sp = await searchParams;
+  const category = Array.isArray(sp.category) ? sp.category[0] : sp.category;
   const activeFilters = [
     sp.category,
     sp.q,
@@ -24,11 +25,18 @@ export async function generateMetadata({
     sp.sort && sp.sort !== "popular" ? sp.sort : undefined,
     sp.item,
   ].filter(Boolean).length;
+  // A lone category filter is its own indexable landing page; canonicalize to
+  // itself rather than to /browse. Anything more (search, sort, multi-filter)
+  // collapses back to /browse and is noindexed below.
+  const canonical =
+    activeFilters === 1 && category
+      ? `/browse?category=${encodeURIComponent(category)}`
+      : "/browse";
   return {
     title: "Browse listings",
     description:
       "Browse digital goods on X-VAULT — game top-ups, gift cards, subscriptions, software keys and accounts. Buyer-protected, USDT payments, instant delivery.",
-    alternates: { canonical: "/browse" },
+    alternates: { canonical },
     openGraph: {
       title: "Browse digital goods — X-VAULT",
       description:

@@ -377,10 +377,10 @@ async function attachImages(productId: string, sellerId: string, imageIds: strin
   const toDelete = existing.map((r) => r.id).filter((id) => !imageIds.includes(id));
   if (toDelete.length > 0) {
     const ph = toDelete.map(() => "?").join(",");
-    await run(
-      `delete from product_images where seller_id = ? and id in (${ph})`,
-      [sellerId, ...toDelete],
-    );
+    await run(`delete from product_images where seller_id = ? and id in (${ph})`, [
+      sellerId,
+      ...toDelete,
+    ]);
   }
   // Update sort order in parallel — each is an independent row update.
   await Promise.all(
@@ -398,6 +398,31 @@ async function attachImages(productId: string, sellerId: string, imageIds: strin
 // ---------------------------------------------------------------------------
 // Images
 // ---------------------------------------------------------------------------
+// Magic-byte signatures — the client-supplied MIME is untrusted, so we sniff
+// the actual file header before accepting an upload. Prevents a malicious file
+// (e.g. an HTML/SVG payload) being stored and later served under an image MIME.
+const IMAGE_MAGIC: Array<{ mime: string; bytes: number[] }> = [
+  { mime: "image/png", bytes: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a] },
+  { mime: "image/jpeg", bytes: [0xff, 0xd8, 0xff] },
+  { mime: "image/gif", bytes: [0x47, 0x49, 0x46, 0x38] }, // GIF8
+  { mime: "image/webp", bytes: [0x52, 0x49, 0x46, 0x46] }, // RIFF (then WEBP at offset 8)
+];
+
+function detectImageMime(buf: Buffer): string | null {
+  for (const { mime, bytes } of IMAGE_MAGIC) {
+    if (bytes.every((b, i) => buf[i] === b)) {
+      if (mime === "image/webp") {
+        // RIFF container: confirm the "WEBP" form tag at offset 8
+        if (buf[8] === 0x57 && buf[9] === 0x45 && buf[10] === 0x42 && buf[11] === 0x50)
+          return "image/webp";
+        continue;
+      }
+      return mime;
+    }
+  }
+  return null;
+}
+
 export async function uploadProductImageAction(mime: string, dataBase64: string) {
   await appContext();
   const user = await requireSeller();
@@ -405,6 +430,11 @@ export async function uploadProductImageAction(mime: string, dataBase64: string)
   if (!ALLOWED.includes(mime)) fail("Unsupported image format.");
   const approxBytes = Math.floor((dataBase64.length * 3) / 4);
   if (approxBytes > 2 * 1024 * 1024) fail("Image too large (2 MB max).");
+  // Verify the real file type from its magic bytes and store that, not the
+  // client-claimed MIME. Reject anything whose header isn't a known image.
+  const header = Buffer.from(dataBase64.slice(0, 24), "base64");
+  const detectedMime = detectImageMime(header);
+  if (!detectedMime) fail("File does not appear to be a valid image.");
   const recent = (await q1<{ c: number }>(
     `select count(*) c from product_images where seller_id = ? and created_at > ?`,
     [user.id, now() - 3_600_000],
@@ -414,7 +444,7 @@ export async function uploadProductImageAction(mime: string, dataBase64: string)
   await run(
     `insert into product_images (id, product_id, seller_id, mime, data, sort, created_at)
      values (?, null, ?, ?, ?, 0, ?)`,
-    [id, user.id, mime, dataBase64, now()],
+    [id, user.id, detectedMime, dataBase64, now()],
   );
   return { id };
 }

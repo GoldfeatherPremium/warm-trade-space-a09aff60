@@ -25,7 +25,9 @@ export async function generateMetadata({
   const { product } = await getProductBySlug(slug);
   if (!product) return { title: "Listing not found" };
   const title = `${product.title} — ${usdt(product.price_cents)}`;
-  const description = `Buy ${product.title} on X-VAULT — buyer-protected, ${product.warranty_hours}h warranty, ${product.delivery_type === "auto" ? "instant delivery" : "fast manual delivery"}. Paid in USDT.`;
+  const description =
+    product.admin_seo_description ??
+    `Buy ${product.title} on X-VAULT — buyer-protected, ${product.warranty_hours}h warranty, ${product.delivery_type === "auto" ? "instant delivery" : "fast manual delivery"}. Paid in USDT.`;
   return {
     title,
     description,
