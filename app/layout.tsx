@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo_Black, Inter, JetBrains_Mono } from "next/font/google";
-import { LiveUpdatesProvider, PwaInstallBanner } from "./_components/live-updates";
 import "./globals.css";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -29,7 +28,10 @@ const jetbrainsMono = JetBrains_Mono({
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#08070c",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f8f9fa" },
+    { media: "(prefers-color-scheme: dark)", color: "#111827" },
+  ],
 };
 
 export const metadata: Metadata = {
@@ -51,18 +53,20 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image" },
 };
 
+/* Runs before first paint — applies dark class from localStorage or OS preference */
+const THEME_SCRIPT = `(function(){try{var t=localStorage.getItem('xv-theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
-      className={`dark ${archivoBlack.variable} ${inter.variable} ${jetbrainsMono.variable}`}
+      suppressHydrationWarning
+      className={`${archivoBlack.variable} ${inter.variable} ${jetbrainsMono.variable}`}
     >
-      <body>
-        <LiveUpdatesProvider>
-          {children}
-          <PwaInstallBanner />
-        </LiveUpdatesProvider>
-      </body>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
+      <body>{children}</body>
     </html>
   );
 }

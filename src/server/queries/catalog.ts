@@ -419,6 +419,7 @@ export interface BrowseParams {
   minPrice?: number;
   maxPrice?: number;
   inStock?: boolean;
+  verified?: boolean;
   sort?: "popular" | "price_asc" | "price_desc" | "newest" | "rating";
   page?: number;
 }
@@ -432,8 +433,16 @@ export async function browseProductsData(p: BrowseParams): Promise<{
   // Cache the default browse (no filters, page 1, popular sort) for 30 seconds.
   // This is the highest-traffic path: every unauthenticated visitor lands here first.
   const isDefault =
-    !p.category && !p.item && !p.q && !p.delivery && !p.minPrice && !p.maxPrice && !p.inStock &&
-    (p.sort === "popular" || !p.sort) && (p.page === 1 || !p.page);
+    !p.category &&
+    !p.item &&
+    !p.q &&
+    !p.delivery &&
+    !p.minPrice &&
+    !p.maxPrice &&
+    !p.inStock &&
+    !p.verified &&
+    (p.sort === "popular" || !p.sort) &&
+    (p.page === 1 || !p.page);
   if (isDefault) {
     return cached("browse:default:v1", 30_000, () => _browseProductsData(p));
   }
@@ -497,6 +506,7 @@ async function _browseProductsData(p: BrowseParams): Promise<{
     params.push(Math.round(p.maxPrice * 100));
   }
   if (p.inStock) where.push(`(p.delivery_type = 'manual' or p.stock_count > 0)`);
+  if (p.verified) where.push(`u.verification_tier in ('verified', 'business', 'premium')`);
   const order = {
     popular: `p.insurance_days desc, p.sold_count desc, p.views desc`,
     price_asc: `p.price_cents asc`,

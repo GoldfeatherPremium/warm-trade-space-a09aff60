@@ -53,14 +53,14 @@ export function AccountNav() {
   }, [open]);
 
   if (me === undefined) {
-    return <div className="ml-auto sm:ml-0 size-9 rounded-md bg-secondary/60 animate-pulse" />;
+    return <div className="size-9 rounded-md bg-secondary/60 animate-pulse" />;
   }
 
   if (!me) {
     return (
       <Link
         href="/auth"
-        className="ml-auto sm:ml-0 text-xs font-bold px-3 py-2 bg-primary text-primary-foreground rounded-md shrink-0"
+        className="text-xs font-bold px-3 py-2 bg-primary text-primary-foreground rounded-md shrink-0"
       >
         SIGN IN
       </Link>
@@ -88,8 +88,8 @@ export function AccountNav() {
   }
 
   return (
-    <div className="ml-auto sm:ml-0 flex items-center gap-1 shrink-0">
-      {/* Chat icon */}
+    <div className="flex items-center gap-1 shrink-0">
+      {/* Chat */}
       <Link
         href="/chat"
         className="relative size-9 rounded-md grid place-items-center text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"

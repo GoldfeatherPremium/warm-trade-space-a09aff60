@@ -18,7 +18,7 @@ export function CategoryBar() {
   if (cats.length === 0) return null;
 
   return (
-    <div className="border-b border-border/60 bg-background/70 backdrop-blur-sm sticky top-14 z-30">
+    <div className="border-b border-border/60 bg-background sticky top-14 z-30">
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex items-center gap-0.5 overflow-x-auto no-scrollbar py-1">
           <Link

@@ -16,7 +16,7 @@ import {
 import { getHomePageData } from "@/server/queries/catalog";
 import { usdtShort, timeAgo } from "@/lib/format";
 import { PublicShell } from "./_components/site-shell";
-import { SearchBox } from "./_components/search-box";
+import { SmartSearchBox } from "./_components/smart-search-box";
 import { ProductCard } from "./_components/product-card";
 import { BrandMark } from "./_components/brand-mark";
 import { CountUp } from "./_components/count-up";
@@ -173,7 +173,7 @@ export default async function HomePage() {
 
             {/* Search */}
             <div className="max-w-xl mb-4">
-              <SearchBox variant="hero" />
+              <SmartSearchBox variant="hero" />
             </div>
 
             {/* CTAs */}
