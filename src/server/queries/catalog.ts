@@ -369,12 +369,17 @@ export async function getSellerLeaderboardData(
             group by seller_id
          ) os on os.seller_id = u.id
          left join (
-           select p.seller_id, c.name as category_name
-             from products p
-             join categories c on c.id = p.category_id
-            where p.status = 'active'
-            group by p.seller_id
-            order by sum(p.sold_count) desc
+           select seller_id, category_name from (
+             select p.seller_id, c.name as category_name,
+                    row_number() over (
+                      partition by p.seller_id order by sum(p.sold_count) desc
+                    ) as rn
+               from products p
+               join categories c on c.id = p.category_id
+              where p.status = 'active'
+              group by p.seller_id, c.id, c.name
+           ) ranked
+           where rn = 1
          ) pc on pc.seller_id = u.id
         where u.seller_status = 'approved' and u.is_banned = 0 and u.vacation_mode = 0 and u.total_sales > 0
         order by (u.trust_score * 0.7 + (case when u.total_sales < 500 then u.total_sales else 500 end) * 0.3) desc, u.total_sales desc
