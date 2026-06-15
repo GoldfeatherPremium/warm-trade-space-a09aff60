@@ -8,7 +8,7 @@ import { timeAgo } from "@/lib/format";
 import { PublicShell } from "../_components/site-shell";
 import { MarkAllReadButton } from "./mark-all-read";
 
-export const metadata: Metadata = { title: "Notifications — X-VAULT" };
+export const metadata: Metadata = { title: "Notifications — X-VAULT", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 const TYPE_META: Record<string, { label: string; cls: string }> = {

@@ -7,7 +7,7 @@ import { listUserDisputes } from "@/server/queries/disputes";
 import { usdt, dateTime } from "@/lib/format";
 import { PublicShell } from "../_components/site-shell";
 
-export const metadata: Metadata = { title: "Disputes — X-VAULT" };
+export const metadata: Metadata = { title: "Disputes — X-VAULT", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 const STATUS_CLS: Record<string, string> = {

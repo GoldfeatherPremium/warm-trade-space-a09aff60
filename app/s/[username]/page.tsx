@@ -39,8 +39,22 @@ export default async function StorePage({ params }: { params: Promise<{ username
   const { seller, products, reviews } = await getSellerStoreData(username);
   if (!seller) notFound();
 
+  const breadcrumbLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+      { "@type": "ListItem", position: 2, name: "Sellers", item: `${SITE_URL}/sellers` },
+      { "@type": "ListItem", position: 3, name: seller.username, item: `${SITE_URL}/s/${seller.username}` },
+    ],
+  };
+
   return (
     <PublicShell>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+      />
       <header className="bg-card border border-border rounded-2xl p-5 mb-6">
         <div className="flex items-center gap-4">
           <div className="size-16 rounded-2xl bg-primary/15 border border-primary/40 grid place-items-center text-xl font-bold text-primary uppercase">

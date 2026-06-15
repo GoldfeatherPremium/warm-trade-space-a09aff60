@@ -14,6 +14,7 @@ import {
 } from "@/lib/server/core.server";
 import { getWallet, txWithdrawalHold } from "@/lib/server/money.server";
 import { requireSeller, requireUser } from "@/server/auth";
+import { cached } from "@/lib/server/cache.server";
 
 type Row = Record<string, string | number | null>;
 
@@ -23,6 +24,7 @@ type Row = Record<string, string | number | null>;
 export async function getSellerOverviewAction() {
   await appContext();
   const user = await requireSeller();
+  return cached(`seller:overview:${user.id}`, 2 * 60_000, async () => {
   const t = now();
   const dayMs = 86_400_000;
   const sales = (period: number) =>
@@ -145,6 +147,7 @@ export async function getSellerOverviewAction() {
       completionRate: user.completion_rate,
     },
   };
+  }); // end cached
 }
 
 // ---------------------------------------------------------------------------
@@ -793,6 +796,7 @@ type Range = keyof typeof RANGES;
 export async function getSellerAnalyticsAction(range: Range = "30d") {
   await appContext();
   const user = await requireSeller();
+  return cached(`seller:analytics:${user.id}:${range}`, 5 * 60_000, async () => {
   const days = RANGES[range];
   const t = now();
   const since = t - days * DAY;
@@ -918,6 +922,7 @@ export async function getSellerAnalyticsAction(range: Range = "30d") {
       oos: productCounts?.oos ?? 0,
     },
   };
+  }); // end cached
 }
 
 // ---------------------------------------------------------------------------
