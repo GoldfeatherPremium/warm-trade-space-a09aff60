@@ -113,21 +113,18 @@ export default async function HomePage() {
       />
 
       {/* ── HERO ─────────────────────────────────────────────────── */}
-      <section className="relative rounded-2xl overflow-hidden mb-8 border border-border/60">
-        {/* Background */}
-        <div
-          className="absolute inset-0 -z-10"
-          style={{ background: "var(--gradient-hero)" }}
-          aria-hidden
-        />
-
+      {/* Background applied directly on section — no absolute child avoids z-index stacking issues */}
+      <section
+        className="rounded-2xl overflow-hidden mb-8 border border-border/60"
+        style={{ background: "var(--gradient-hero)" }}
+      >
         <div className="px-6 py-10 sm:px-12 sm:py-14">
-          {/* Trust badge */}
-          <div className="inline-flex items-center gap-2 mb-5">
-            <span className="flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-primary bg-primary/10 border border-primary/25 rounded-full px-3 py-1">
+          {/* Trust badges */}
+          <div className="flex flex-wrap items-center gap-2 mb-5">
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-primary bg-primary/10 border border-primary/25 rounded-full px-3 py-1">
               <ShieldCheck className="size-3" /> BUYER PROTECTED
             </span>
-            <span className="flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-accent bg-accent/10 border border-accent/25 rounded-full px-3 py-1">
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-accent bg-accent/10 border border-accent/25 rounded-full px-3 py-1">
               <Zap className="size-3" /> USDT PAYMENTS
             </span>
           </div>
@@ -154,7 +151,7 @@ export default async function HomePage() {
                 <Link
                   key={s.query}
                   href={`/browse?q=${encodeURIComponent(s.query)}`}
-                  className="px-2.5 py-1 rounded-full bg-secondary/60 border border-border/60 capitalize hover:border-primary/50 hover:text-primary transition-colors"
+                  className="px-2.5 py-1 rounded-full bg-card/60 border border-border/60 capitalize hover:border-primary/50 hover:text-primary transition-colors"
                 >
                   {s.query}
                 </Link>
@@ -164,7 +161,7 @@ export default async function HomePage() {
         </div>
 
         {/* Stats bar */}
-        <div className="border-t border-border/50 bg-primary/5 px-6 sm:px-12 py-3 flex flex-wrap gap-x-8 gap-y-2">
+        <div className="border-t border-border/40 bg-card/30 px-6 sm:px-12 py-3 flex flex-wrap gap-x-8 gap-y-2">
           {[
             { icon: ShieldCheck, label: "Buyer Protected", value: "Every order" },
             { icon: Zap, label: "Instant Delivery", value: "Auto orders" },

@@ -3,10 +3,11 @@ import { ShieldCheck } from "lucide-react";
 import { SearchBox } from "./search-box";
 import { AccountNav } from "./account-nav";
 import { CategoryBar } from "./category-bar";
+import { ThemeToggle } from "./theme-toggle";
 
 function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 bg-background/90 backdrop-blur-md border-b border-border/60">
+    <header className="sticky top-0 z-40 bg-background border-b border-border/60">
       <div className="max-w-6xl mx-auto px-4 h-14 flex items-center gap-3">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 shrink-0 mr-1">
@@ -20,19 +21,19 @@ function SiteHeader() {
         <nav className="hidden md:flex items-center gap-1 text-xs font-medium text-muted-foreground">
           <Link
             href="/browse"
-            className="px-3 py-1.5 rounded-md hover:bg-secondary/60 hover:text-foreground transition-colors"
+            className="px-3 py-1.5 rounded-md hover:bg-secondary/80 hover:text-foreground transition-colors"
           >
             Browse
           </Link>
           <Link
             href="/sellers"
-            className="px-3 py-1.5 rounded-md hover:bg-secondary/60 hover:text-foreground transition-colors"
+            className="px-3 py-1.5 rounded-md hover:bg-secondary/80 hover:text-foreground transition-colors"
           >
             Sellers
           </Link>
           <Link
             href="/sell"
-            className="px-3 py-1.5 rounded-md hover:bg-secondary/60 hover:text-foreground transition-colors"
+            className="px-3 py-1.5 rounded-md hover:bg-secondary/80 hover:text-foreground transition-colors"
           >
             Sell
           </Link>
@@ -43,8 +44,11 @@ function SiteHeader() {
           <SearchBox />
         </div>
 
-        {/* Account actions */}
-        <AccountNav />
+        {/* Dark mode toggle + account actions */}
+        <div className="ml-auto sm:ml-0 flex items-center gap-1">
+          <ThemeToggle />
+          <AccountNav />
+        </div>
       </div>
     </header>
   );
@@ -88,7 +92,7 @@ const FOOTER_SECTIONS: Array<{ heading: string; links: Array<{ label: string; hr
 
 function SiteFooter() {
   return (
-    <footer className="border-t border-border/60 bg-card/30 px-4 py-12 mt-16">
+    <footer className="border-t border-border/60 bg-card/40 px-4 py-12 mt-16">
       <div className="max-w-6xl mx-auto">
         <div className="flex items-center gap-2 mb-8">
           <div className="size-7 rounded-lg grid place-items-center bg-primary/15 border border-primary/30">

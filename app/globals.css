@@ -35,42 +35,84 @@
   --font-mono: var(--nf-mono, "JetBrains Mono", monospace);
 }
 
+/* ── LIGHT MODE — G2G / Z2U / Gameflip inspired ── */
 :root {
   --radius: 0.5rem;
 
-  /* ── Light Marketplace Theme — G2G / Z2U / Gameflip inspired ── */
   --background: oklch(0.975 0.003 250);
-  --foreground: oklch(0.14 0.02 265);
+  --foreground: oklch(0.13 0.022 260);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.14 0.02 265);
+  --card-foreground: oklch(0.13 0.022 260);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.14 0.02 265);
+  --popover-foreground: oklch(0.13 0.022 260);
 
-  /* Emerald green — matches G2G's trustworthy brand green */
-  --primary: oklch(0.52 0.2 163);
+  /* G2G emerald green */
+  --primary: oklch(0.5 0.185 163);
   --primary-foreground: oklch(1 0 0);
-  --primary-light: oklch(0.94 0.06 163);
 
-  --secondary: oklch(0.95 0.005 250);
-  --secondary-foreground: oklch(0.25 0.02 265);
-  --muted: oklch(0.96 0.004 250);
-  --muted-foreground: oklch(0.5 0.025 265);
+  --secondary: oklch(0.96 0.004 250);
+  --secondary-foreground: oklch(0.25 0.022 260);
+  --muted: oklch(0.965 0.003 250);
+  --muted-foreground: oklch(0.52 0.022 260);
 
-  /* Orange accent — Z2U-style price/highlight colour */
-  --accent: oklch(0.6 0.21 50);
+  /* Z2U orange for prices */
+  --accent: oklch(0.62 0.2 50);
   --accent-foreground: oklch(1 0 0);
 
   --destructive: oklch(0.55 0.22 25);
   --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.88 0.008 250);
-  --input: oklch(0.92 0.005 250);
-  --ring: oklch(0.52 0.2 163);
+  --border: oklch(0.91 0.006 250);
+  --input: oklch(0.94 0.004 250);
+  --ring: oklch(0.5 0.185 163);
 
-  /* Safe single-layer gradients — no OKLCH radial stacking (avoids render artifacts) */
-  --gradient-primary: linear-gradient(135deg, oklch(0.5 0.21 163), oklch(0.6 0.19 168));
-  --gradient-hero: linear-gradient(160deg, oklch(0.93 0.05 163) 0%, oklch(0.975 0.003 250) 55%);
-  --shadow-card: 0 1px 3px oklch(0 0 0 / 0.08), 0 4px 12px oklch(0 0 0 / 0.06);
-  --shadow-glow: 0 8px 32px oklch(0.52 0.2 163 / 0.25);
+  --gradient-hero: linear-gradient(
+    150deg,
+    oklch(0.94 0.06 163) 0%,
+    oklch(0.985 0.004 250) 55%,
+    oklch(0.96 0.05 50) 100%
+  );
+  --gradient-primary: linear-gradient(135deg, oklch(0.48 0.2 163), oklch(0.56 0.18 170));
+  --shadow-card: 0 1px 3px oklch(0 0 0 / 0.07), 0 4px 12px oklch(0 0 0 / 0.04);
+  --shadow-glow: 0 8px 32px oklch(0.5 0.185 163 / 0.2);
+}
+
+/* ── DARK MODE ── */
+.dark {
+  --background: oklch(0.115 0.016 260);
+  --foreground: oklch(0.94 0.008 260);
+  --card: oklch(0.165 0.022 260);
+  --card-foreground: oklch(0.94 0.008 260);
+  --popover: oklch(0.155 0.02 260);
+  --popover-foreground: oklch(0.94 0.008 260);
+
+  /* Brighter green on dark bg */
+  --primary: oklch(0.62 0.2 163);
+  --primary-foreground: oklch(0.115 0.016 260);
+
+  --secondary: oklch(0.2 0.028 260);
+  --secondary-foreground: oklch(0.88 0.01 260);
+  --muted: oklch(0.175 0.022 260);
+  --muted-foreground: oklch(0.6 0.028 260);
+
+  /* Brighter orange on dark bg */
+  --accent: oklch(0.7 0.195 50);
+  --accent-foreground: oklch(0.115 0.016 260);
+
+  --destructive: oklch(0.62 0.24 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.24 0.03 260);
+  --input: oklch(0.22 0.026 260);
+  --ring: oklch(0.62 0.2 163);
+
+  --gradient-hero: linear-gradient(
+    150deg,
+    oklch(0.18 0.06 163) 0%,
+    oklch(0.135 0.016 260) 55%,
+    oklch(0.17 0.05 50) 100%
+  );
+  --gradient-primary: linear-gradient(135deg, oklch(0.55 0.2 163), oklch(0.62 0.18 170));
+  --shadow-card: 0 1px 3px oklch(0 0 0 / 0.35), 0 4px 16px oklch(0 0 0 / 0.25);
+  --shadow-glow: 0 8px 32px oklch(0.62 0.2 163 / 0.3);
 }
 
 @layer base {
@@ -124,7 +166,7 @@
     opacity: 1;
   }
   50% {
-    opacity: 0.5;
+    opacity: 0.4;
   }
 }
 .live-dot {
