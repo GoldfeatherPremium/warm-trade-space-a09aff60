@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { adminGetProductAction } from "@/server/actions/admin";
 import { EditProductClient } from "./edit-client";
 
-export const metadata: Metadata = { title: "Edit Product — Admin · X-VAULT" };
+export const metadata: Metadata = { title: "Edit Product — Admin" };
 export const dynamic = "force-dynamic";
 
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {

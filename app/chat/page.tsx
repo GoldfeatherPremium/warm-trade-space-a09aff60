@@ -5,7 +5,7 @@ import { listConversations } from "@/server/queries/chat";
 import { PublicShell } from "../_components/site-shell";
 import { ChatClient } from "./chat-client";
 
-export const metadata: Metadata = { title: "Inbox — X-VAULT", robots: { index: false } };
+export const metadata: Metadata = { title: "Inbox", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 export default async function ChatPage({

@@ -10,12 +10,12 @@ import { ProductCard } from "./_components/product-card";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export const metadata: Metadata = {
-  title: "X-VAULT — Buy & Sell Digital Goods with USDT",
+  title: { absolute: "X-VAULT — Buy & Sell Digital Goods with USDT" },
   description:
     "The trusted digital goods marketplace. Game currency, gift cards, keys, accounts and boosting — buyer-protected, paid in USDT, instant delivery.",
   alternates: { canonical: "/" },
   openGraph: {
-    title: "X-VAULT — Buy & Sell Digital Goods with USDT",
+    title: { absolute: "X-VAULT — Buy & Sell Digital Goods with USDT" },
     description: "Buyer-protected digital marketplace. Pay in USDT, instant delivery.",
     url: SITE_URL + "/",
     images: [{ url: `${SITE_URL}/assets/og-default.jpg`, width: 1200, height: 630 }],

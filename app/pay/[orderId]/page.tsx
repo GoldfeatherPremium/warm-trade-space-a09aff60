@@ -6,7 +6,7 @@ import { getPaymentData } from "@/server/queries/orders";
 import { getWallet, getBuyerCredits } from "@/lib/server/money.server";
 import { PayClient } from "./pay-client";
 
-export const metadata: Metadata = { title: "Pay with USDT — X-VAULT", robots: { index: false } };
+export const metadata: Metadata = { title: "Pay with USDT", robots: { index: false } };
 export const dynamic = "force-dynamic";
 
 export default async function PayPage({ params }: { params: Promise<{ orderId: string }> }) {

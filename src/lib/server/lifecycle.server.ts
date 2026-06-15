@@ -131,15 +131,18 @@ export function confirmPayment(orderId: string): Promise<void> {
       const staff = await q<{ id: string }>(
         `select id from users where role in ('admin','support')`,
       );
-      for (const s of staff) {
-        await notify(
-          s.id,
-          "risk_hold",
-          "Order auto-held by fraud-engine",
-          `${o.order_no} · risk ${risk.score} · ${risk.reasons.slice(0, 1).join("")}`,
-          `/admin/risk`,
-        );
-      }
+  // Staff notifications can fire in parallel — each is an independent INSERT.
+      await Promise.all(
+        staff.map((s) =>
+          notify(
+            s.id,
+            "risk_hold",
+            "Order auto-held by fraud-engine",
+            `${o.order_no} · risk ${risk.score} · ${risk.reasons.slice(0, 1).join("")}`,
+            `/admin/risk`,
+          ),
+        ),
+      );
     }
 
     if (o.delivery_type === "auto") {
@@ -454,14 +457,15 @@ export async function sweepLifecycle(force = false): Promise<void> {
     `select id from orders where status = 'awaiting_payment' and expires_at < ?`,
     [t],
   );
-  for (const row of expired) await expireOrder(row.id, "Payment window expired", "expired");
+  // Each order handler runs in its own tx() — they're independent, safe to parallelise.
+  await Promise.all(expired.map((row) => expireOrder(row.id, "Payment window expired", "expired")));
 
   // 2. auto-confirmer: delivered orders past the confirmation window
   const toConfirm = await q<{ id: string }>(
     `select id from orders where status = 'delivered' and auto_confirm_at < ?`,
     [t],
   );
-  for (const row of toConfirm) await completeOrder(row.id, true);
+  await Promise.all(toConfirm.map((row) => completeOrder(row.id, true)));
 
   // 3. escrow-release: completed orders past warranty with no open dispute
   const toRelease = await q<{ id: string }>(
@@ -470,5 +474,5 @@ export async function sweepLifecycle(force = false): Promise<void> {
        and not exists (select 1 from disputes dd where dd.order_id = o.id and dd.status != 'resolved')`,
     [t],
   );
-  for (const row of toRelease) await releaseOrder(row.id);
+  await Promise.all(toRelease.map((row) => releaseOrder(row.id)));
 }

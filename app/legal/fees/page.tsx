@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LegalArticle } from "../../_components/legal-article";
 
 export const metadata: Metadata = {
-  title: "Fees & commissions — X-VAULT",
+  title: "Fees & commissions",
   description:
     "X-VAULT fee schedule: 8% base commission, per-category overrides, USDT withdrawal fees, and what buyers pay at checkout.",
   alternates: { canonical: "/legal/fees" },

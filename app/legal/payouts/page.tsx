@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { LegalArticle } from "../../_components/legal-article";
 
 export const metadata: Metadata = {
-  title: "Payouts & withdrawals — X-VAULT",
+  title: "Payouts & withdrawals",
   description:
     "How seller payouts work on X-VAULT: USDT networks supported, minimum withdrawal, finance review window, and how holds get released.",
   alternates: { canonical: "/legal/payouts" },

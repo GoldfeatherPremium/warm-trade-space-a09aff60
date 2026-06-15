@@ -3,7 +3,7 @@ import Link from "next/link";
 import { LegalArticle } from "../../_components/legal-article";
 
 export const metadata: Metadata = {
-  title: "Prohibited items — X-VAULT",
+  title: "Prohibited items",
   description:
     "What sellers may not list on X-VAULT: stolen / carded goods, hacked accounts, unauthorized credentials, and anything violating the underlying service's terms.",
   alternates: { canonical: "/legal/prohibited" },
