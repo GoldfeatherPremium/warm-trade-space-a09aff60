@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
@@ -159,10 +160,11 @@ export default async function DashboardPage() {
                     href={`/orders/${o.id}`}
                     className="flex items-center gap-3 p-2 rounded-md hover:bg-secondary/50 transition-colors"
                   >
-                    {" "}
-                    <img
+                    <Image
                       src={productImage(o.image_key)}
                       alt=""
+                      width={40}
+                      height={40}
                       className="size-10 rounded-md object-cover border border-border shrink-0"
                     />
                     <div className="min-w-0 flex-1">

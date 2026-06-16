@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import { listVerificationsAction, reviewVerificationAction } from "@/server/actions/admin";
 import { dateTime } from "@/lib/format";
 
@@ -111,7 +111,7 @@ export function VerificationsClient() {
   const [verifications, setVerifications] = useState<Verification[]>([]);
   const [loading, setLoading] = useState(true);
 
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const data = await listVerificationsAction({ status: statusFilter });
@@ -119,11 +119,11 @@ export function VerificationsClient() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [statusFilter]);
 
   useEffect(() => {
     void load();
-  }, [statusFilter]);
+  }, [load]);
 
   const STATUSES: StatusFilter[] = ["pending", "approved", "rejected", "all"];
 

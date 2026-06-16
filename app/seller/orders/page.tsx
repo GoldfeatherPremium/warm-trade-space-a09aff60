@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Download, PackageSearch, ShoppingBag } from "lucide-react";
 import { listSellerOrdersAction } from "@/server/actions/seller";
@@ -163,11 +164,13 @@ export default function SellerOrdersPage() {
                 href={`/orders/${o.id}`}
                 className={`bg-card border rounded-lg p-3 flex items-center gap-3 hover:border-primary/50 ${NEEDS_ACTION.includes(o.status) ? "border-accent/40" : "border-border"}`}
               >
-                <div className="size-12 rounded-md overflow-hidden bg-secondary shrink-0">
-                  <img
+                <div className="size-12 rounded-md overflow-hidden bg-secondary shrink-0 relative">
+                  <Image
                     src={productImageNext(o.image_key)}
                     alt=""
-                    className="w-full h-full object-cover"
+                    fill
+                    sizes="48px"
+                    className="object-cover"
                   />
                 </div>
                 <div className="flex-1 min-w-0">

@@ -116,6 +116,9 @@ export default function StorefrontPage() {
         />
         <div className="p-4 flex items-center gap-3">
           {form.logoUrl ? (
+            // Live preview of a seller-entered logo URL (arbitrary external host);
+            // can't be domain-allowlisted for next/image, so a plain <img> is correct.
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={form.logoUrl}
               alt=""
