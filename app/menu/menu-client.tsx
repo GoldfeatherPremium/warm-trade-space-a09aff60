@@ -221,7 +221,7 @@ export function MenuClient({ user }: { user: User | null }) {
       id: "disputes",
       label: "Dispute Center",
       icon: Scale,
-      color: "text-cyan-400",
+      color: "text-accent",
       entries: [{ label: "My Disputes", href: "/disputes" }],
     },
     {

@@ -25,7 +25,7 @@ function SlaBadge({ openedAt, resolved }: { openedAt: number; resolved: boolean 
     <span
       className={`text-[9px] font-bold px-2 py-0.5 rounded inline-flex items-center gap-1 ${
         overdue
-          ? "bg-destructive/90 text-white"
+          ? "bg-destructive/90 text-destructive-foreground"
           : remaining < 12 * 3_600_000
             ? "bg-warning/90 text-warning-foreground"
             : "bg-secondary text-foreground/80"

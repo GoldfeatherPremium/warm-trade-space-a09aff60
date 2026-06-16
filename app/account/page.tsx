@@ -16,7 +16,7 @@ const TIER_CLS: Record<string, string> = {
   bronze: "text-warning/70",
   silver: "text-muted-foreground",
   gold: "text-warning",
-  platinum: "text-cyan-400",
+  platinum: "text-accent",
   diamond: "text-primary",
 };
 

@@ -284,7 +284,7 @@ export function OrderClient({ initial }: { initial: OrderData }) {
             <button
               onClick={() => act("sla", () => buyerCancelSlaBreachAction(o.id))}
               disabled={!!busy}
-              className="w-full py-2.5 text-sm font-bold bg-destructive/90 text-white rounded-lg disabled:opacity-60"
+              className="w-full py-2.5 text-sm font-bold bg-destructive/90 text-destructive-foreground rounded-lg disabled:opacity-60"
             >
               {busy === "sla" ? "Cancelling…" : "Cancel — SLA breach (no delivery)"}
             </button>
@@ -326,7 +326,7 @@ export function OrderClient({ initial }: { initial: OrderData }) {
                       )
                     }
                     disabled={!!busy}
-                    className="px-4 py-2 text-xs font-bold bg-destructive text-white rounded-md disabled:opacity-60"
+                    className="px-4 py-2 text-xs font-bold bg-destructive text-destructive-foreground rounded-md disabled:opacity-60"
                   >
                     {busy === "dispute" ? "Opening…" : "Open dispute"}
                   </button>
