@@ -200,18 +200,19 @@ async function createPostgresEngine(): Promise<Engine> {
 async function schemaAlreadyMigrated(e: Engine): Promise<boolean> {
   // Sentinel: bump whenever you add new tables/columns to migrate() so
   // production databases pick up changes on the next cold start. Currently
-  // points at users.store_banner_url (seller storefront columns).
+  // points at users.theme_pref (cross-device theme persistence) — read by
+  // currentUser()/the root layout, so a DB missing it crashes every request.
   try {
     if (isPostgres()) {
       const r = await e.q<{ c: number }>(
         `select count(*)::int as c from information_schema.columns
          where table_schema = 'public' and table_name = 'users'
-           and column_name = 'store_banner_url'`,
+           and column_name = 'theme_pref'`,
       );
       return !!r[0] && Number(r[0].c) > 0;
     }
     const r = await e.q<{ c: number }>(
-      `select count(*) as c from pragma_table_info('users') where name = 'store_banner_url'`,
+      `select count(*) as c from pragma_table_info('users') where name = 'theme_pref'`,
     );
     return !!r[0] && Number(r[0].c) > 0;
   } catch {
