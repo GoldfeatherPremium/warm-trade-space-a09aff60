@@ -35,6 +35,22 @@ function isPostgres(): boolean {
   return !!process.env.DATABASE_URL;
 }
 
+// Postgres SQLSTATEs meaning "this object already exists" — i.e. another
+// concurrent cold-start isolate created it first, which is the desired end
+// state. `create table/index if not exists` is NOT atomic on Postgres: two
+// isolates can both pass the existence check then collide, throwing 23505
+// (duplicate pg_type) / 42P07 (duplicate_table) / 42710 (duplicate_object) /
+// 42P06 (duplicate_schema) / 42P07. Swallowing these makes concurrent
+// migration safe WITHOUT a session-level advisory lock — which is unreliable
+// behind a transaction-mode pooler (PgBouncer / Neon pooled / Supabase pooler).
+const DUPLICATE_OBJECT_CODES = new Set(["23505", "42P07", "42710", "42P06"]);
+export function isDuplicateObjectError(e: unknown): boolean {
+  const code = (e as { code?: string } | null)?.code;
+  if (code && DUPLICATE_OBJECT_CODES.has(code)) return true;
+  const msg = (e as Error | null)?.message?.toLowerCase() ?? "";
+  return msg.includes("already exists") || msg.includes("duplicate key value");
+}
+
 // ---------------------------------------------------------------------------
 // SQLite engine (local development / single-server deployments)
 // ---------------------------------------------------------------------------
@@ -136,42 +152,6 @@ async function makePgClient(): Promise<PgSql> {
       ]),
     ),
   }) as unknown as PgSql;
-}
-
-// Advisory-lock keys (arbitrary but stable) used to serialize one-time boot
-// work — schema migration and the demo seed — across concurrent isolates and
-// build workers that all point at the same Postgres database.
-const MIGRATION_LOCK_KEY = 4927_310_001;
-export const SEED_LOCK_KEY = 4927_310_002;
-
-/**
- * Run `fn` while holding a Postgres session-level advisory lock so that only
- * one connection — across every serverless isolate, build worker, or process
- * sharing this database — executes it at a time. This makes the otherwise
- * racy `create table if not exists` / `create extension` DDL in migrate() and
- * the demo seed concurrency-safe: parallel callers block until the holder
- * commits, then re-check their sentinel and skip the work.
- *
- * On SQLite there is a single in-process connection, so callers are already
- * serialized and this is a passthrough.
- */
-export async function withBootLock<T>(key: number, fn: () => Promise<T>): Promise<T> {
-  if (!isPostgres()) return fn();
-  // Dedicated single connection: an advisory lock is tied to the session that
-  // took it, so the same client must release it.
-  const { default: postgres } = await import("postgres");
-  const sql = postgres(process.env.DATABASE_URL!, {
-    max: 1,
-    prepare: false,
-    idle_timeout: 5,
-  }) as unknown as PgSql;
-  try {
-    await sql.unsafe(`select pg_advisory_lock($1)`, [key]);
-    return await fn();
-  } finally {
-    await sql.unsafe(`select pg_advisory_unlock($1)`, [key]).catch(() => {});
-    await sql.end({ timeout: 1 }).catch(() => {});
-  }
 }
 
 async function getPgClient(): Promise<{ sql: PgSql; oneShot: boolean }> {
@@ -287,14 +267,12 @@ async function getEngine(): Promise<Engine> {
   }
   if (isPostgres()) {
     if (!migratedFlag) {
-      const e = engine;
-      // Serialize across isolates/build workers: concurrent `create table if
-      // not exists` on Postgres races on pg_type and throws
-      // "duplicate key value violates unique constraint pg_type_typname_nsp_index".
-      // The lock holder migrates; everyone else re-checks the sentinel and skips.
-      await withBootLock(MIGRATION_LOCK_KEY, async () => {
-        if (!(await schemaAlreadyMigrated(e))) await migrate(e);
-      });
+      // Sentinel check short-circuits once any isolate has migrated, so this
+      // runs only against a fresh DB. The migrate DDL itself tolerates the
+      // concurrent-create race (see migrate()), so no cross-isolate advisory
+      // lock is needed — important because session-level locks are unreliable
+      // behind a transaction-mode pooler (Neon pooled / PgBouncer).
+      if (!(await schemaAlreadyMigrated(engine))) await migrate(engine);
       migratedFlag = true;
     }
   } else {
@@ -746,10 +724,16 @@ async function migrate(e: Engine): Promise<void> {
       .split("\n")
       .filter((line) => !line.trim().startsWith("--"))
       .join("\n");
-    // run statements one by one so partial application is idempotent
+    // Run statements one by one so partial application is idempotent. Swallow
+    // "already exists" races: a concurrent isolate may have created the same
+    // object between our `if not exists` check and execution. Any other error
+    // (a genuinely broken statement) still propagates.
     for (const stmt of cleaned.split(";")) {
       const s = stmt.trim();
-      if (s) await e.exec(s);
+      if (s)
+        await e.exec(s).catch((err) => {
+          if (!isDuplicateObjectError(err)) throw err;
+        });
     }
   } else {
     await e.exec(schemaSql("sqlite"));
