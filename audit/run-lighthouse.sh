@@ -1,45 +1,76 @@
 #!/usr/bin/env bash
-# Lighthouse runner for X-VAULT — run on the Contabo VPS (needs Chrome/Chromium).
+# ─────────────────────────────────────────────────────────────────────────────
+# Full-site Lighthouse runner for X-VAULT (run on the VPS; needs Chrome).
 #
-# Prereqs:
-#   sudo apt-get install -y chromium-browser   # or google-chrome-stable
+# Public routes run unauthenticated. Authenticated routes run only if you pass a
+# session cookie (COOKIE env). Each route is tested on BOTH desktop and mobile,
+# across all four categories (performance, accessibility, best-practices, seo).
+#
+# Quick start:
 #   npm i -g lighthouse
-#   export DATABASE_URL=...  STOCK_ENCRYPTION_KEY=...  NEXT_PUBLIC_SITE_URL=http://localhost:3000
+#   export BASE=http://localhost:3000
+#   # optional, for /account /seller /admin etc:
+#   export COOKIE='xv_session=PASTE_FROM_BROWSER_DEVTOOLS'
+#   # optional, fill real ids so dynamic pages aren't 404:
+#   export PROD_SLUG=some-product-slug  STORE_USER=some-seller
+#   bash audit/run-lighthouse.sh
 #
-# Usage:  bash audit/run-lighthouse.sh [BASE_URL]
-# Output: audit/lighthouse/<route>.<mobile|desktop>.html  + a summary.json
-set -euo pipefail
+# Output: audit/lighthouse/<route>.<desktop|mobile>.report.{html,json} + summary
+# ─────────────────────────────────────────────────────────────────────────────
+set -uo pipefail
 
-BASE="${1:-http://localhost:3000}"
-OUT="audit/lighthouse"
+BASE="${BASE:-http://localhost:3000}"
+COOKIE="${COOKIE:-}"
+OUT="${OUT:-audit/lighthouse}"
+PROD_SLUG="${PROD_SLUG:-}"
+STORE_USER="${STORE_USER:-}"
 mkdir -p "$OUT"
 
-# Public routes. Authenticated routes (dashboard/seller/admin) need a session
-# cookie — pass it via LH_EXTRA_HEADERS='{"Cookie":"xv_session=..."}'.
-ROUTES=( "/" "/browse" "/sellers" "/auth" "/about" )
-# Add a real product + store slug if you have them:
-#   ROUTES+=( "/p/<slug>" "/s/<username>" )
+CHROME_FLAGS="--headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage"
 
-CHROME_FLAGS="--headless=new --no-sandbox --disable-gpu"
+PUBLIC=(
+  "/" "/browse" "/sellers" "/auth" "/about" "/contact" "/menu" "/search" "/sell"
+  "/legal/terms" "/legal/privacy" "/legal/escrow" "/legal/fees"
+  "/legal/payouts" "/legal/credits" "/legal/buyer-protection" "/legal/prohibited"
+)
+[ -n "$PROD_SLUG" ]  && PUBLIC+=("/p/$PROD_SLUG")
+[ -n "$STORE_USER" ] && PUBLIC+=("/s/$STORE_USER")
 
-run() {
-  local route="$1" preset="$2" form="$3" label="$4"
-  local name; name="$(echo "$route" | sed 's#/#_#g; s#^_##; s#^$#home#')"
-  echo "→ $route [$label]"
-  lighthouse "$BASE$route" \
-    --quiet --chrome-flags="$CHROME_FLAGS" \
-    --preset="$preset" --form-factor="$form" \
-    ${LH_EXTRA_HEADERS:+--extra-headers="$LH_EXTRA_HEADERS"} \
-    --only-categories=performance,accessibility,best-practices,seo \
-    --output=html --output=json \
-    --output-path="$OUT/${name:-home}.$label.html" || true
+AUTH=(
+  "/dashboard" "/account" "/account/affiliate" "/account/credits"
+  "/account/following" "/account/subscriptions" "/orders" "/wallet"
+  "/favorites" "/notifications" "/chat" "/disputes"
+  "/seller" "/seller/orders" "/seller/products" "/seller/wallet"
+  "/seller/analytics" "/seller/promotions" "/seller/storefront"
+  "/seller/reviews" "/seller/verification" "/seller/subscriptions" "/seller/optimize"
+  "/admin" "/admin/orders" "/admin/finance" "/admin/users" "/admin/products"
+  "/admin/disputes" "/admin/moderation" "/admin/risk" "/admin/analytics"
+  "/admin/coupons" "/admin/categories" "/admin/sellers" "/admin/verifications"
+  "/admin/fx" "/admin/payments" "/admin/credits" "/admin/settings"
+  "/admin/audit" "/admin/items" "/admin/chats"
+)
+
+slug() { echo "$1" | sed 's#^/##; s#/#_#g; s#?.*##; s#^$#home#'; }
+
+run() { # <url> <desktop|mobile>
+  local url="$1" label="$2" name; name="$(slug "$url")"
+  local args=(--quiet --chrome-flags="$CHROME_FLAGS"
+    --only-categories=performance,accessibility,best-practices,seo
+    --output=html --output=json --output-path="$OUT/${name}.${label}")
+  [ "$label" = "desktop" ] && args+=(--preset=desktop)   # mobile = lighthouse default
+  [ -n "$COOKIE" ] && args+=(--extra-headers="{\"Cookie\":\"$COOKIE\"}")
+  echo "→ [$label] $url"
+  lighthouse "$BASE$url" "${args[@]}" >/dev/null 2>&1 || echo "  ! failed: $url"
 }
 
-for r in "${ROUTES[@]}"; do
-  run "$r" desktop desktop desktop
-  run "$r" perf    mobile  mobile     # 'perf' preset = mobile throttling
-done
+TARGETS=("${PUBLIC[@]}")
+[ -n "$COOKIE" ] && TARGETS+=("${AUTH[@]}") || \
+  echo "(no COOKIE set — skipping authenticated routes)"
 
-echo
-echo "Reports in $OUT/. Open the .html files, or jq the .report.json for scores:"
-echo "  for f in $OUT/*.report.json; do jq -r '[input_filename,(.categories|to_entries|map(\"\\(.key):\\(.value.score*100|floor)\"))]|flatten|join(\" \")' \"\$f\"; done"
+for u in "${TARGETS[@]}"; do run "$u" desktop; run "$u" mobile; done
+
+echo; echo "=== SCORES (P / A11y / BP / SEO) ==="
+for f in "$OUT"/*.report.json; do
+  jq -r '"\(input_filename|sub(".*/";"")|sub(".report.json";""))|\(.categories.performance.score*100|floor)|\(.categories.accessibility.score*100|floor)|\(.categories["best-practices"].score*100|floor)|\(.categories.seo.score*100|floor)"' "$f" 2>/dev/null
+done | column -t -s'|'
+echo; echo "HTML reports: $OUT/"
