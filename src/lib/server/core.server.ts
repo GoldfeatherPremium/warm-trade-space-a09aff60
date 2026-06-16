@@ -38,7 +38,12 @@ export function verifyPassword(password: string, stored: string): boolean {
 }
 
 // ---------- stock encryption (AES-256-GCM at rest) ----------
-function getStockKey(): Buffer {
+// Fixed salt for the single-key scrypt KDF. A constant salt still defeats
+// precomputed rainbow tables and, combined with scrypt's memory-hardness, makes
+// brute-forcing a weak STOCK_ENCRYPTION_KEY far costlier than a bare SHA-256.
+const STOCK_KEY_SALT = "xvault.stock.kdf.v2";
+
+function rawStockKey(): string {
   const rawKey = process.env.STOCK_ENCRYPTION_KEY;
   if (!rawKey) {
     throw new Error(
@@ -48,20 +53,50 @@ function getStockKey(): Buffer {
         "stock items would be encrypted under a public constant, exposing all sold goods.",
     );
   }
-  return createHash("sha256").update(rawKey).digest();
+  return rawKey;
+}
+
+// v2 key: scrypt (memory-hard KDF). Used for all NEW ciphertext.
+function getStockKeyV2(): Buffer {
+  const raw = rawStockKey();
+  if (raw.length < 16) {
+    // Warn rather than throw: refusing here would brick decryption of existing
+    // data on deployments with a short key. Operators should rotate to a long
+    // random secret. (Min-length is enforced softly to stay non-breaking.)
+    console.warn(
+      "[security] STOCK_ENCRYPTION_KEY is shorter than 16 characters — use a long random secret.",
+    );
+  }
+  return scryptSync(raw, STOCK_KEY_SALT, 32);
+}
+
+// Legacy key: bare SHA-256. Retained ONLY to decrypt data written before the
+// KDF upgrade (ciphertext without the "v2." prefix).
+function getStockKeyLegacy(): Buffer {
+  return createHash("sha256").update(rawStockKey()).digest();
 }
 
 export function encryptStock(plaintext: string): string {
-  const key = getStockKey();
+  const key = getStockKeyV2();
   const iv = randomBytes(12);
   const cipher = createCipheriv("aes-256-gcm", key, iv);
   const enc = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()]);
-  return `${iv.toString("hex")}.${cipher.getAuthTag().toString("hex")}.${enc.toString("hex")}`;
+  // "v2." prefix marks scrypt-derived ciphertext so decryptStock picks the key.
+  return `v2.${iv.toString("hex")}.${cipher.getAuthTag().toString("hex")}.${enc.toString("hex")}`;
 }
 
 export function decryptStock(stored: string): string {
-  const key = getStockKey();
-  const [iv, tag, data] = stored.split(".");
+  const parts = stored.split(".");
+  let key: Buffer;
+  let iv: string, tag: string, data: string;
+  if (parts[0] === "v2") {
+    key = getStockKeyV2();
+    [, iv, tag, data] = parts;
+  } else {
+    // Legacy ciphertext: 3-part iv.tag.data encrypted under the SHA-256 key.
+    key = getStockKeyLegacy();
+    [iv, tag, data] = parts;
+  }
   const decipher = createDecipheriv("aes-256-gcm", key, Buffer.from(iv, "hex"));
   decipher.setAuthTag(Buffer.from(tag, "hex"));
   return Buffer.concat([decipher.update(Buffer.from(data, "hex")), decipher.final()]).toString(

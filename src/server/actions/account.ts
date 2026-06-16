@@ -51,6 +51,17 @@ export async function updateProfileAction(input: {
   }
 }
 
+// Whitelisted formats: locale "en" / "pt-BR", ISO-4217 currency, ISO-3166-1
+// alpha-2 country (or empty). Rejects arbitrary strings from reaching the DB.
+const prefsSchema = z.object({
+  locale: z.string().regex(/^[a-z]{2}(-[A-Z]{2})?$/),
+  preferred_currency: z.string().regex(/^[A-Z]{3}$/),
+  country: z
+    .string()
+    .regex(/^[A-Z]{2}$/)
+    .or(z.literal("")),
+});
+
 export async function updatePreferencesAction(input: {
   locale: string;
   preferred_currency: string;
@@ -59,10 +70,17 @@ export async function updatePreferencesAction(input: {
   try {
     await appContext();
     const user = await requireUser();
+    const parsed = prefsSchema.safeParse({
+      locale: input.locale,
+      preferred_currency: input.preferred_currency,
+      country: input.country || "",
+    });
+    if (!parsed.success) return { ok: false, error: "Invalid locale, currency, or country." };
+    const { locale, preferred_currency, country } = parsed.data;
     await run(`update users set locale = ?, preferred_currency = ?, country = ? where id = ?`, [
-      input.locale,
-      input.preferred_currency,
-      input.country || null,
+      locale,
+      preferred_currency,
+      country || null,
       user.id,
     ]);
     return { ok: true };

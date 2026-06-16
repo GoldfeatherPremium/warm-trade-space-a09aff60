@@ -51,6 +51,23 @@ export function isDuplicateObjectError(e: unknown): boolean {
   return msg.includes("already exists") || msg.includes("duplicate key value");
 }
 
+// Benign during the additive `alter table ... add column` pass: the column
+// already exists (re-run / concurrent isolate), OR the target table is created
+// later in migrate() than the alter that references it (existing ordering
+// quirk). Postgres: 42701 duplicate_column, 42P01 undefined_table. SQLite:
+// "duplicate column name", "no such table". Everything else must surface.
+function isBenignMigrationError(e: unknown): boolean {
+  if (isDuplicateObjectError(e)) return true;
+  const code = (e as { code?: string } | null)?.code;
+  if (code === "42701" || code === "42P01") return true;
+  const msg = (e as Error | null)?.message?.toLowerCase() ?? "";
+  return (
+    msg.includes("duplicate column") ||
+    msg.includes("no such table") ||
+    msg.includes("does not exist")
+  );
+}
+
 // ---------------------------------------------------------------------------
 // SQLite engine (local development / single-server deployments)
 // ---------------------------------------------------------------------------
@@ -794,6 +811,9 @@ async function migrate(e: Engine): Promise<void> {
     // --- Phase 5: buyer credits (refunds + promos go here, not into wallet cash) ---
     `alter table orders add column credits_applied_cents ${big} not null default 0`,
     `alter table withdrawals add column from_credits integer not null default 0`,
+    // Four-eyes payout control: records the staff member who approved, so a
+    // different staff member is required to mark the withdrawal sent.
+    `alter table withdrawals add column approved_by text`,
     // --- Phase 6: frozen product snapshot for order proof ---
     `alter table orders add column product_snapshot text`,
     // --- Phase 4: per-category submission schema + product custom attrs + admin SEO copy ---
@@ -848,7 +868,13 @@ async function migrate(e: Engine): Promise<void> {
   ];
 
   for (const stmt of addColumns) {
-    await e.exec(stmt).catch(() => {}); // already exists
+    // Swallow ONLY benign races (column already exists) and the ordering quirk
+    // where a few alters reference tables created later in this same function
+    // (missing table). Any other error — syntax, type mismatch, constraint —
+    // now propagates instead of being silently lost.
+    await e.exec(stmt).catch((err) => {
+      if (!isBenignMigrationError(err)) throw err;
+    });
   }
   await e
     .exec(
