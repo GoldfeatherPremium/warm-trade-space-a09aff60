@@ -96,9 +96,9 @@ export function RiskClient() {
                 key={p.label}
                 className={`rounded-md border px-2.5 py-2 ${
                   p.tone === "alert"
-                    ? "border-red-500/50 bg-red-500/10"
+                    ? "border-destructive/50 bg-destructive/10"
                     : p.tone === "warn"
-                      ? "border-yellow-500/40 bg-yellow-500/5"
+                      ? "border-warning/40 bg-warning/5"
                       : "border-border bg-background/40"
                 }`}
               >
@@ -174,10 +174,10 @@ export function RiskClient() {
                   <span
                     className={`inline-block font-mono font-bold px-1.5 py-0.5 rounded ${
                       e.band === "high"
-                        ? "bg-red-500/15 text-red-400"
+                        ? "bg-destructive/15 text-destructive"
                         : e.band === "medium"
-                          ? "bg-yellow-500/15 text-yellow-400"
-                          : "bg-emerald-500/15 text-emerald-400"
+                          ? "bg-warning/15 text-warning"
+                          : "bg-success/15 text-success"
                     }`}
                   >
                     {e.score}
@@ -200,7 +200,7 @@ export function RiskClient() {
                     <span className="text-muted-foreground">escrow:</span>{" "}
                     <span
                       className={
-                        e.escrow_status === "on_hold" ? "text-red-400 font-bold" : undefined
+                        e.escrow_status === "on_hold" ? "text-destructive font-bold" : undefined
                       }
                     >
                       {e.escrow_status ?? "—"}

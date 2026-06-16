@@ -104,7 +104,7 @@ export function CouponsClient() {
                     EXPIRED
                   </span>
                 ) : usedUp ? (
-                  <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-yellow-500/15 text-yellow-400">
+                  <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-warning/15 text-warning">
                     FULLY REDEEMED
                   </span>
                 ) : c.is_active ? (

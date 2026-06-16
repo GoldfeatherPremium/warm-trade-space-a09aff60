@@ -96,7 +96,7 @@ export function ItemsClient() {
 
       {suggestions.length > 0 && (
         <div className="space-y-2">
-          <h2 className="text-xs font-bold tracking-widest text-yellow-400">SELLER REQUESTS</h2>
+          <h2 className="text-xs font-bold tracking-widest text-warning">SELLER REQUESTS</h2>
           {suggestions.map((s) => (
             <div
               key={s.id as string}
@@ -110,7 +110,7 @@ export function ItemsClient() {
               <span
                 className={`text-[9px] font-bold px-2 py-0.5 rounded ${
                   s.status === "pending"
-                    ? "bg-yellow-500/15 text-yellow-400"
+                    ? "bg-warning/15 text-warning"
                     : s.status === "approved"
                       ? "bg-accent/15 text-accent"
                       : "bg-destructive/15 text-destructive"

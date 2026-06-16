@@ -5,6 +5,7 @@ import Link from "next/link";
 import { DollarSign, ShoppingBag, Coins, Lock, Trophy } from "lucide-react";
 import { getAdminDashboardAction } from "@/server/actions/admin";
 import { usdt, ORDER_STATUS_META } from "@/lib/format";
+import { useChartTheme, type ChartTheme } from "../_lib/use-chart-theme";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -18,20 +19,20 @@ type Dashboard = Awaited<ReturnType<typeof getAdminDashboardAction>>;
 
 const GmvChart = lazy(() =>
   import("recharts").then((m) => ({
-    default: function Chart({ data }: { data: Dashboard["daily"] }) {
+    default: function Chart({ data, ct }: { data: Dashboard["daily"]; ct: ChartTheme }) {
       const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } = m;
       return (
         <ResponsiveContainer width="100%" height={200}>
           <BarChart data={data} margin={{ top: 4, right: 8, left: 8, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+            <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} />
             <XAxis
               dataKey="day"
-              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+              tick={{ fontSize: 10, fill: ct.tickFill }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
-              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+              tick={{ fontSize: 10, fill: ct.tickFill }}
               axisLine={false}
               tickLine={false}
               width={48}
@@ -39,14 +40,14 @@ const GmvChart = lazy(() =>
             />
             <Tooltip
               contentStyle={{
-                background: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
+                background: ct.tooltipBg,
+                border: `1px solid ${ct.tooltipBorder}`,
                 borderRadius: 8,
                 fontSize: 11,
               }}
               formatter={(value: number) => [`$${value.toFixed(2)}`, "GMV"]}
             />
-            <Bar dataKey="gmv" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
+            <Bar dataKey="gmv" fill={ct.chart1} radius={[3, 3, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       );
@@ -56,7 +57,13 @@ const GmvChart = lazy(() =>
 
 const OrdersStatusChart = lazy(() =>
   import("recharts").then((m) => ({
-    default: function Chart({ data }: { data: Array<{ status: string; c: number }> }) {
+    default: function Chart({
+      data,
+      ct,
+    }: {
+      data: Array<{ status: string; c: number }>;
+      ct: ChartTheme;
+    }) {
       const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } = m;
       return (
         <ResponsiveContainer width="100%" height={200}>
@@ -65,34 +72,30 @@ const OrdersStatusChart = lazy(() =>
             data={data}
             margin={{ top: 4, right: 16, left: 8, bottom: 0 }}
           >
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="rgba(255,255,255,0.06)"
-              horizontal={false}
-            />
+            <CartesianGrid strokeDasharray="3 3" stroke={ct.grid} horizontal={false} />
             <XAxis
               type="number"
-              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+              tick={{ fontSize: 10, fill: ct.tickFill }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
               type="category"
               dataKey="label"
-              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+              tick={{ fontSize: 10, fill: ct.tickFill }}
               axisLine={false}
               tickLine={false}
               width={88}
             />
             <Tooltip
               contentStyle={{
-                background: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
+                background: ct.tooltipBg,
+                border: `1px solid ${ct.tooltipBorder}`,
                 borderRadius: 8,
                 fontSize: 11,
               }}
             />
-            <Bar dataKey="c" fill="hsl(var(--primary))" radius={[0, 3, 3, 0]} />
+            <Bar dataKey="c" fill={ct.chart1} radius={[0, 3, 3, 0]} />
           </BarChart>
         </ResponsiveContainer>
       );
@@ -139,13 +142,11 @@ function QueueCounter({ label, count, href }: { label: string; count: number; hr
     <Link
       href={href}
       className={`flex flex-col items-center justify-center gap-1 rounded-xl border p-4 transition-colors hover:bg-secondary ${
-        highlight ? "border-yellow-500/40 bg-yellow-500/5" : "border-border bg-card"
+        highlight ? "border-warning/40 bg-warning/5" : "border-border bg-card"
       }`}
     >
       <span
-        className={`font-mono text-2xl font-bold ${
-          highlight ? "text-yellow-400" : "text-foreground"
-        }`}
+        className={`font-mono text-2xl font-bold ${highlight ? "text-warning" : "text-foreground"}`}
       >
         {count.toLocaleString("en-US")}
       </span>
@@ -176,6 +177,7 @@ export function AdminDashboardClient() {
   const [data, setData] = useState<Dashboard | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
+  const ct = useChartTheme();
 
   const load = () => {
     startTransition(async () => {
@@ -293,7 +295,7 @@ export function AdminDashboardClient() {
           GMV — LAST 14 DAYS
         </p>
         <Suspense fallback={<ChartSkeleton />}>
-          {data ? <GmvChart data={data.daily} /> : <ChartSkeleton />}
+          {data ? <GmvChart data={data.daily} ct={ct} /> : <ChartSkeleton />}
         </Suspense>
       </div>
 
@@ -308,7 +310,7 @@ export function AdminDashboardClient() {
             {!data ? (
               <ChartSkeleton />
             ) : statusRows.length > 0 ? (
-              <OrdersStatusChart data={statusRows} />
+              <OrdersStatusChart data={statusRows} ct={ct} />
             ) : (
               <p className="text-xs text-muted-foreground py-4 text-center">No orders yet.</p>
             )}

@@ -8,9 +8,9 @@ import { AlertTriangle, Clock } from "lucide-react";
 type Dispute = Awaited<ReturnType<typeof listDisputesAction>>[number];
 
 const STATUS_CLS: Record<string, string> = {
-  open: "bg-yellow-500/15 text-yellow-400",
-  under_review: "bg-blue-500/15 text-blue-400",
-  resolved: "bg-emerald-500/15 text-emerald-400",
+  open: "bg-warning/15 text-warning",
+  under_review: "bg-accent/15 text-accent",
+  resolved: "bg-success/15 text-success",
 };
 
 const SLA_HOURS = 72;
@@ -27,7 +27,7 @@ function SlaBadge({ openedAt, resolved }: { openedAt: number; resolved: boolean 
         overdue
           ? "bg-destructive/90 text-white"
           : remaining < 12 * 3_600_000
-            ? "bg-amber-500/90 text-black"
+            ? "bg-warning/90 text-warning-foreground"
             : "bg-secondary text-foreground/80"
       }`}
     >

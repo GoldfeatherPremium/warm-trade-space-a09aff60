@@ -174,9 +174,9 @@ function ControlHeader({ onOpenCmd }: { onOpenCmd: () => void }) {
                 key={p.label}
                 className={`rounded-md border px-2.5 py-1.5 ${
                   p.tone === "alert"
-                    ? "border-red-500/50 bg-red-500/10"
+                    ? "border-destructive/50 bg-destructive/10"
                     : p.tone === "warn"
-                      ? "border-yellow-500/40 bg-yellow-500/5"
+                      ? "border-warning/40 bg-warning/5"
                       : "border-border bg-background/40"
                 }`}
               >

@@ -10,12 +10,12 @@ type StatusFilter = "pending" | "approved" | "rejected" | "all";
 const TIER_META: Record<string, { label: string; cls: string }> = {
   verified: { label: "Verified", cls: "bg-primary/15 text-primary" },
   trusted: { label: "Trusted", cls: "bg-accent/15 text-accent" },
-  elite: { label: "Elite", cls: "bg-purple-500/15 text-purple-400" },
+  elite: { label: "Elite", cls: "bg-primary/15 text-primary" },
 };
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {
-  pending: { label: "Pending", cls: "bg-yellow-500/15 text-yellow-400" },
-  approved: { label: "Approved", cls: "bg-emerald-500/15 text-emerald-400" },
+  pending: { label: "Pending", cls: "bg-warning/15 text-warning" },
+  approved: { label: "Approved", cls: "bg-success/15 text-success" },
   rejected: { label: "Rejected", cls: "bg-destructive/15 text-destructive" },
 };
 
@@ -88,7 +88,7 @@ function VerificationRow({ v, onRefresh }: { v: Verification; onRefresh: () => v
             <button
               disabled={busy}
               onClick={() => decide("approved")}
-              className={`${BTN_CLS} bg-emerald-600 text-white disabled:opacity-50`}
+              className={`${BTN_CLS} bg-success text-success-foreground disabled:opacity-50`}
             >
               {busy ? "…" : "Approve"}
             </button>

@@ -99,7 +99,7 @@ type PulseData = Awaited<ReturnType<typeof getAdminPulseAction>>;
 
 function PillTone({ tone }: { tone: "ok" | "warn" | "alert" | "neutral" }) {
   if (tone === "alert") return "bg-destructive/20 text-destructive border-destructive/30";
-  if (tone === "warn") return "bg-yellow-500/15 text-yellow-400 border-yellow-500/30";
+  if (tone === "warn") return "bg-warning/15 text-warning border-warning/30";
   if (tone === "ok") return "bg-accent/15 text-accent border-accent/30";
   return "bg-muted/40 text-muted-foreground border-border";
 }
@@ -258,7 +258,7 @@ function CommandPalette({ open, onClose }: { open: boolean; onClose: () => void 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] bg-foreground/60 backdrop-blur-sm"
       onClick={onClose}
     >
       <div

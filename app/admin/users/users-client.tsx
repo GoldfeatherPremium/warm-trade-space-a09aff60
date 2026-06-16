@@ -16,8 +16,8 @@ type User = Users[number];
 const STATUS_CLS: Record<string, string> = {
   buyer: "bg-secondary text-muted-foreground",
   seller: "bg-accent/15 text-accent",
-  support: "bg-blue-500/15 text-blue-400",
-  finance: "bg-purple-500/15 text-purple-400",
+  support: "bg-accent/15 text-accent",
+  finance: "bg-primary/15 text-primary",
   admin: "bg-destructive/15 text-destructive",
 };
 
@@ -133,7 +133,7 @@ function UserCard({ user, onRefresh }: { user: User; onRefresh: () => void }) {
           </span>
         ) : null}
         {user.wallet_frozen ? (
-          <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-yellow-500/15 text-yellow-400">
+          <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-warning/15 text-warning">
             FROZEN
           </span>
         ) : null}
@@ -196,7 +196,7 @@ function UserCard({ user, onRefresh }: { user: User; onRefresh: () => void }) {
           <button
             onClick={() => doAction("freeze_wallet")}
             disabled={isPending}
-            className="px-3 py-1.5 rounded-md text-xs font-bold bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 disabled:opacity-60"
+            className="px-3 py-1.5 rounded-md text-xs font-bold bg-warning/20 text-warning hover:bg-warning/30 disabled:opacity-60"
           >
             Freeze wallet
           </button>
