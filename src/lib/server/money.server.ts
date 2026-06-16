@@ -1,4 +1,4 @@
-import { q1, run, tx } from "./db.server";
+import { q, q1, run, tx } from "./db.server";
 import { fail, now } from "./core.server";
 
 export interface Wallet {
@@ -62,12 +62,14 @@ export function txEscrowRelease(
   orderNo: string,
 ) {
   return tx(async () => {
-    const w = await getWallet(sellerId);
-    if (w.pending_cents < netCents) fail(`Escrow inconsistency on order ${orderNo}`);
-    await run(
-      `update wallets set pending_cents = pending_cents - ?, available_cents = available_cents + ? where user_id = ?`,
-      [netCents, netCents, sellerId],
+    await getWallet(sellerId);
+    // Atomic guarded move: only release if enough is actually in escrow.
+    const moved = await q<{ user_id: string }>(
+      `update wallets set pending_cents = pending_cents - ?, available_cents = available_cents + ?
+       where user_id = ? and pending_cents >= ? returning user_id`,
+      [netCents, netCents, sellerId, netCents],
     );
+    if (moved.length === 0) fail(`Escrow inconsistency on order ${orderNo}`);
     await writeLedger(
       sellerId,
       orderId,
@@ -100,12 +102,14 @@ export function txRefund(
   orderNo: string,
 ) {
   return tx(async () => {
-    const w = await getWallet(sellerId);
-    if (w.pending_cents < originalNetCents) fail(`Escrow inconsistency on order ${orderNo}`);
-    await run(`update wallets set pending_cents = pending_cents - ? where user_id = ?`, [
-      originalNetCents,
-      sellerId,
-    ]);
+    await getWallet(sellerId);
+    // Atomic guarded reversal: only reverse if the escrow hold is still present.
+    const reversed = await q<{ user_id: string }>(
+      `update wallets set pending_cents = pending_cents - ?
+       where user_id = ? and pending_cents >= ? returning user_id`,
+      [originalNetCents, sellerId, originalNetCents],
+    );
+    if (reversed.length === 0) fail(`Escrow inconsistency on order ${orderNo}`);
     await writeLedger(
       sellerId,
       orderId,
@@ -145,19 +149,19 @@ export function txWithdrawalHold(
   withdrawalId: string,
 ) {
   return tx(async () => {
-    const w = await getWallet(userId);
-    if (w.available_cents < amountCents + feeCents) fail("Insufficient available balance.");
-    await run(`update wallets set available_cents = available_cents - ? where user_id = ?`, [
-      amountCents + feeCents,
-      userId,
-    ]);
-    await writeLedger(
-      userId,
-      null,
-      "withdrawal",
-      -(amountCents + feeCents),
-      `Withdrawal ${withdrawalId} (incl. fee)`,
+    await getWallet(userId); // ensure the wallet row exists
+    const total = amountCents + feeCents;
+    // Atomic guarded debit: the `available_cents >= ?` predicate + RETURNING make
+    // the check-and-decrement a single statement, closing the read-modify-write
+    // race where two concurrent withdrawals could both pass a separate balance
+    // check and overdraw the wallet (READ COMMITTED on Postgres).
+    const debited = await q<{ user_id: string }>(
+      `update wallets set available_cents = available_cents - ?
+       where user_id = ? and available_cents >= ? returning user_id`,
+      [total, userId, total],
     );
+    if (debited.length === 0) fail("Insufficient available balance.");
+    await writeLedger(userId, null, "withdrawal", -total, `Withdrawal ${withdrawalId} (incl. fee)`);
   });
 }
 
@@ -184,8 +188,14 @@ export function txWithdrawalReversal(
   });
 }
 
-/** Admin manual adjustment (audited at the call site). */
-export function txAdjustment(userId: string, amountCents: number, note: string) {
+/** Admin manual adjustment (audited at the call site). `orderId` lets callers
+ * (e.g. affiliate payouts) record a ledger key so the credit can be deduped. */
+export function txAdjustment(
+  userId: string,
+  amountCents: number,
+  note: string,
+  orderId: string | null = null,
+) {
   return tx(async () => {
     const w = await getWallet(userId);
     if (w.available_cents + amountCents < 0) fail("Adjustment would make balance negative.");
@@ -193,7 +203,7 @@ export function txAdjustment(userId: string, amountCents: number, note: string) 
       amountCents,
       userId,
     ]);
-    await writeLedger(userId, null, "adjustment", amountCents, note);
+    await writeLedger(userId, orderId, "adjustment", amountCents, note);
   });
 }
 
@@ -278,12 +288,15 @@ export function txCreditGrant(
 /** Spend credits (checkout). Returns the new balance. */
 export function txCreditSpend(userId: string, amountCents: number, orderId: string, note: string) {
   return tx(async () => {
-    const c = await getBuyerCredits(userId);
-    if (c.balance_cents < amountCents) fail("Insufficient credits balance.");
-    await run(
-      `update buyer_credits set balance_cents = balance_cents - ?, updated_at = ? where user_id = ?`,
-      [amountCents, now(), userId],
+    await getBuyerCredits(userId); // ensure the credits row exists
+    // Atomic guarded debit (see txWithdrawalHold) — prevents concurrent spends
+    // from both passing a separate balance check and overspending credits.
+    const debited = await q<{ user_id: string }>(
+      `update buyer_credits set balance_cents = balance_cents - ?, updated_at = ?
+       where user_id = ? and balance_cents >= ? returning user_id`,
+      [amountCents, now(), userId, amountCents],
     );
+    if (debited.length === 0) fail("Insufficient credits balance.");
     await writeCreditLedger(userId, orderId, "spend", -amountCents, "spend", note);
   });
 }
@@ -299,12 +312,14 @@ export function txRefundToCredits(
   orderNo: string,
 ) {
   return tx(async () => {
-    const w = await getWallet(sellerId);
-    if (w.pending_cents < originalNetCents) fail(`Escrow inconsistency on order ${orderNo}`);
-    await run(`update wallets set pending_cents = pending_cents - ? where user_id = ?`, [
-      originalNetCents,
-      sellerId,
-    ]);
+    await getWallet(sellerId);
+    // Atomic guarded reversal: only reverse if the escrow hold is still present.
+    const reversed = await q<{ user_id: string }>(
+      `update wallets set pending_cents = pending_cents - ?
+       where user_id = ? and pending_cents >= ? returning user_id`,
+      [originalNetCents, sellerId, originalNetCents],
+    );
+    if (reversed.length === 0) fail(`Escrow inconsistency on order ${orderNo}`);
     await writeLedger(
       sellerId,
       orderId,

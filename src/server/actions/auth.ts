@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { headers } from "next/headers";
 import { q1, run } from "@/lib/server/db.server";
 import { appContext } from "@/lib/server/app.server";
 import { audit, hashPassword, now, uid, verifyPassword } from "@/lib/server/core.server";
@@ -8,6 +9,13 @@ import { rateLimit } from "@/lib/server/rate-limit.server";
 import { createSession, destroySession } from "../auth";
 
 export type ActionResult = { ok: true } | { ok: false; error: string };
+
+/** Best-effort client IP from proxy headers (Vercel sets x-forwarded-for). */
+async function clientIp(): Promise<string> {
+  const h = await headers();
+  const xff = h.get("x-forwarded-for");
+  return xff?.split(",")[0]?.trim() || h.get("x-real-ip") || "unknown";
+}
 
 const registerSchema = z.object({
   email: z.string().email().max(120),
@@ -25,6 +33,10 @@ export async function registerAction(input: z.infer<typeof registerSchema>): Pro
     await appContext();
     const data = registerSchema.parse(input);
     const email = data.email.toLowerCase().trim();
+    // Per-IP limit blunts botnet signups across many distinct emails; per-email
+    // limit blunts repeated hits on one address. (In-process store — see note in
+    // rate-limit.server.ts; back with Redis/edge WAF for multi-isolate scale.)
+    rateLimit({ key: `register:ip:${await clientIp()}`, limit: 10, windowMs: 60_000 });
     rateLimit({ key: `register:${email}`, limit: 5, windowMs: 60_000 });
     if (await q1(`select 1 as x from users where email = ?`, [email]))
       return { ok: false, error: "An account with that email already exists." };
@@ -73,6 +85,9 @@ export async function loginAction(input: z.infer<typeof loginSchema>): Promise<A
     await appContext();
     const data = loginSchema.parse(input);
     const email = data.email.toLowerCase().trim();
+    // Per-IP limit throttles distributed credential-stuffing that rotates emails
+    // from one source; per-email limit throttles targeted password guessing.
+    rateLimit({ key: `login:ip:${await clientIp()}`, limit: 30, windowMs: 60_000 });
     rateLimit({ key: `login:${email}`, limit: 8, windowMs: 60_000 });
     const row = await q1<{ id: string; password_hash: string; is_banned: number }>(
       `select id, password_hash, is_banned from users where email = ?`,

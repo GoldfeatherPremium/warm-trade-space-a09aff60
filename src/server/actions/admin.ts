@@ -612,13 +612,14 @@ export async function reviewWithdrawalAction(input: {
     amount_cents: number;
     fee_cents: number;
     status: string;
+    approved_by: string | null;
   }>(`select * from withdrawals where id = ?`, [input.withdrawalId]);
   if (!w) fail("Withdrawal not found.");
   if (input.action === "approve") {
     if (w!.status !== "pending") fail("Only pending withdrawals can be approved.");
     await run(
-      `update withdrawals set status = 'approved', reviewed_by = ?, reviewed_at = ? where id = ?`,
-      [staff.id, now(), w!.id],
+      `update withdrawals set status = 'approved', reviewed_by = ?, approved_by = ?, reviewed_at = ? where id = ?`,
+      [staff.id, staff.id, now(), w!.id],
     );
     await notify(
       w!.user_id,
@@ -628,7 +629,13 @@ export async function reviewWithdrawalAction(input: {
       "/seller/wallet",
     );
   } else if (input.action === "mark_sent") {
-    if (!["pending", "approved"].includes(w!.status)) fail("Withdrawal is not awaiting payout.");
+    // Four-eyes control: a payout must be explicitly approved first, and the
+    // staff member sending it must differ from the one who approved it — so no
+    // single actor can move funds out of the platform on their own.
+    if (w!.status !== "approved")
+      fail("Withdrawal must be approved by another staff member before it can be sent.");
+    if (w!.approved_by && w!.approved_by === staff.id)
+      fail("A withdrawal must be sent by a different staff member than the one who approved it.");
     if (!input.txHash) fail("Transaction hash is required.");
     await run(
       `update withdrawals set status = 'sent', tx_hash = ?, reviewed_by = ?, reviewed_at = ? where id = ?`,

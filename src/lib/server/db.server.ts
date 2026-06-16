@@ -51,6 +51,23 @@ export function isDuplicateObjectError(e: unknown): boolean {
   return msg.includes("already exists") || msg.includes("duplicate key value");
 }
 
+// Benign during the additive `alter table ... add column` pass: the column
+// already exists (re-run / concurrent isolate), OR the target table is created
+// later in migrate() than the alter that references it (existing ordering
+// quirk). Postgres: 42701 duplicate_column, 42P01 undefined_table. SQLite:
+// "duplicate column name", "no such table". Everything else must surface.
+function isBenignMigrationError(e: unknown): boolean {
+  if (isDuplicateObjectError(e)) return true;
+  const code = (e as { code?: string } | null)?.code;
+  if (code === "42701" || code === "42P01") return true;
+  const msg = (e as Error | null)?.message?.toLowerCase() ?? "";
+  return (
+    msg.includes("duplicate column") ||
+    msg.includes("no such table") ||
+    msg.includes("does not exist")
+  );
+}
+
 // ---------------------------------------------------------------------------
 // SQLite engine (local development / single-server deployments)
 // ---------------------------------------------------------------------------
@@ -136,10 +153,13 @@ async function makePgClient(): Promise<PgSql> {
   const { default: postgres } = await import("postgres");
   const numericOids = [20, 1700];
   return postgres(process.env.DATABASE_URL!, {
-    max: 5,
+    // Sized for a transaction-mode pooler (PgBouncer / Neon / Supabase pooler).
+    // max:5 was too low for the target order volume; idle/lifetime were short
+    // enough to churn TCP+TLS on steady load. Tune `max` to the pooler's budget.
+    max: 20,
     prepare: false,
-    idle_timeout: 5,
-    max_lifetime: 60,
+    idle_timeout: 30,
+    max_lifetime: 300,
     types: Object.fromEntries(
       numericOids.map((oid) => [
         `num${oid}`,
@@ -794,6 +814,9 @@ async function migrate(e: Engine): Promise<void> {
     // --- Phase 5: buyer credits (refunds + promos go here, not into wallet cash) ---
     `alter table orders add column credits_applied_cents ${big} not null default 0`,
     `alter table withdrawals add column from_credits integer not null default 0`,
+    // Four-eyes payout control: records the staff member who approved, so a
+    // different staff member is required to mark the withdrawal sent.
+    `alter table withdrawals add column approved_by text`,
     // --- Phase 6: frozen product snapshot for order proof ---
     `alter table orders add column product_snapshot text`,
     // --- Phase 4: per-category submission schema + product custom attrs + admin SEO copy ---
@@ -848,7 +871,13 @@ async function migrate(e: Engine): Promise<void> {
   ];
 
   for (const stmt of addColumns) {
-    await e.exec(stmt).catch(() => {}); // already exists
+    // Swallow ONLY benign races (column already exists) and the ordering quirk
+    // where a few alters reference tables created later in this same function
+    // (missing table). Any other error — syntax, type mismatch, constraint —
+    // now propagates instead of being silently lost.
+    await e.exec(stmt).catch((err) => {
+      if (!isBenignMigrationError(err)) throw err;
+    });
   }
   await e
     .exec(
@@ -1264,6 +1293,36 @@ async function migrate(e: Engine): Promise<void> {
         .catch(() => {});
     }
   }
+
+  // --- Audit phase 2: missing hot-path indexes (DATABASE_AUDIT §2) ---
+  await e
+    .exec(`create index if not exists idx_withdrawals_user on withdrawals(user_id, created_at)`)
+    .catch(() => {});
+  await e
+    .exec(`create index if not exists idx_deposits_user on deposits(user_id, created_at)`)
+    .catch(() => {});
+  await e
+    .exec(`create index if not exists idx_subslots_buyer on subscription_slots(buyer_id)`)
+    .catch(() => {});
+  await e
+    .exec(
+      `create index if not exists idx_product_images_seller on product_images(seller_id, created_at)`,
+    )
+    .catch(() => {});
+
+  // --- Audit phase 2: per-user coupon redemption cap (FRAUD M3) ---
+  // PK (coupon_id, user_id) makes "one redemption per buyer" race-safe.
+  await e
+    .exec(
+      `create table if not exists coupon_redemptions (
+        coupon_id text not null,
+        user_id text not null,
+        order_id text,
+        created_at ${big} not null,
+        primary key (coupon_id, user_id)
+      )`,
+    )
+    .catch(() => {});
 
   // --- Payment methods registry ---
   // Foundation for offering multiple checkout rails. USDT is live today; the

@@ -2,6 +2,12 @@ import type { NextConfig } from "next";
 
 const securityHeaders = [
   { key: "X-DNS-Prefetch-Control", value: "on" },
+  // Force HTTPS for two years incl. subdomains; eligible for the preload list.
+  // Prevents SSL-strip / protocol-downgrade MITM on first and subsequent visits.
+  {
+    key: "Strict-Transport-Security",
+    value: "max-age=63072000; includeSubDomains; preload",
+  },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
