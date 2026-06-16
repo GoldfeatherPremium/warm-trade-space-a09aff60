@@ -17,6 +17,7 @@ import {
   TrendingUp,
   BadgeCheck,
   RefreshCw,
+  Lock,
 } from "lucide-react";
 import { getProductBySlug } from "@/server/queries/catalog";
 import { usdt, timeAgo } from "@/lib/format";
