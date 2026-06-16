@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { MessageCircle, ShieldCheck, Minus, Plus, Zap, Lock } from "lucide-react";
+import { MessageCircle, Minus, Plus } from "lucide-react";
 import { createOrderAction } from "@/server/actions/orders";
 import { startProductConversationAction } from "@/server/actions/chat";
 import { usdt } from "@/lib/format";
@@ -228,24 +228,6 @@ export function BuyBox({
         <MessageCircle className="size-4" />
         {chatBusy ? "Opening chat…" : "Chat with Seller"}
       </button>
-
-      {/* Trust row */}
-      <div className="grid grid-cols-2 gap-2 pt-1">
-        {[
-          { icon: ShieldCheck, label: "Buyer Protected" },
-          { icon: Zap, label: "Secure Checkout" },
-          { icon: Lock, label: "USDT Payment" },
-          { icon: ShieldCheck, label: "Dispute Coverage" },
-        ].map((t) => (
-          <div
-            key={t.label}
-            className="flex items-center gap-1.5 text-[10px] text-muted-foreground"
-          >
-            <t.icon className="size-3 text-primary shrink-0" />
-            {t.label}
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
