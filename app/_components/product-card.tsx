@@ -15,21 +15,29 @@ export function ProductCard({ product, priority }: { product: PublicProduct; pri
     auto && !outOfStock && product.stock_count > 0 && product.stock_count <= lowStock;
 
   return (
-    <Link
-      href={`/p/${product.slug}`}
-      className="group relative flex flex-col bg-card border border-border rounded-2xl overflow-hidden card-hover"
-    >
-      {/* Wishlist button */}
+    /* Outer wrapper is a div so we can place a Link + a button as siblings */
+    <div className="group relative flex flex-col bg-card border border-border rounded-2xl overflow-hidden card-hover">
+      {/* Full-card link overlay — sits below the wishlist button in z-order */}
+      <Link
+        href={`/p/${product.slug}`}
+        className="absolute inset-0 z-0"
+        aria-label={product.title}
+      />
+
+      {/* Wishlist button — z-10 so it sits above the link overlay */}
       <button
         aria-label="Add to wishlist"
-        onClick={(e) => e.preventDefault()}
+        onClick={(e) => {
+          e.stopPropagation();
+          /* TODO: wire to favorites API */
+        }}
         className="absolute top-2.5 right-2.5 z-10 size-7 rounded-full glass flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:scale-110 active:scale-95"
       >
         <Heart className="size-3.5 text-foreground/70 hover:text-red-400 transition-colors" />
       </button>
 
       {/* Image */}
-      <div className="aspect-[16/10] bg-secondary overflow-hidden relative shrink-0">
+      <div className="aspect-[16/10] bg-secondary overflow-hidden relative shrink-0 pointer-events-none">
         <Image
           src={productImage(product.image_key)}
           alt={product.title}
@@ -39,7 +47,7 @@ export function ProductCard({ product, priority }: { product: PublicProduct; pri
           className={`object-cover transition-transform duration-500 group-hover:scale-105 ${outOfStock ? "opacity-40 grayscale" : "opacity-85 group-hover:opacity-100"}`}
         />
 
-        {/* Gradient overlay for better text legibility */}
+        {/* Gradient overlay */}
         <div
           className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent"
           aria-hidden
@@ -75,8 +83,8 @@ export function ProductCard({ product, priority }: { product: PublicProduct; pri
         )}
       </div>
 
-      {/* Body */}
-      <div className="p-3.5 flex flex-col flex-1 gap-2.5">
+      {/* Body — pointer-events-none so clicks fall through to the link overlay */}
+      <div className="p-3.5 flex flex-col flex-1 gap-2.5 pointer-events-none">
         <h3 className="text-[13px] font-semibold leading-snug line-clamp-2 text-foreground/85 group-hover:text-foreground transition-colors">
           {product.title}
         </h3>
@@ -84,7 +92,6 @@ export function ProductCard({ product, priority }: { product: PublicProduct; pri
         <div className="mt-auto flex items-end justify-between gap-2">
           {/* Seller info */}
           <div className="flex items-center gap-2 min-w-0">
-            {/* Seller avatar */}
             <div className="size-6 rounded-md bg-primary/15 border border-primary/25 grid place-items-center shrink-0 text-[9px] font-bold text-primary uppercase">
               {product.seller.username.slice(0, 2)}
             </div>
@@ -115,11 +122,11 @@ export function ProductCard({ product, priority }: { product: PublicProduct; pri
         </div>
       </div>
 
-      {/* Bottom glow accent on hover */}
+      {/* Bottom glow on hover */}
       <div
-        className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-transparent via-primary/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-transparent via-primary/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
         aria-hidden
       />
-    </Link>
+    </div>
   );
 }
