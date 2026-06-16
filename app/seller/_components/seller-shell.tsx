@@ -40,20 +40,20 @@ export function SellerShell({
   return (
     <PublicShell>
       <div className="space-y-4">
-        <div className="flex gap-1 overflow-x-auto no-scrollbar border-b border-border pb-2">
+        <div className="flex gap-1 overflow-x-auto no-scrollbar border-b border-border/60 pb-2">
           {NAV.map((n) => {
             const active = n.exact ? pathname === n.href : pathname.startsWith(n.href);
             return (
               <Link
                 key={n.href}
                 href={n.href}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-bold whitespace-nowrap ${
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-semibold whitespace-nowrap transition-all ${
                   active
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-secondary hover:bg-border text-foreground"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/70"
                 }`}
               >
-                <n.icon className="size-3.5" /> {n.label}
+                <n.icon className="size-3.5 shrink-0" /> {n.label}
               </Link>
             );
           })}

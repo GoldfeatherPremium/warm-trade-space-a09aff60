@@ -41,11 +41,11 @@ export function AuthForm({ redirectTo }: { redirectTo: string }) {
   }
 
   const inputCls =
-    "w-full bg-background border border-border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50";
+    "w-full bg-background border border-border/70 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition-colors";
 
   return (
-    <div className="bg-card border border-border rounded-lg p-6 space-y-5">
-      <div className="flex gap-1 bg-secondary rounded-lg p-1">
+    <div className="bg-card border border-border/60 rounded-2xl p-6 space-y-5 shadow-elev">
+      <div className="flex gap-1 bg-secondary/70 rounded-xl p-1">
         {(["login", "register"] as const).map((m) => (
           <button
             key={m}
@@ -54,8 +54,10 @@ export function AuthForm({ redirectTo }: { redirectTo: string }) {
               setMode(m);
               setError(null);
             }}
-            className={`flex-1 text-xs font-bold py-2 rounded-md tracking-wide transition-colors ${
-              mode === m ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+            className={`flex-1 text-xs font-bold py-2.5 rounded-lg tracking-wide transition-all ${
+              mode === m
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {m === "login" ? "SIGN IN" : "CREATE ACCOUNT"}
@@ -112,7 +114,8 @@ export function AuthForm({ redirectTo }: { redirectTo: string }) {
         <button
           type="submit"
           disabled={busy}
-          className="w-full bg-primary text-primary-foreground text-xs font-bold tracking-widest py-2.5 rounded-md hover:opacity-90 disabled:opacity-60"
+          className="w-full text-primary-foreground text-xs font-bold tracking-widest py-3 rounded-xl hover:opacity-90 disabled:opacity-60 transition-opacity shadow-glow"
+          style={{ background: "var(--gradient-primary)" }}
         >
           {busy ? "PLEASE WAIT…" : mode === "login" ? "SIGN IN" : "CREATE ACCOUNT"}
         </button>

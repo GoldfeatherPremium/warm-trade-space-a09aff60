@@ -146,7 +146,7 @@ function ControlHeader({ onOpenCmd }: { onOpenCmd: () => void }) {
     : [];
 
   return (
-    <div className="rounded-xl border border-border bg-gradient-to-br from-card via-card to-secondary/40 p-4 space-y-3">
+    <div className="rounded-2xl border border-border/60 bg-gradient-to-br from-card via-card to-secondary/30 p-5 space-y-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <p className="text-[10px] font-bold tracking-[0.25em] text-muted-foreground">
@@ -156,7 +156,7 @@ function ControlHeader({ onOpenCmd }: { onOpenCmd: () => void }) {
         </div>
         <button
           onClick={onOpenCmd}
-          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-secondary hover:bg-border text-xs font-bold"
+          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-secondary/70 hover:bg-secondary text-xs font-bold transition-colors border border-border/60"
         >
           <span>Quick jump</span>
           <kbd className="text-[9px] px-1.5 py-0.5 rounded bg-background border border-border">
@@ -172,12 +172,12 @@ function ControlHeader({ onOpenCmd }: { onOpenCmd: () => void }) {
           : pills.map((p) => (
               <div
                 key={p.label}
-                className={`rounded-md border px-2.5 py-1.5 ${
+                className={`rounded-xl border px-2.5 py-2 transition-colors ${
                   p.tone === "alert"
                     ? "border-destructive/50 bg-destructive/10"
                     : p.tone === "warn"
                       ? "border-warning/40 bg-warning/5"
-                      : "border-border bg-background/40"
+                      : "border-border/60 bg-secondary/40"
                 }`}
               >
                 <p className="text-[9px] font-bold tracking-widest text-muted-foreground truncate">
@@ -206,10 +206,10 @@ function GroupedNav({ pathname }: { pathname: string }) {
                 <Link
                   key={n.to}
                   href={n.to}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-bold whitespace-nowrap transition ${
+                  className={`px-3 py-1.5 rounded-xl text-[11px] font-semibold whitespace-nowrap transition-all ${
                     active
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-secondary hover:bg-border text-foreground"
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/70"
                   }`}
                 >
                   {n.label}

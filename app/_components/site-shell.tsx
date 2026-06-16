@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, Zap, Lock, ArrowRight } from "lucide-react";
 import { SmartSearchBox } from "./smart-search-box";
 import { AccountNav } from "./account-nav";
 import { CategoryBar } from "./category-bar";
@@ -8,45 +8,45 @@ import { BottomNav } from "./bottom-nav";
 
 function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 bg-background border-b border-border/60">
-      <div className="max-w-6xl mx-auto px-4 h-14 flex items-center gap-3">
+    <header className="sticky top-0 z-40 glass border-x-0 border-t-0">
+      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center gap-4">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 shrink-0 mr-1">
-          <div className="size-7 rounded-lg grid place-items-center bg-primary/15 border border-primary/30">
-            <ShieldCheck className="size-4 text-primary" />
+        <Link href="/" className="flex items-center gap-2.5 shrink-0 mr-2 group">
+          <div className="size-8 rounded-xl grid place-items-center bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/30 shadow-[0_0_12px_-4px_var(--color-primary)] transition-shadow group-hover:shadow-[0_0_20px_-4px_var(--color-primary)]">
+            <ShieldCheck className="size-4.5 text-primary" />
           </div>
           <span className="font-display text-lg tracking-tight">X-VAULT</span>
         </Link>
 
         {/* Primary nav */}
-        <nav className="hidden md:flex items-center gap-1 text-xs font-medium text-muted-foreground">
+        <nav className="hidden md:flex items-center gap-0.5 text-[13px] font-medium text-muted-foreground">
           <Link
             href="/browse"
-            className="px-3 py-1.5 rounded-md hover:bg-secondary/80 hover:text-foreground transition-colors"
+            className="px-3 py-1.5 rounded-lg hover:bg-secondary/80 hover:text-foreground transition-colors"
           >
             Browse
           </Link>
           <Link
             href="/sellers"
-            className="px-3 py-1.5 rounded-md hover:bg-secondary/80 hover:text-foreground transition-colors"
+            className="px-3 py-1.5 rounded-lg hover:bg-secondary/80 hover:text-foreground transition-colors"
           >
             Sellers
           </Link>
           <Link
             href="/sell"
-            className="px-3 py-1.5 rounded-md hover:bg-secondary/80 hover:text-foreground transition-colors"
+            className="px-3 py-1.5 rounded-lg hover:bg-secondary/80 hover:text-foreground transition-colors"
           >
             Sell
           </Link>
         </nav>
 
-        {/* Search */}
-        <div className="flex-1 max-w-sm hidden sm:block mx-2">
+        {/* Search — centered */}
+        <div className="flex-1 max-w-md hidden sm:block mx-2">
           <SmartSearchBox />
         </div>
 
-        {/* Dark mode toggle + account actions */}
-        <div className="ml-auto sm:ml-0 flex items-center gap-1">
+        {/* Right actions */}
+        <div className="ml-auto sm:ml-0 flex items-center gap-1.5">
           <ThemeToggle />
           <AccountNav />
         </div>
@@ -55,21 +55,23 @@ function SiteHeader() {
   );
 }
 
-const FOOTER_SECTIONS: Array<{ heading: string; links: Array<{ label: string; href: string }> }> = [
+const FOOTER_SECTIONS = [
   {
     heading: "Marketplace",
     links: [
       { label: "Browse listings", href: "/browse" },
       { label: "Top sellers", href: "/sellers" },
       { label: "Become a seller", href: "/sell" },
+      { label: "Trending products", href: "/browse?sort=popular" },
     ],
   },
   {
-    heading: "Trust & safety",
+    heading: "Trust & Safety",
     links: [
       { label: "Buyer protection", href: "/legal/buyer-protection" },
-      { label: "How it works", href: "/legal/escrow" },
+      { label: "How escrow works", href: "/legal/escrow" },
       { label: "Prohibited items", href: "/legal/prohibited" },
+      { label: "Dispute process", href: "/legal/buyer-protection#disputes" },
     ],
   },
   {
@@ -78,6 +80,7 @@ const FOOTER_SECTIONS: Array<{ heading: string; links: Array<{ label: string; hr
       { label: "Fees & commissions", href: "/legal/fees" },
       { label: "Credits & refunds", href: "/legal/credits" },
       { label: "Payouts & withdrawals", href: "/legal/payouts" },
+      { label: "USDT payments", href: "/legal/credits" },
     ],
   },
   {
@@ -91,20 +94,48 @@ const FOOTER_SECTIONS: Array<{ heading: string; links: Array<{ label: string; hr
   },
 ];
 
+const TRUST_BADGES = [
+  { icon: ShieldCheck, label: "Buyer Protected" },
+  { icon: Zap, label: "Instant Delivery" },
+  { icon: Lock, label: "Escrow Secured" },
+];
+
 function SiteFooter() {
   return (
-    <footer className="border-t border-border/60 bg-card/40 px-4 py-12 mt-16">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center gap-2 mb-8">
-          <div className="size-7 rounded-lg grid place-items-center bg-primary/15 border border-primary/30">
-            <ShieldCheck className="size-4 text-primary" />
-          </div>
-          <span className="font-display text-xl">X-VAULT</span>
+    <footer className="border-t border-border/60 bg-card/30 backdrop-blur-sm mt-20">
+      {/* Trust belt */}
+      <div className="border-b border-border/50">
+        <div className="max-w-7xl mx-auto px-4 py-5 flex flex-wrap items-center justify-center gap-6 sm:gap-10">
+          {TRUST_BADGES.map(({ icon: Icon, label }) => (
+            <div key={label} className="flex items-center gap-2 text-muted-foreground text-sm">
+              <Icon className="size-4 text-primary" />
+              <span className="font-medium">{label}</span>
+            </div>
+          ))}
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-sm mb-10">
+      </div>
+
+      {/* Main grid */}
+      <div className="max-w-7xl mx-auto px-4 py-12">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
+          {/* Brand column */}
+          <div className="col-span-2 md:col-span-1">
+            <Link href="/" className="flex items-center gap-2.5 mb-4 group">
+              <div className="size-8 rounded-xl grid place-items-center bg-primary/15 border border-primary/30">
+                <ShieldCheck className="size-4 text-primary" />
+              </div>
+              <span className="font-display text-lg">X-VAULT</span>
+            </Link>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              The premium digital goods marketplace. Buyer-protected, USDT-powered, instant
+              delivery.
+            </p>
+          </div>
+
+          {/* Link columns */}
           {FOOTER_SECTIONS.map((s) => (
-            <div key={s.heading} className="space-y-3">
-              <h4 className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase">
+            <div key={s.heading}>
+              <h4 className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase mb-3">
                 {s.heading}
               </h4>
               <ul className="space-y-2">
@@ -112,7 +143,7 @@ function SiteFooter() {
                   <li key={l.href}>
                     <Link
                       href={l.href}
-                      className="text-muted-foreground hover:text-foreground transition-colors text-xs"
+                      className="text-muted-foreground hover:text-foreground transition-colors text-xs leading-relaxed"
                     >
                       {l.label}
                     </Link>
@@ -122,12 +153,31 @@ function SiteFooter() {
             </div>
           ))}
         </div>
+
+        {/* CTA banner */}
+        <div className="rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/8 to-accent/5 p-5 sm:p-6 mb-8 flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
+          <div>
+            <p className="text-sm font-semibold mb-0.5">Ready to start selling?</p>
+            <p className="text-xs text-muted-foreground">
+              Join 48,000+ verified sellers on X-VAULT.
+            </p>
+          </div>
+          <Link
+            href="/sell"
+            className="inline-flex items-center gap-2 text-xs font-bold tracking-widest px-4 py-2.5 rounded-lg text-primary-foreground shrink-0"
+            style={{ background: "var(--gradient-primary)" }}
+          >
+            START SELLING <ArrowRight className="size-3.5" />
+          </Link>
+        </div>
+
+        {/* Bottom bar */}
         <div className="border-t border-border/60 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-[11px] text-muted-foreground">
-            © 2026 X-VAULT MARKETPLACE · Buyer-protected digital goods
+            © 2026 X-VAULT MARKETPLACE · All rights reserved
           </p>
           <p className="text-[11px] text-muted-foreground text-center">
-            All chats are monitored — never share personal info off-platform.
+            Never share personal info off-platform · All chats are monitored
           </p>
         </div>
       </div>
@@ -140,7 +190,7 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-dvh bg-background text-foreground flex flex-col">
       <SiteHeader />
       <CategoryBar />
-      <main className="flex-1 w-full max-w-6xl mx-auto px-4 py-6">{children}</main>
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-6">{children}</main>
       <SiteFooter />
       <BottomNav />
     </div>
