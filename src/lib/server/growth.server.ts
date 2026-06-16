@@ -34,14 +34,18 @@ export async function maybePayoutReferralForOrder(
     [attr.referral_id],
   );
   if (!ref) return;
+  // Idempotency: wallet_ledger has columns (user_id, order_id, type), NOT
+  // (ref_id, kind). The previous query referenced non-existent columns, so it
+  // either threw or never matched — risking a duplicate payout on every release
+  // of the same order. Match the real schema and the order_id recorded below.
   const already = await q1(
-    `select 1 from wallet_ledger where user_id = ? and ref_id = ? and kind = 'adjustment'`,
+    `select 1 from wallet_ledger where user_id = ? and order_id = ? and type = 'adjustment'`,
     [ref.owner_user_id, orderId],
   );
   if (already) return;
   const payout = Math.floor((orderTotalCents * ref.commission_pct) / 100);
   if (payout <= 0) return;
-  await txAdjustment(ref.owner_user_id, payout, `Affiliate commission · ${orderId}`);
+  await txAdjustment(ref.owner_user_id, payout, `Affiliate commission · ${orderId}`, orderId);
   await run(
     `update referrals set purchase_count = purchase_count + 1, earnings_cents = earnings_cents + ? where id = ?`,
     [payout, ref.id],

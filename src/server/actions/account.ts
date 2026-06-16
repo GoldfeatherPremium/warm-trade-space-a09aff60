@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { q, q1, run } from "@/lib/server/db.server";
 import { appContext } from "@/lib/server/app.server";
-import { decryptStock, now } from "@/lib/server/core.server";
+import { decryptStock, hashPassword, now, verifyPassword } from "@/lib/server/core.server";
 import { requireUser } from "../auth";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
@@ -16,20 +16,22 @@ export async function updateProfileAction(input: {
   try {
     await appContext();
     const user = await requireUser();
-    const { createHash } = await import("node:crypto");
-    const hash = (p: string) => createHash("sha256").update(p).digest("hex");
 
     if (input.newPassword) {
       if (!input.currentPassword) return { ok: false, error: "Current password required." };
+      if (input.newPassword.length < 8)
+        return { ok: false, error: "New password must be at least 8 characters." };
       const row = await q1<{ password_hash: string }>(
         `select password_hash from users where id = ?`,
         [user.id],
       );
-      if (!row || row.password_hash !== hash(input.currentPassword))
+      // scrypt+salt verification — must match how register/login hash passwords
+      // (core.server.hashPassword). Previously used unsalted SHA-256, which both
+      // weakened security and never matched the stored scrypt hash.
+      if (!row || !verifyPassword(input.currentPassword, row.password_hash))
         return { ok: false, error: "Current password is incorrect." };
-      await run(`update users set password_hash = ?, updated_at = ? where id = ?`, [
-        hash(input.newPassword),
-        now(),
+      await run(`update users set password_hash = ? where id = ?`, [
+        hashPassword(input.newPassword),
         user.id,
       ]);
     }
@@ -40,11 +42,7 @@ export async function updateProfileAction(input: {
         [input.username, user.id],
       );
       if (taken) return { ok: false, error: "Username already taken." };
-      await run(`update users set username = ?, updated_at = ? where id = ?`, [
-        input.username,
-        now(),
-        user.id,
-      ]);
+      await run(`update users set username = ? where id = ?`, [input.username, user.id]);
     }
 
     return { ok: true };
@@ -61,10 +59,12 @@ export async function updatePreferencesAction(input: {
   try {
     await appContext();
     const user = await requireUser();
-    await run(
-      `update users set locale = ?, preferred_currency = ?, country = ?, updated_at = ? where id = ?`,
-      [input.locale, input.preferred_currency, input.country || null, now(), user.id],
-    );
+    await run(`update users set locale = ?, preferred_currency = ?, country = ? where id = ?`, [
+      input.locale,
+      input.preferred_currency,
+      input.country || null,
+      user.id,
+    ]);
     return { ok: true };
   } catch (e) {
     return { ok: false, error: (e as Error).message };
