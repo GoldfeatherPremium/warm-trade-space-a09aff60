@@ -130,6 +130,42 @@ async function makePgClient(): Promise<PgSql> {
   }) as unknown as PgSql;
 }
 
+// Advisory-lock keys (arbitrary but stable) used to serialize one-time boot
+// work — schema migration and the demo seed — across concurrent isolates and
+// build workers that all point at the same Postgres database.
+const MIGRATION_LOCK_KEY = 4927_310_001;
+export const SEED_LOCK_KEY = 4927_310_002;
+
+/**
+ * Run `fn` while holding a Postgres session-level advisory lock so that only
+ * one connection — across every serverless isolate, build worker, or process
+ * sharing this database — executes it at a time. This makes the otherwise
+ * racy `create table if not exists` / `create extension` DDL in migrate() and
+ * the demo seed concurrency-safe: parallel callers block until the holder
+ * commits, then re-check their sentinel and skip the work.
+ *
+ * On SQLite there is a single in-process connection, so callers are already
+ * serialized and this is a passthrough.
+ */
+export async function withBootLock<T>(key: number, fn: () => Promise<T>): Promise<T> {
+  if (!isPostgres()) return fn();
+  // Dedicated single connection: an advisory lock is tied to the session that
+  // took it, so the same client must release it.
+  const { default: postgres } = await import("postgres");
+  const sql = postgres(process.env.DATABASE_URL!, {
+    max: 1,
+    prepare: false,
+    idle_timeout: 5,
+  }) as unknown as PgSql;
+  try {
+    await sql.unsafe(`select pg_advisory_lock($1)`, [key]);
+    return await fn();
+  } finally {
+    await sql.unsafe(`select pg_advisory_unlock($1)`, [key]).catch(() => {});
+    await sql.end({ timeout: 1 }).catch(() => {});
+  }
+}
+
 async function getPgClient(): Promise<{ sql: PgSql; oneShot: boolean }> {
   const tx = pgTxStore.getStore();
   if (tx) return { sql: tx, oneShot: false };
@@ -239,7 +275,14 @@ async function getEngine(): Promise<Engine> {
   }
   if (isPostgres()) {
     if (!migratedFlag) {
-      if (!(await schemaAlreadyMigrated(engine))) await migrate(engine);
+      const e = engine;
+      // Serialize across isolates/build workers: concurrent `create table if
+      // not exists` on Postgres races on pg_type and throws
+      // "duplicate key value violates unique constraint pg_type_typname_nsp_index".
+      // The lock holder migrates; everyone else re-checks the sentinel and skips.
+      await withBootLock(MIGRATION_LOCK_KEY, async () => {
+        if (!(await schemaAlreadyMigrated(e))) await migrate(e);
+      });
       migratedFlag = true;
     }
   } else {

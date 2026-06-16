@@ -1,4 +1,4 @@
-import { q, q1, run, tx } from "./db.server";
+import { q, q1, run, tx, withBootLock, SEED_LOCK_KEY } from "./db.server";
 import { encryptStock, hashPassword, now, sha256, slugify, uid } from "./core.server";
 import { BASE_CATEGORIES } from "./categories.server";
 
@@ -13,13 +13,18 @@ import { BASE_CATEGORIES } from "./categories.server";
  *   buyer@xvault.test    — regular buyer
  */
 export async function seedIfEmpty(): Promise<void> {
-  const hasUsers = await q1(`select 1 as x from users limit 1`);
-  if (hasUsers) return;
+  // Serialize across isolates: without this, two concurrent cold starts both
+  // observe an empty table and both insert the demo accounts, colliding on the
+  // unique email/username and throwing. The lock holder seeds; the next caller
+  // re-checks and finds the rows already present.
+  await withBootLock(SEED_LOCK_KEY, async () => {
+    const hasUsers = await q1(`select 1 as x from users limit 1`);
+    if (hasUsers) return;
 
-  const t = now();
-  const pw = hashPassword("Password123!");
+    const t = now();
+    const pw = hashPassword("Password123!");
 
-  await tx(async () => {
+    await tx(async () => {
     const mkUser = async (
       email: string,
       username: string,
@@ -317,5 +322,6 @@ export async function seedIfEmpty(): Promise<void> {
         );
       }
     }
+    });
   });
 }
