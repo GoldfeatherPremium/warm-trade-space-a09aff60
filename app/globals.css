@@ -36,12 +36,77 @@
 }
 
 /*
- * Premium Dark Luxury — deep black canvas, electric-purple primary,
- * indigo/blue secondary. Tuned for an expensive, trustworthy, enterprise
- * marketplace feel (Apple × Stripe × Vercel × Linear).
+ * Dual premium theme system.
+ *
+ *   :root  → Premium Light — Stripe × Notion × Apple. Clean whites, soft
+ *            grays, violet accents, crisp shadows. "Fintech-grade trust."
+ *   .dark  → Premium Dark Luxury — Linear × Raycast × Vercel × Arc. Near-black
+ *            canvas, electric-violet glow, glassmorphism. "Cyber luxury."
+ *
+ * Both carry the FULL token set (surfaces, gradients, glass, shadows) so
+ * neither theme inherits the other's atmosphere. Every component reads tokens,
+ * so switching the `.dark` class on <html> retints the entire app instantly.
  */
 :root {
   --radius: 0.75rem;
+  color-scheme: light;
+
+  /* Surfaces — clean white with a whisper of violet */
+  --background: oklch(0.985 0.003 290);
+  --foreground: oklch(0.18 0.02 290);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.02 290);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.02 290);
+
+  /* Electric violet primary — darkened for AA contrast on white */
+  --primary: oklch(0.54 0.245 296);
+  --primary-foreground: oklch(0.99 0 0);
+  --primary-glow: oklch(0.62 0.247 296);
+
+  --secondary: oklch(0.955 0.008 290);
+  --secondary-foreground: oklch(0.25 0.02 290);
+  --muted: oklch(0.965 0.006 290);
+  --muted-foreground: oklch(0.5 0.022 290);
+
+  /* Indigo / blue accent (prices, highlights) */
+  --accent: oklch(0.52 0.18 262);
+  --accent-foreground: oklch(0.99 0 0);
+
+  --destructive: oklch(0.57 0.235 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --success: oklch(0.58 0.16 158);
+
+  --border: oklch(0.91 0.006 290);
+  --input: oklch(0.91 0.006 290);
+  --ring: oklch(0.54 0.245 296);
+
+  /* Glass surface used by header, sticky cards, overlays */
+  --glass-bg: oklch(1 0 0 / 0.7);
+  --glass-border: oklch(0.2 0.02 290 / 0.08);
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, oklch(0.55 0.25 298), oklch(0.54 0.19 258));
+  --gradient-hero: radial-gradient(
+    120% 120% at 50% -10%,
+    oklch(0.93 0.045 292) 0%,
+    oklch(0.97 0.012 290) 45%,
+    oklch(0.985 0.003 290) 100%
+  );
+  --gradient-aurora:
+    radial-gradient(48% 60% at 12% 0%, oklch(0.6 0.247 296 / 0.13), transparent 62%),
+    radial-gradient(42% 55% at 92% 12%, oklch(0.6 0.17 262 / 0.1), transparent 60%),
+    radial-gradient(38% 50% at 60% 100%, oklch(0.6 0.2 286 / 0.07), transparent 60%);
+  --gradient-text: linear-gradient(120deg, oklch(0.24 0.03 290), oklch(0.5 0.2 296));
+
+  /* Shadows */
+  --shadow-glow: 0 24px 70px -24px oklch(0.54 0.245 296 / 0.28);
+  --shadow-card: 0 8px 30px -16px oklch(0.3 0.05 290 / 0.16);
+  --shadow-elev: 0 20px 50px -24px oklch(0.3 0.05 290 / 0.2);
+}
+
+.dark {
+  color-scheme: dark;
 
   /* Surfaces — near-black with a faint cool-violet tint */
   --background: oklch(0.06 0.008 290);
@@ -95,28 +160,6 @@
   --shadow-glow: 0 24px 70px -24px oklch(0.62 0.247 296 / 0.55);
   --shadow-card: 0 8px 30px -12px oklch(0 0 0 / 0.6);
   --shadow-elev: 0 20px 50px -20px oklch(0 0 0 / 0.7);
-}
-
-.dark {
-  --background: oklch(0.06 0.008 290);
-  --foreground: oklch(0.97 0.004 290);
-  --card: oklch(0.105 0.012 290);
-  --card-foreground: oklch(0.97 0.004 290);
-  --popover: oklch(0.1 0.012 290);
-  --popover-foreground: oklch(0.97 0.004 290);
-  --primary: oklch(0.62 0.247 296);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.15 0.018 290);
-  --secondary-foreground: oklch(0.97 0.004 290);
-  --muted: oklch(0.135 0.015 290);
-  --muted-foreground: oklch(0.66 0.022 290);
-  --accent: oklch(0.66 0.17 262);
-  --accent-foreground: oklch(0.99 0 0);
-  --destructive: oklch(0.63 0.245 22);
-  --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.2 0.02 290);
-  --input: oklch(0.2 0.02 290);
-  --ring: oklch(0.62 0.247 296);
 }
 
 @layer base {

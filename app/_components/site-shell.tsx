@@ -4,6 +4,7 @@ import { AccountNav } from "./account-nav";
 import { CategoryBar } from "./category-bar";
 import { BrandMark } from "./brand-mark";
 import { BottomNav } from "./bottom-nav";
+import { ThemeToggle } from "./theme-toggle";
 
 function SiteHeader() {
   return (
@@ -43,6 +44,7 @@ function SiteHeader() {
         </div>
 
         {/* Account actions */}
+        <ThemeToggle className="shrink-0" />
         <AccountNav />
       </div>
     </header>

@@ -51,12 +51,24 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image" },
 };
 
+/**
+ * FOUC-free theme boot. Runs before first paint so the correct theme class is
+ * on <html> before the body renders — no flash, no hydration mismatch (paired
+ * with suppressHydrationWarning). Default is dark (the brand default); honors a
+ * stored preference and "system" follows prefers-color-scheme.
+ */
+const THEME_BOOT = `(function(){try{var t=localStorage.getItem('theme');var sys=window.matchMedia('(prefers-color-scheme: dark)').matches;var dark=t==='light'?false:t==='dark'?true:t==='system'?sys:true;var el=document.documentElement;el.classList.toggle('dark',dark);el.style.colorScheme=dark?'dark':'light';}catch(e){document.documentElement.classList.add('dark');}})();`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
-      className={`dark ${archivoBlack.variable} ${inter.variable} ${jetbrainsMono.variable}`}
+      suppressHydrationWarning
+      className={`${archivoBlack.variable} ${inter.variable} ${jetbrainsMono.variable}`}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
+      </head>
       <body>
         <LiveUpdatesProvider>
           {children}
