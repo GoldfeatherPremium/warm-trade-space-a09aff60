@@ -186,6 +186,17 @@ export async function createOrderAction(input: z.infer<typeof createSchema>): Pr
         });
         discount = Math.round((grossTotal * coupon.pct_off) / 100);
         couponCode = coupon.code;
+        // Per-user cap: one redemption per buyer. The select covers the common
+        // case; the coupon_redemptions PK (coupon_id, user_id) is the race-safe
+        // backstop — a concurrent second use throws and rolls back the order.
+        const usedBefore = await q1(
+          `select 1 as x from coupon_redemptions where coupon_id = ? and user_id = ?`,
+          [coupon.id, user.id],
+        );
+        if (usedBefore) {
+          stockError = "You have already used this coupon.";
+          throw new Error(stockError);
+        }
         const claimed = await q<{ id: string }>(
           `update coupons set used_count = used_count + 1
              where id = ? and (max_uses = 0 or used_count < max_uses) returning id`,
@@ -195,6 +206,10 @@ export async function createOrderAction(input: z.infer<typeof createSchema>): Pr
           stockError = "This coupon has been fully redeemed.";
           throw new Error(stockError);
         }
+        await run(
+          `insert into coupon_redemptions (coupon_id, user_id, order_id, created_at) values (?,?,?,?)`,
+          [coupon.id, user.id, orderId, t],
+        );
       }
       const total = grossTotal - discount;
       const commissionPct = p.cat_commission;

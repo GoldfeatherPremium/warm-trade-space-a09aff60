@@ -62,12 +62,14 @@ export function txEscrowRelease(
   orderNo: string,
 ) {
   return tx(async () => {
-    const w = await getWallet(sellerId);
-    if (w.pending_cents < netCents) fail(`Escrow inconsistency on order ${orderNo}`);
-    await run(
-      `update wallets set pending_cents = pending_cents - ?, available_cents = available_cents + ? where user_id = ?`,
-      [netCents, netCents, sellerId],
+    await getWallet(sellerId);
+    // Atomic guarded move: only release if enough is actually in escrow.
+    const moved = await q<{ user_id: string }>(
+      `update wallets set pending_cents = pending_cents - ?, available_cents = available_cents + ?
+       where user_id = ? and pending_cents >= ? returning user_id`,
+      [netCents, netCents, sellerId, netCents],
     );
+    if (moved.length === 0) fail(`Escrow inconsistency on order ${orderNo}`);
     await writeLedger(
       sellerId,
       orderId,
@@ -100,12 +102,14 @@ export function txRefund(
   orderNo: string,
 ) {
   return tx(async () => {
-    const w = await getWallet(sellerId);
-    if (w.pending_cents < originalNetCents) fail(`Escrow inconsistency on order ${orderNo}`);
-    await run(`update wallets set pending_cents = pending_cents - ? where user_id = ?`, [
-      originalNetCents,
-      sellerId,
-    ]);
+    await getWallet(sellerId);
+    // Atomic guarded reversal: only reverse if the escrow hold is still present.
+    const reversed = await q<{ user_id: string }>(
+      `update wallets set pending_cents = pending_cents - ?
+       where user_id = ? and pending_cents >= ? returning user_id`,
+      [originalNetCents, sellerId, originalNetCents],
+    );
+    if (reversed.length === 0) fail(`Escrow inconsistency on order ${orderNo}`);
     await writeLedger(
       sellerId,
       orderId,
@@ -308,12 +312,14 @@ export function txRefundToCredits(
   orderNo: string,
 ) {
   return tx(async () => {
-    const w = await getWallet(sellerId);
-    if (w.pending_cents < originalNetCents) fail(`Escrow inconsistency on order ${orderNo}`);
-    await run(`update wallets set pending_cents = pending_cents - ? where user_id = ?`, [
-      originalNetCents,
-      sellerId,
-    ]);
+    await getWallet(sellerId);
+    // Atomic guarded reversal: only reverse if the escrow hold is still present.
+    const reversed = await q<{ user_id: string }>(
+      `update wallets set pending_cents = pending_cents - ?
+       where user_id = ? and pending_cents >= ? returning user_id`,
+      [originalNetCents, sellerId, originalNetCents],
+    );
+    if (reversed.length === 0) fail(`Escrow inconsistency on order ${orderNo}`);
     await writeLedger(
       sellerId,
       orderId,

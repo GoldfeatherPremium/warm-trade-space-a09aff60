@@ -153,10 +153,13 @@ async function makePgClient(): Promise<PgSql> {
   const { default: postgres } = await import("postgres");
   const numericOids = [20, 1700];
   return postgres(process.env.DATABASE_URL!, {
-    max: 5,
+    // Sized for a transaction-mode pooler (PgBouncer / Neon / Supabase pooler).
+    // max:5 was too low for the target order volume; idle/lifetime were short
+    // enough to churn TCP+TLS on steady load. Tune `max` to the pooler's budget.
+    max: 20,
     prepare: false,
-    idle_timeout: 5,
-    max_lifetime: 60,
+    idle_timeout: 30,
+    max_lifetime: 300,
     types: Object.fromEntries(
       numericOids.map((oid) => [
         `num${oid}`,
@@ -1290,6 +1293,36 @@ async function migrate(e: Engine): Promise<void> {
         .catch(() => {});
     }
   }
+
+  // --- Audit phase 2: missing hot-path indexes (DATABASE_AUDIT §2) ---
+  await e
+    .exec(`create index if not exists idx_withdrawals_user on withdrawals(user_id, created_at)`)
+    .catch(() => {});
+  await e
+    .exec(`create index if not exists idx_deposits_user on deposits(user_id, created_at)`)
+    .catch(() => {});
+  await e
+    .exec(`create index if not exists idx_subslots_buyer on subscription_slots(buyer_id)`)
+    .catch(() => {});
+  await e
+    .exec(
+      `create index if not exists idx_product_images_seller on product_images(seller_id, created_at)`,
+    )
+    .catch(() => {});
+
+  // --- Audit phase 2: per-user coupon redemption cap (FRAUD M3) ---
+  // PK (coupon_id, user_id) makes "one redemption per buyer" race-safe.
+  await e
+    .exec(
+      `create table if not exists coupon_redemptions (
+        coupon_id text not null,
+        user_id text not null,
+        order_id text,
+        created_at ${big} not null,
+        primary key (coupon_id, user_id)
+      )`,
+    )
+    .catch(() => {});
 
   // --- Payment methods registry ---
   // Foundation for offering multiple checkout rails. USDT is live today; the
