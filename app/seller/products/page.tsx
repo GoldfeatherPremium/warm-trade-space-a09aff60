@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus, Pause, Play, Boxes, Pencil } from "lucide-react";
@@ -90,11 +91,13 @@ export default function SellerProductsPage() {
                 key={p.id as string}
                 className="bg-card border border-border rounded-lg p-3 flex items-center gap-3"
               >
-                <div className="size-12 rounded-md overflow-hidden bg-secondary shrink-0">
-                  <img
+                <div className="size-12 rounded-md overflow-hidden bg-secondary shrink-0 relative">
+                  <Image
                     src={productImageNext(p.image_key as string | null)}
                     alt=""
-                    className="w-full h-full object-cover"
+                    fill
+                    sizes="48px"
+                    className="object-cover"
                   />
                 </div>
                 <div className="flex-1 min-w-0">

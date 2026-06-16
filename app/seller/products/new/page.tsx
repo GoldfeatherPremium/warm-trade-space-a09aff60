@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   AlertTriangle,
@@ -558,12 +559,12 @@ export default function NewProductPage() {
               key={id}
               className="relative size-20 rounded-md overflow-hidden border border-border"
             >
-              <img
+              <Image
                 src={`/api/public/img/${id}`}
                 alt=""
-                width={80}
-                height={80}
-                className="w-full h-full object-cover"
+                fill
+                sizes="80px"
+                className="object-cover"
               />
               <button
                 type="button"

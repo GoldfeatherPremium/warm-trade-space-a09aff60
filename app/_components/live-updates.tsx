@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 
 interface Counts {
@@ -150,7 +151,13 @@ export function PwaInstallBanner() {
 
   return (
     <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-80 z-50 bg-card border border-border rounded-xl p-4 shadow-2xl flex items-start gap-3 animate-in slide-in-from-bottom-4 duration-300">
-      <img src="/icon-192.png" alt="" className="size-10 rounded-xl shrink-0" />
+      <Image
+        src="/icon-192.png"
+        alt=""
+        width={40}
+        height={40}
+        className="size-10 rounded-xl shrink-0"
+      />
       <div className="flex-1 min-w-0">
         <p className="text-sm font-bold">Install X-VAULT</p>
         <p className="text-xs text-muted-foreground mt-0.5">Add to home screen for faster access</p>

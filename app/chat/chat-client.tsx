@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition, useCallback } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Send,
@@ -188,11 +189,13 @@ function ContextCard({ card }: { card: NonNullable<ConversationDetail>["card"] }
         className="flex items-center gap-3 px-4 py-2.5 bg-secondary/30 border-b border-border/50 hover:bg-secondary/50 transition-colors group"
       >
         {card.image_key != null && (
-          <div className="size-8 rounded-md overflow-hidden bg-secondary shrink-0">
-            <img
+          <div className="size-8 rounded-md overflow-hidden bg-secondary shrink-0 relative">
+            <Image
               src={productImage(String(card.image_key))}
               alt=""
-              className="w-full h-full object-cover"
+              fill
+              sizes="32px"
+              className="object-cover"
             />
           </div>
         )}
@@ -218,11 +221,13 @@ function ContextCard({ card }: { card: NonNullable<ConversationDetail>["card"] }
       className="flex items-center gap-3 px-4 py-2.5 bg-secondary/30 border-b border-border/50 hover:bg-secondary/50 transition-colors group"
     >
       {card.image_key != null && (
-        <div className="size-8 rounded-md overflow-hidden bg-secondary shrink-0">
-          <img
+        <div className="size-8 rounded-md overflow-hidden bg-secondary shrink-0 relative">
+          <Image
             src={productImage(String(card.image_key))}
             alt=""
-            className="w-full h-full object-cover"
+            fill
+            sizes="32px"
+            className="object-cover"
           />
         </div>
       )}
