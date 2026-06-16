@@ -4,7 +4,6 @@ import Link from "next/link";
 import React, { Suspense } from "react";
 import { notFound } from "next/navigation";
 import {
-  Star,
   Zap,
   Clock,
   ShieldCheck,
@@ -16,13 +15,19 @@ import {
   MessageSquare,
   TrendingUp,
   BadgeCheck,
-  RefreshCw,
 } from "lucide-react";
 import { getProductBySlug } from "@/server/queries/catalog";
 import { usdt, timeAgo } from "@/lib/format";
 import { PublicShell } from "../../_components/site-shell";
 import { productImage } from "../../_lib/product-image";
-import { SellerBadge } from "../../_components/seller-badge";
+import {
+  RatingStars,
+  PriceTag,
+  DeliveryBadge,
+  StockPill,
+  TrustStrip,
+  Stat,
+} from "../../_components/kit";
 import { BuyBox } from "./buy-box";
 import { RelatedProducts } from "./related-products";
 import { ViewBeacon } from "./view-beacon";
@@ -58,23 +63,7 @@ export async function generateMetadata({
   };
 }
 
-/** Star display: filled + half + empty. */
-function StarRow({ rating, count }: { rating: number; count: number }) {
-  return (
-    <div className="flex items-center gap-1.5">
-      <div className="flex items-center gap-0.5">
-        {[1, 2, 3, 4, 5].map((n) => (
-          <Star
-            key={n}
-            className={`size-3.5 ${n <= Math.round(rating) ? "fill-warning text-warning" : "text-border"}`}
-          />
-        ))}
-      </div>
-      <span className="text-xs font-bold">{rating > 0 ? rating.toFixed(1) : "—"}</span>
-      {count > 0 && <span className="text-[11px] text-muted-foreground">({count} reviews)</span>}
-    </div>
-  );
-}
+const VERIFIED = new Set(["verified", "business", "premium"]);
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -86,14 +75,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const imgSrc = productImage(product.image_key);
   const avgRating =
     reviews.length > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : 0;
-
-  // Star distribution for reviews
   const dist = [5, 4, 3, 2, 1].map((star) => ({
     star,
     count: reviews.filter((r) => r.rating === star).length,
   }));
+  const isVerified = VERIFIED.has(product.seller.verification_tier);
 
-  // JSON-LD
   const breadcrumbLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -137,9 +124,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       : {}),
   };
 
-  const VERIFIED = new Set(["verified", "business", "premium"]);
-  const isVerified = VERIFIED.has(product.seller.verification_tier);
-
   return (
     <PublicShell>
       <script
@@ -164,14 +148,15 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           {product.category_name}
         </Link>
         <ChevronRight className="size-3 shrink-0" />
-        <span className="text-foreground truncate max-w-[200px]">{product.title}</span>
+        <span className="text-foreground truncate max-w-[55vw] sm:max-w-[300px]">
+          {product.title}
+        </span>
       </nav>
 
-      {/* Main grid */}
       <div className="grid lg:grid-cols-[1fr_380px] gap-6 items-start">
-        {/* ── LEFT: image + info + reviews ── */}
+        {/* ── LEFT ── */}
         <div className="space-y-5 min-w-0">
-          {/* Product image */}
+          {/* Gallery */}
           <div className="relative aspect-[16/9] rounded-2xl overflow-hidden border border-border bg-secondary">
             <Image
               src={imgSrc}
@@ -181,28 +166,23 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               sizes="(max-width: 1024px) 100vw, 55vw"
               className={`object-cover transition-opacity ${outOfStock ? "opacity-50" : ""}`}
             />
-            {/* Overlay badges */}
-            <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-              {outOfStock ? (
-                <span className="text-[10px] font-bold px-2 py-1 rounded-md bg-secondary/90 text-muted-foreground">
-                  SOLD OUT
-                </span>
-              ) : auto ? (
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-md bg-primary text-primary-foreground">
-                  <Zap className="size-3" /> INSTANT DELIVERY
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-md bg-accent text-accent-foreground">
-                  <Clock className="size-3" /> ~{product.delivery_sla_minutes}min
-                </span>
-              )}
+            <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
+              <DeliveryBadge
+                deliveryType={product.delivery_type}
+                slaMinutes={product.delivery_sla_minutes}
+                className="bg-background/85 backdrop-blur-sm"
+              />
+              <StockPill
+                deliveryType={product.delivery_type}
+                stockCount={product.stock_count}
+                className="bg-background/85 backdrop-blur-sm"
+              />
               {product.is_promoted && (
-                <span className="text-[10px] font-bold px-2 py-1 rounded-md bg-accent text-accent-foreground">
-                  FEATURED
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-warning/90 text-warning-foreground">
+                  Featured
                 </span>
               )}
             </div>
-            {/* Category pill bottom-right */}
             <div className="absolute bottom-3 right-3">
               <Link
                 href={`/browse?category=${product.category_slug}`}
@@ -213,7 +193,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </div>
           </div>
 
-          {/* Key highlights */}
+          {/* Highlights */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
             <Highlight
               icon={auto ? Zap : Clock}
@@ -255,15 +235,15 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           </div>
 
           {/* Description */}
-          <div className="bg-card border border-border rounded-xl p-5">
+          <section className="bg-card border border-border rounded-2xl p-5">
             <h2 className="font-display text-lg mb-3">About this listing</h2>
             <div className="text-sm text-foreground/85 whitespace-pre-wrap leading-relaxed">
               {product.description}
             </div>
-          </div>
+          </section>
 
           {/* Reviews */}
-          <div className="bg-card border border-border rounded-xl p-5" id="reviews">
+          <section className="bg-card border border-border rounded-2xl p-5" id="reviews">
             <h2 className="font-display text-lg mb-4">
               Reviews
               {reviews.length > 0 && (
@@ -283,17 +263,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               </div>
             ) : (
               <>
-                {/* Aggregate */}
                 <div className="flex flex-col sm:flex-row gap-6 mb-5 pb-5 border-b border-border/60">
                   <div className="text-center shrink-0">
-                    <p className="font-display text-5xl text-foreground">{avgRating.toFixed(1)}</p>
-                    <div className="flex justify-center mt-1">
-                      {[1, 2, 3, 4, 5].map((n) => (
-                        <Star
-                          key={n}
-                          className={`size-4 ${n <= Math.round(avgRating) ? "fill-warning text-warning" : "text-border"}`}
-                        />
-                      ))}
+                    <p className="font-display text-5xl text-foreground tabular-nums">
+                      {avgRating.toFixed(1)}
+                    </p>
+                    <div className="flex justify-center mt-1.5">
+                      <RatingStars rating={avgRating} size="md" showValue={false} />
                     </div>
                     <p className="text-[11px] text-muted-foreground mt-1">
                       {reviews.length} reviews
@@ -302,8 +278,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   <div className="flex-1 space-y-1.5">
                     {dist.map(({ star, count }) => (
                       <div key={star} className="flex items-center gap-2 text-[11px]">
-                        <span className="w-6 text-right text-muted-foreground">{star}</span>
-                        <Star className="size-3 fill-warning text-warning shrink-0" />
+                        <span className="w-6 text-right text-muted-foreground tabular-nums">
+                          {star}
+                        </span>
                         <div className="flex-1 bg-secondary rounded-full h-1.5 overflow-hidden">
                           <div
                             className="h-full bg-warning rounded-full"
@@ -313,13 +290,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                             }}
                           />
                         </div>
-                        <span className="w-5 text-muted-foreground">{count}</span>
+                        <span className="w-5 text-muted-foreground tabular-nums">{count}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                {/* Individual reviews */}
                 <div className="space-y-4">
                   {reviews.map((r, i) => (
                     <div key={i} className="pb-4 border-b border-border/50 last:border-0 last:pb-0">
@@ -330,13 +306,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                           </div>
                           <div>
                             <p className="text-xs font-semibold">{r.buyer}</p>
-                            <div className="flex items-center gap-1 mt-0.5">
-                              {[1, 2, 3, 4, 5].map((n) => (
-                                <Star
-                                  key={n}
-                                  className={`size-2.5 ${n <= r.rating ? "fill-warning text-warning" : "text-border"}`}
-                                />
-                              ))}
+                            <div className="mt-0.5">
+                              <RatingStars rating={r.rating} size="sm" showValue={false} />
                             </div>
                           </div>
                         </div>
@@ -362,25 +333,18 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 </div>
               </>
             )}
-          </div>
+          </section>
         </div>
 
         {/* ── RIGHT: sticky buy panel ── */}
         <aside className="space-y-3">
           <div className="bg-card border border-border rounded-2xl p-5 lg:sticky lg:top-24">
-            {/* Title + badges */}
             <div className="mb-4">
               <div className="flex flex-wrap items-center gap-1.5 mb-2">
-                <span
-                  className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                    auto
-                      ? "bg-primary/10 text-primary border border-primary/25"
-                      : "bg-accent/10 text-accent border border-accent/25"
-                  }`}
-                >
-                  {auto ? <Zap className="size-2.5" /> : <Clock className="size-2.5" />}
-                  {auto ? "Instant delivery" : `~${product.delivery_sla_minutes}min`}
-                </span>
+                <DeliveryBadge
+                  deliveryType={product.delivery_type}
+                  slaMinutes={product.delivery_sla_minutes}
+                />
                 <span className="text-[10px] font-medium text-muted-foreground px-2 py-0.5 rounded-full bg-secondary border border-border">
                   {product.warranty_hours}h warranty
                 </span>
@@ -393,28 +357,24 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <h1 className="text-xl font-bold leading-snug">{product.title}</h1>
               {reviews.length > 0 && (
                 <a href="#reviews" className="mt-1.5 inline-block">
-                  <StarRow rating={avgRating} count={reviews.length} />
+                  <RatingStars rating={avgRating} count={reviews.length} size="sm" />
                 </a>
               )}
             </div>
 
-            {/* Price */}
             <div className="border-t border-border/60 pt-4 mb-4">
-              <p className="text-[10px] text-muted-foreground mb-0.5 font-medium tracking-wider uppercase">
+              <p className="text-[10px] text-muted-foreground mb-1 font-medium tracking-wider uppercase">
                 Price per unit
               </p>
-              <p className="font-mono text-3xl font-bold text-accent">
-                {usdt(product.price_cents)}
-              </p>
+              <PriceTag cents={product.price_cents} size="lg" />
               {product.sold_count > 0 && (
-                <p className="text-[11px] text-muted-foreground mt-0.5">
+                <p className="text-[11px] text-muted-foreground mt-1.5">
                   {product.sold_count.toLocaleString()} sold ·{" "}
                   {isVerified ? "Verified seller" : `Level ${product.seller.seller_level}`}
                 </p>
               )}
             </div>
 
-            {/* Buy box controls */}
             <BuyBox
               productId={product.id}
               slug={product.slug}
@@ -428,20 +388,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               stockCount={product.stock_count}
             />
 
-            {/* Trust strip */}
-            <div className="mt-4 pt-4 border-t border-border/60 grid grid-cols-3 gap-2 text-center">
-              {(
-                [
-                  { icon: Lock, label: "Escrow secured" },
-                  { icon: ShieldCheck, label: "Buyer protected" },
-                  { icon: RefreshCw, label: `${product.warranty_hours}h warranty` },
-                ] as { icon: React.ElementType; label: string }[]
-              ).map((t) => (
-                <div key={t.label} className="flex flex-col items-center gap-1">
-                  <t.icon className="size-4 text-primary" />
-                  <span className="text-[9px] text-muted-foreground leading-tight">{t.label}</span>
-                </div>
-              ))}
+            <div className="mt-4 pt-4 border-t border-border/60">
+              <TrustStrip warrantyHours={product.warranty_hours} />
             </div>
           </div>
 
@@ -466,25 +414,19 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </div>
 
             <div className="grid grid-cols-3 gap-2 text-center">
-              <SellerStat
-                label="Rating"
+              <Stat
                 value={product.seller.rating > 0 ? product.seller.rating.toFixed(1) : "—"}
-                sub="avg"
+                label="rating"
               />
-              <SellerStat
-                label="Sales"
+              <Stat
                 value={
                   product.seller.total_sales >= 1000
                     ? `${(product.seller.total_sales / 1000).toFixed(1)}k`
                     : String(product.seller.total_sales)
                 }
-                sub="total"
+                label="sales"
               />
-              <SellerStat
-                label="Completion"
-                value={`${Math.round(product.seller.completion_rate)}%`}
-                sub="rate"
-              />
+              <Stat value={`${Math.round(product.seller.completion_rate)}%`} label="completion" />
             </div>
 
             <p className="text-[10px] text-primary font-semibold mt-3 group-hover:underline">
@@ -492,8 +434,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </p>
           </Link>
 
-          {/* Trust checklist */}
-          <div className="bg-card border border-border rounded-xl p-4">
+          {/* Buyer protection checklist */}
+          <div className="bg-card border border-border rounded-2xl p-4">
             <p className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase mb-3">
               Buyer Protection
             </p>
@@ -514,8 +456,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </aside>
       </div>
 
-      {/* Related products */}
-      <Suspense fallback={<div className="mt-10 h-40 rounded-xl bg-secondary/50 animate-pulse" />}>
+      <Suspense fallback={<div className="mt-10 h-40 rounded-2xl bg-secondary/50 animate-pulse" />}>
         <RelatedProducts productId={product.id} />
       </Suspense>
 
@@ -546,15 +487,6 @@ function Highlight({
         </p>
         <p className="text-xs font-semibold truncate mt-0.5">{value}</p>
       </div>
-    </div>
-  );
-}
-
-function SellerStat({ label, value, sub }: { label: string; value: string; sub: string }) {
-  return (
-    <div>
-      <p className="text-base font-bold">{value}</p>
-      <p className="text-[10px] text-muted-foreground">{sub}</p>
     </div>
   );
 }

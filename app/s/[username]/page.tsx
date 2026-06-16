@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Star, ShieldCheck, Package, Clock, Zap, Award, TrendingUp } from "lucide-react";
+import { ShieldCheck, Package, Clock, Zap, Award, TrendingUp } from "lucide-react";
 import { getSellerStoreData } from "@/server/queries/catalog";
 import { LEVEL_META, type SellerLevel } from "@/lib/server/trust.server";
 import { timeAgo } from "@/lib/format";
 import { PublicShell } from "../../_components/site-shell";
 import { ProductCard } from "../../_components/product-card";
 import { SellerBadge } from "../../_components/seller-badge";
+import { RatingStars, EmptyState, SectionHeading } from "../../_components/kit";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
@@ -90,6 +91,9 @@ export default async function StorePage({ params }: { params: Promise<{ username
             {/* Avatar */}
             <div className="size-20 rounded-2xl border-2 border-card bg-primary/15 grid place-items-center text-2xl font-bold text-primary uppercase shrink-0 overflow-hidden ring-1 ring-primary/30">
               {seller.store_logo_url ? (
+                // Seller-supplied logo from an arbitrary external host; can't be
+                // domain-allowlisted for next/image, so a plain <img> is correct here.
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={seller.store_logo_url}
                   alt={seller.username}
@@ -112,16 +116,13 @@ export default async function StorePage({ params }: { params: Promise<{ username
                     `Lvl ${seller.seller_level}`}
                 </span>
               </div>
-              <p className="text-[11px] text-muted-foreground mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
-                <span className="flex items-center gap-0.5 text-warning font-bold">
-                  <Star className="size-3 fill-current" />
-                  {seller.rating > 0 ? seller.rating.toFixed(1) : "New"} ({seller.rating_count})
-                </span>
+              <div className="text-[11px] text-muted-foreground mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <RatingStars rating={seller.rating} count={seller.rating_count} size="sm" />
                 <span className="flex items-center gap-1">
                   <ShieldCheck className="size-3 text-primary" /> Buyer protected
                 </span>
                 <span>Member since {new Date(seller.created_at).getFullYear()}</span>
-              </p>
+              </div>
             </div>
           </div>
 
@@ -173,11 +174,13 @@ export default async function StorePage({ params }: { params: Promise<{ username
       </header>
 
       <section className="mb-8">
-        <h2 className="font-display text-xl mb-3">Listings ({products.length})</h2>
+        <SectionHeading title={`Listings (${products.length})`} />
         {products.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-8 text-center">
-            This seller has no active listings right now.
-          </p>
+          <EmptyState
+            icon={Package}
+            title="No active listings"
+            description="This seller has no active listings right now."
+          />
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {products.map((p, i) => (
@@ -189,15 +192,12 @@ export default async function StorePage({ params }: { params: Promise<{ username
 
       {reviews.length > 0 && (
         <section>
-          <h2 className="font-display text-xl mb-3">Recent reviews</h2>
+          <SectionHeading title="Recent reviews" />
           <div className="space-y-3">
             {reviews.slice(0, 20).map((r, i) => (
               <div key={i} className="bg-card border border-border rounded-xl p-3">
                 <div className="flex items-center gap-2 text-xs">
-                  <span className="flex items-center gap-0.5 text-warning font-bold">
-                    <Star className="size-3 fill-current" />
-                    {r.rating}
-                  </span>
+                  <RatingStars rating={r.rating} size="sm" showValue={false} />
                   <span className="font-bold">{r.buyer}</span>
                   <span className="text-muted-foreground truncate">on {r.product_title}</span>
                   <span className="text-muted-foreground ml-auto shrink-0">

@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Heart } from "lucide-react";
 import { requireUser } from "@/server/auth";
 import { q } from "@/lib/server/db.server";
 import { appContext } from "@/lib/server/app.server";
-import { usdt } from "@/lib/format";
 import { PublicShell } from "../_components/site-shell";
 import { productImage } from "../_lib/product-image";
+import { PriceTag, EmptyState } from "../_components/kit";
 
 export const metadata: Metadata = { title: "Favorites", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -47,14 +48,15 @@ export default async function FavoritesPage() {
       </h1>
 
       {products.length === 0 ? (
-        <div className="py-16 text-center space-y-3">
-          <p className="text-sm text-muted-foreground">
-            Nothing saved yet — tap the ♥ on any product to keep it here.
-          </p>
+        <EmptyState
+          icon={Heart}
+          title="Nothing saved yet"
+          description="Tap the ♥ on any product to keep it here."
+        >
           <Link href="/browse" className="text-primary text-sm font-bold">
             Browse the market →
           </Link>
-        </div>
+        </EmptyState>
       ) : (
         <div className="space-y-2 max-w-2xl">
           {products.map((p) => (
@@ -63,11 +65,13 @@ export default async function FavoritesPage() {
               href={`/p/${p.slug}`}
               className="bg-card border border-border rounded-lg p-3 flex items-center gap-3 hover:border-primary/50 transition-colors"
             >
-              <div className="size-14 rounded-md overflow-hidden bg-secondary shrink-0">
-                <img
+              <div className="size-14 rounded-md overflow-hidden bg-secondary shrink-0 relative">
+                <Image
                   src={productImage(p.image_key)}
                   alt=""
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes="56px"
+                  className="object-cover"
                 />
               </div>
               <div className="flex-1 min-w-0">
@@ -81,7 +85,7 @@ export default async function FavoritesPage() {
                   <p className="text-[10px] text-warning font-bold">Currently unavailable</p>
                 )}
               </div>
-              <span className="font-mono text-accent text-sm shrink-0">{usdt(p.price_cents)}</span>
+              <PriceTag cents={p.price_cents} size="sm" className="shrink-0" />
             </Link>
           ))}
         </div>

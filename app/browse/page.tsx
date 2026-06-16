@@ -6,6 +6,7 @@ import { q } from "@/lib/server/db.server";
 import { appContext } from "@/lib/server/app.server";
 import { PublicShell } from "../_components/site-shell";
 import { ProductCard } from "../_components/product-card";
+import { EmptyState } from "../_components/kit";
 import { BrowseFilters } from "./browse-filters";
 
 // Dynamic page but give CDN a 30-second window to coalesce concurrent requests.
@@ -202,31 +203,30 @@ export default async function BrowsePage({
 
           {/* Results grid */}
           {items.length === 0 ? (
-            <div className="py-16 text-center">
-              <PackageSearch className="size-10 text-muted-foreground mx-auto mb-3" />
-              <p className="font-semibold mb-1">No listings match your search</p>
-              <p className="text-sm text-muted-foreground mb-4">
-                {params.q
+            <EmptyState
+              icon={PackageSearch}
+              title="No listings match your search"
+              description={
+                params.q
                   ? `We couldn't find anything for "${params.q}"`
-                  : "No listings with these filters"}
-              </p>
-              <div className="flex flex-wrap justify-center gap-2">
+                  : "No listings with these filters"
+              }
+            >
+              <Link
+                href="/browse"
+                className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-bold"
+              >
+                Clear all filters
+              </Link>
+              {params.q && activeChips.length > 0 && (
                 <Link
-                  href="/browse"
-                  className="text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-bold"
+                  href={`/browse?q=${encodeURIComponent(params.q)}`}
+                  className="text-xs px-3 py-1.5 rounded-md bg-secondary text-foreground font-bold"
                 >
-                  Clear all filters
+                  Remove filters, keep search
                 </Link>
-                {params.q && activeChips.length > 0 && (
-                  <Link
-                    href={`/browse?q=${encodeURIComponent(params.q)}`}
-                    className="text-xs px-3 py-1.5 rounded-md bg-secondary text-foreground font-bold"
-                  >
-                    Remove filters, keep search
-                  </Link>
-                )}
-              </div>
-            </div>
+              )}
+            </EmptyState>
           ) : (
             <>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">

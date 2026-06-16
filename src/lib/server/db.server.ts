@@ -100,6 +100,14 @@ const pgTxStore = new AsyncLocalStorage<PgSql>();
 // scope the client to the current request via AsyncLocalStorage. Clients
 // created outside a scope are one-shot and closed after use.
 const pgRequestStore = new AsyncLocalStorage<{ sql: PgSql | null }>();
+// Persistent, isolate-scoped connection pool used when there is NO request
+// scope (the Next.js App Router never calls withDbRequest). Reusing one pool
+// for the isolate's lifetime — instead of opening and tearing down a pool per
+// query — eliminates per-query TCP+TLS connection churn, which is the dominant
+// cost and the first thing to exhaust Postgres / the connection pooler at high
+// request volume. postgres.js manages the pool via max / idle_timeout /
+// max_lifetime. Point DATABASE_URL at a transaction-mode pooler in production.
+let sharedPg: PgSql | null = null;
 let migratedFlag = false;
 let baseCategoriesEnsured: Promise<number> | null = null;
 
@@ -174,7 +182,11 @@ async function getPgClient(): Promise<{ sql: PgSql; oneShot: boolean }> {
     if (!slot.sql) slot.sql = await makePgClient();
     return { sql: slot.sql, oneShot: false };
   }
-  return { sql: await makePgClient(), oneShot: true };
+  // No request scope (Next.js RSC / route handlers): reuse the isolate-scoped
+  // pool rather than a one-shot client. Never end() it — it lives for the
+  // isolate so subsequent queries/requests skip the connect handshake.
+  if (!sharedPg) sharedPg = await makePgClient();
+  return { sql: sharedPg, oneShot: false };
 }
 
 /** Wrap a server handler so the postgres client is request-scoped.
@@ -374,6 +386,8 @@ export function resetDbForTests() {
   migrated = null;
   migratedFlag = false;
   baseCategoriesEnsured = null;
+  if (sharedPg) void sharedPg.end({ timeout: 1 }).catch(() => {});
+  sharedPg = null;
 }
 
 // ---------------------------------------------------------------------------

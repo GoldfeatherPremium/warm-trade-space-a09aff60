@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ShoppingBag, PackageSearch } from "lucide-react";
 import { currentUser } from "@/server/auth";
 import { listBuyerOrders } from "@/server/queries/buyer";
-import { ORDER_STATUS_META, dateTime, usdt } from "@/lib/format";
+import { ORDER_STATUS_META, dateTime } from "@/lib/format";
 import { PublicShell } from "../_components/site-shell";
 import { productImage } from "../_lib/product-image";
+import { PriceTag, EmptyState } from "../_components/kit";
 
 export const metadata: Metadata = { title: "My orders", robots: { index: false } };
 
@@ -75,18 +77,13 @@ export default async function OrdersPage({
       </div>
 
       {orders.length === 0 ? (
-        <div className="text-center py-16 space-y-3">
-          <ShoppingBag className="size-10 text-muted-foreground/40 mx-auto" />
-          <p className="text-sm text-muted-foreground">You haven't bought anything yet.</p>
+        <EmptyState icon={ShoppingBag} title="You haven't bought anything yet.">
           <Link href="/browse" className="text-primary text-sm font-bold">
             Browse the market →
           </Link>
-        </div>
+        </EmptyState>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 space-y-2">
-          <PackageSearch className="size-10 text-muted-foreground/40 mx-auto" />
-          <p className="text-sm text-muted-foreground">No orders in this view.</p>
-        </div>
+        <EmptyState icon={PackageSearch} title="No orders in this view." />
       ) : (
         <div className="space-y-2">
           {filtered.map((o) => {
@@ -103,10 +100,11 @@ export default async function OrdersPage({
                   needsAction ? "border-accent/40" : "border-border"
                 }`}
               >
-                {" "}
-                <img
+                <Image
                   src={productImage(o.image_key)}
                   alt=""
+                  width={48}
+                  height={48}
                   className="size-12 rounded-md object-cover border border-border shrink-0"
                 />
                 <div className="flex-1 min-w-0">
@@ -120,9 +118,7 @@ export default async function OrdersPage({
                 >
                   {meta.label.toUpperCase()}
                 </span>
-                <span className="font-mono text-accent text-sm whitespace-nowrap">
-                  {usdt(o.total_cents)}
-                </span>
+                <PriceTag cents={o.total_cents} size="sm" className="whitespace-nowrap" />
               </Link>
             );
           })}
