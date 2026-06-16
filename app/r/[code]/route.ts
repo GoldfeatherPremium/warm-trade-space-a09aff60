@@ -9,7 +9,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   try {
     await appContext();
     const ua = request.headers.get("user-agent") ?? null;
-    await recordReferralClick(code.toUpperCase(), ua, null);
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      request.headers.get("x-real-ip") ??
+      null;
+    const country = request.headers.get("x-vercel-ip-country") ?? null;
+    await recordReferralClick(code.toUpperCase(), ua, country, ip);
   } catch {
     // never block the redirect
   }

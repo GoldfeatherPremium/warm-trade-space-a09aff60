@@ -1,18 +1,23 @@
 import { q1, run } from "./db.server";
-import { now } from "./core.server";
+import { now, sha256 } from "./core.server";
 import { txAdjustment } from "./money.server";
 
-/** Public: record a referral click (called from /r/$code redirect serverFn). */
+/** Public: record a referral click (called from /r/$code redirect serverFn).
+ * `ip` is hashed with the UA into a coarse fingerprint so referral/affiliate
+ * abuse (self-referral farms, click fraud) can be detected and deduped later —
+ * previously this column was always null. */
 export async function recordReferralClick(
   code: string,
   ua: string | null,
   country: string | null,
+  ip: string | null = null,
 ): Promise<{ ok: boolean; refId: string | null }> {
   const r = await q1<{ id: string }>(`select id from referrals where code = ?`, [code]);
   if (!r) return { ok: false, refId: null };
+  const fingerprint = ip || ua ? sha256(`${ip ?? ""}|${ua ?? ""}`) : null;
   await run(
     `insert into referral_clicks (referral_id, fingerprint, user_agent, country, created_at) values (?,?,?,?,?)`,
-    [r.id, null, (ua ?? "").slice(0, 200), country, now()],
+    [r.id, fingerprint, (ua ?? "").slice(0, 200), country, now()],
   );
   await run(`update referrals set click_count = click_count + 1 where id = ?`, [r.id]);
   return { ok: true, refId: r.id };
