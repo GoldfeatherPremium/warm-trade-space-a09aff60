@@ -153,7 +153,7 @@ export function CategoriesClient() {
                 </span>
               )}
               {c.risk_tier === "high" && (
-                <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-yellow-500/15 text-yellow-400">
+                <span className="text-[9px] font-bold px-2 py-0.5 rounded bg-warning/15 text-warning">
                   HIGH RISK
                 </span>
               )}

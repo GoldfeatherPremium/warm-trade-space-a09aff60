@@ -331,8 +331,8 @@ export default function NewProductPage() {
     <form className="max-w-2xl space-y-4" onSubmit={submit}>
       <h1 className="font-display text-2xl">{editId ? "EDIT LISTING" : "CREATE LISTING"}</h1>
 
-      <div className="bg-yellow-500/10 border border-yellow-500/40 rounded-lg p-3 flex gap-2 text-[11px] leading-relaxed">
-        <AlertTriangle className="size-4 text-yellow-400 shrink-0 mt-0.5" />
+      <div className="bg-warning/10 border border-warning/40 rounded-lg p-3 flex gap-2 text-[11px] leading-relaxed">
+        <AlertTriangle className="size-4 text-warning shrink-0 mt-0.5" />
         <span>
           Sellers are prohibited from listing stolen gift cards, hacked accounts, or unauthorized
           credentials. Violations lead to permanent ban. All listings go through staff review.
@@ -449,7 +449,7 @@ export default function NewProductPage() {
           ))}
         </select>
         {selectedCat?.risk_tier === "high" && (
-          <p className="text-[10px] text-yellow-400">
+          <p className="text-[10px] text-warning">
             High-risk category: extended warranty recommended.
           </p>
         )}
@@ -568,7 +568,7 @@ export default function NewProductPage() {
               <button
                 type="button"
                 onClick={() => removeImage(id)}
-                className="absolute top-0.5 right-0.5 bg-black/70 rounded-full p-0.5 text-white hover:bg-red-600"
+                className="absolute top-0.5 right-0.5 bg-foreground/70 rounded-full p-0.5 text-background hover:bg-destructive"
                 aria-label="Remove image"
               >
                 <X className="size-3" />
@@ -599,7 +599,7 @@ export default function NewProductPage() {
           }}
         />
         {imageIds.length === 0 && (
-          <p className="text-[10px] text-yellow-400">
+          <p className="text-[10px] text-warning">
             Add at least one image — listings with photos sell faster.
           </p>
         )}

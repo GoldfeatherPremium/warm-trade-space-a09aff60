@@ -7,7 +7,7 @@ import { dateTime } from "@/lib/format";
 type FlaggedMessage = Awaited<ReturnType<typeof listFlaggedMessagesAction>>[number];
 
 const FLAG_REASON_META: Record<string, { label: string; cls: string }> = {
-  contact_sharing: { label: "Contact sharing", cls: "bg-yellow-500/15 text-yellow-400" },
+  contact_sharing: { label: "Contact sharing", cls: "bg-warning/15 text-warning" },
   off_platform_payment: {
     label: "Off-platform payment",
     cls: "bg-destructive/15 text-destructive",

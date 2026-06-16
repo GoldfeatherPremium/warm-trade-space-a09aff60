@@ -8,8 +8,8 @@ import { usdt, dateTime } from "@/lib/format";
 type Product = Awaited<ReturnType<typeof listProductReviewQueueAction>>[number];
 
 const PRODUCT_STATUS_META: Record<string, { label: string; cls: string }> = {
-  pending_review: { label: "Pending", cls: "bg-yellow-500/15 text-yellow-400" },
-  active: { label: "Active", cls: "bg-emerald-500/15 text-emerald-400" },
+  pending_review: { label: "Pending", cls: "bg-warning/15 text-warning" },
+  active: { label: "Active", cls: "bg-success/15 text-success" },
   rejected: { label: "Rejected", cls: "bg-destructive/15 text-destructive" },
   paused: { label: "Paused", cls: "bg-secondary text-muted-foreground" },
 };
@@ -108,7 +108,7 @@ function ProductCard({ product, onRefresh }: { product: Product; onRefresh: () =
             <button
               disabled={busy}
               onClick={() => handleReview(true)}
-              className={`${BTN_CLS} bg-emerald-600 text-white disabled:opacity-50`}
+              className={`${BTN_CLS} bg-success text-success-foreground disabled:opacity-50`}
             >
               {busy ? "…" : "Approve"}
             </button>

@@ -11,17 +11,17 @@ export const metadata: Metadata = { title: "Disputes", robots: { index: false } 
 export const dynamic = "force-dynamic";
 
 const STATUS_CLS: Record<string, string> = {
-  open: "bg-yellow-500/15 text-yellow-400",
-  seller_responded: "bg-blue-500/15 text-blue-400",
-  under_review: "bg-blue-500/15 text-blue-400",
-  awaiting_buyer: "bg-yellow-500/15 text-yellow-400",
+  open: "bg-warning/15 text-warning",
+  seller_responded: "bg-accent/15 text-accent",
+  under_review: "bg-accent/15 text-accent",
+  awaiting_buyer: "bg-warning/15 text-warning",
   resolved: "bg-accent/15 text-accent",
 };
 
 const PRIORITY_CLS: Record<string, string> = {
   low: "text-muted-foreground",
   normal: "text-muted-foreground",
-  high: "text-yellow-400",
+  high: "text-warning",
   urgent: "text-destructive",
 };
 
@@ -35,7 +35,7 @@ export default async function DisputesPage() {
     <PublicShell>
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center gap-3 mb-6">
-          <AlertTriangle className="size-6 text-yellow-400" />
+          <AlertTriangle className="size-6 text-warning" />
           <h1 className="font-display text-3xl">Disputes</h1>
         </div>
 

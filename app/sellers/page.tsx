@@ -54,7 +54,7 @@ export default async function SellersPage() {
                 </p>
               </div>
               <div className="text-right shrink-0">
-                <p className="text-[11px] text-yellow-400 flex items-center gap-0.5 font-bold justify-end">
+                <p className="text-[11px] text-warning flex items-center gap-0.5 font-bold justify-end">
                   <Star className="size-3 fill-current" />
                   {s.rating > 0 ? s.rating.toFixed(1) : "new"}
                 </p>

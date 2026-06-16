@@ -50,8 +50,8 @@ export default function SellerWalletPage() {
     );
 
   const STATUS_CLS: Record<string, string> = {
-    pending: "text-yellow-400",
-    processing: "text-blue-400",
+    pending: "text-warning",
+    processing: "text-accent",
     paid: "text-accent",
     rejected: "text-destructive",
   };
@@ -63,7 +63,7 @@ export default function SellerWalletPage() {
       <div className="grid grid-cols-3 gap-3">
         {[
           { label: "AVAILABLE", val: data.wallet.available_cents, cls: "text-accent" },
-          { label: "IN ESCROW", val: data.wallet.pending_cents, cls: "text-yellow-400" },
+          { label: "IN ESCROW", val: data.wallet.pending_cents, cls: "text-warning" },
           { label: "FROZEN", val: data.wallet.frozen_cents, cls: "text-destructive" },
         ].map((s) => (
           <div key={s.label} className="bg-card border border-border rounded-lg p-4">

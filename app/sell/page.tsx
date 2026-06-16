@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 const STATUS_META: Record<string, { label: string; cls: string; note: string }> = {
   pending: {
     label: "Under review",
-    cls: "bg-yellow-500/15 text-yellow-400",
+    cls: "bg-warning/15 text-warning",
     note: "We'll review your application within 48 hours and notify you by notification.",
   },
   approved: {
@@ -103,7 +103,7 @@ export default async function SellPage() {
         {/* Application status */}
         {app && (
           <div
-            className={`border rounded-xl p-5 space-y-2 ${app.status === "approved" ? "border-accent/30 bg-accent/5" : app.status === "pending" ? "border-yellow-500/30 bg-yellow-500/5" : "border-destructive/30 bg-destructive/5"}`}
+            className={`border rounded-xl p-5 space-y-2 ${app.status === "approved" ? "border-accent/30 bg-accent/5" : app.status === "pending" ? "border-warning/30 bg-warning/5" : "border-destructive/30 bg-destructive/5"}`}
           >
             <div className="flex items-center gap-2">
               <CheckCircle2 className="size-5 text-accent" />

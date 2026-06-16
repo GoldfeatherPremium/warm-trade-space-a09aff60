@@ -13,11 +13,11 @@ export const metadata: Metadata = { title: "Account", robots: { index: false } }
 export const dynamic = "force-dynamic";
 
 const TIER_CLS: Record<string, string> = {
-  bronze: "text-amber-600",
-  silver: "text-slate-400",
-  gold: "text-yellow-400",
-  platinum: "text-cyan-400",
-  diamond: "text-purple-400",
+  bronze: "text-warning/70",
+  silver: "text-muted-foreground",
+  gold: "text-warning",
+  platinum: "text-accent",
+  diamond: "text-primary",
 };
 
 export default async function AccountPage() {
@@ -52,7 +52,7 @@ export default async function AccountPage() {
           {/* Loyalty tier */}
           <div className="bg-card border border-border rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
-              <Trophy className="size-4 text-yellow-400" />
+              <Trophy className="size-4 text-warning" />
               <h2 className="text-xs font-bold tracking-widest">LOYALTY</h2>
             </div>
             <p className={`font-display text-2xl ${TIER_CLS[loyalty.tier] ?? "text-foreground"}`}>

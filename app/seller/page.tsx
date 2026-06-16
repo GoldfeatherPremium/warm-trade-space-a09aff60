@@ -99,10 +99,10 @@ export default function SellerOverviewPage() {
           {data.needsDelivery > 0 && (
             <Link
               href="/seller/orders"
-              className="flex items-center gap-3 bg-blue-500/10 border border-blue-500/40 rounded-lg p-3 hover:border-blue-500/70 transition-colors"
+              className="flex items-center gap-3 bg-accent/10 border border-accent/40 rounded-lg p-3 hover:border-accent/70 transition-colors"
             >
-              <PackageCheck className="size-5 text-blue-400 shrink-0" />
-              <p className="text-sm font-bold text-blue-400">
+              <PackageCheck className="size-5 text-accent shrink-0" />
+              <p className="text-sm font-bold text-accent">
                 {data.needsDelivery} order{data.needsDelivery > 1 ? "s" : ""} awaiting delivery
               </p>
             </Link>
@@ -208,7 +208,7 @@ export default function SellerOverviewPage() {
         <StatCard
           label="IN ESCROW"
           value={usdt(data.wallet.pending_cents)}
-          valueCls="text-yellow-400"
+          valueCls="text-warning"
           to="/seller/wallet"
         />
         <StatCard
@@ -248,7 +248,7 @@ export default function SellerOverviewPage() {
                     {conv}%
                   </span>
                   <span
-                    className={`text-right font-mono ${tp.delivery_type === "auto" && tp.stock_count <= 5 ? "text-yellow-400" : "text-muted-foreground"}`}
+                    className={`text-right font-mono ${tp.delivery_type === "auto" && tp.stock_count <= 5 ? "text-warning" : "text-muted-foreground"}`}
                   >
                     {tp.delivery_type === "auto" ? tp.stock_count : "∞"}
                   </span>
@@ -260,7 +260,7 @@ export default function SellerOverviewPage() {
       )}
 
       {data.lowStock.length > 0 && (
-        <div className="bg-card border border-yellow-500/30 rounded-lg p-4">
+        <div className="bg-card border border-warning/30 rounded-lg p-4">
           <p className="text-[9px] font-bold tracking-widest text-muted-foreground mb-3">
             LOW STOCK
           </p>
@@ -272,7 +272,7 @@ export default function SellerOverviewPage() {
                 className="flex justify-between text-xs py-1 hover:text-primary"
               >
                 <span className="truncate">{p.title}</span>
-                <span className="font-mono text-yellow-400">{p.stock_count} left</span>
+                <span className="font-mono text-warning">{p.stock_count} left</span>
               </Link>
             ))}
           </div>

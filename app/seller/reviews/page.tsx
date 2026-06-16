@@ -61,7 +61,7 @@ export default function SellerReviewsPage() {
           <div key={r.id} className="bg-card border border-border rounded-lg p-3 space-y-2">
             <div className="flex items-center gap-2 text-xs">
               <span className="font-bold">{r.buyer}</span>
-              <span className="text-yellow-400 flex">
+              <span className="text-warning flex">
                 {Array.from({ length: r.rating }).map((_, j) => (
                   <Star key={j} className="size-3 fill-current" />
                 ))}

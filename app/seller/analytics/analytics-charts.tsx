@@ -12,6 +12,7 @@ import {
   YAxis,
 } from "recharts";
 import { usdt } from "@/lib/format";
+import { useChartTheme } from "../../_lib/use-chart-theme";
 
 type Analytics = {
   daily: { day: string; v: number }[];
@@ -20,6 +21,8 @@ type Analytics = {
 };
 
 export function AnalyticsCharts({ data }: { data: Analytics }) {
+  const ct = useChartTheme();
+
   return (
     <>
       <div className="bg-card border border-border rounded-lg p-4">
@@ -31,27 +34,27 @@ export function AnalyticsCharts({ data }: { data: Analytics }) {
             <AreaChart data={data.daily} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
               <defs>
                 <linearGradient id="sa-fill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.5} />
-                  <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
+                  <stop offset="0%" stopColor={ct.chart1} stopOpacity={0.5} />
+                  <stop offset="100%" stopColor={ct.chart1} stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid stroke="#27272a" vertical={false} />
+              <CartesianGrid stroke={ct.grid} vertical={false} />
               <XAxis
                 dataKey="day"
-                tick={{ fontSize: 10, fill: "#71717a" }}
+                tick={{ fontSize: 10, fill: ct.tickFill }}
                 tickLine={false}
                 axisLine={false}
               />
               <YAxis
-                tick={{ fontSize: 10, fill: "#71717a" }}
+                tick={{ fontSize: 10, fill: ct.tickFill }}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(v) => `${(v / 100).toFixed(0)}`}
               />
               <Tooltip
                 contentStyle={{
-                  background: "#18181b",
-                  border: "1px solid #27272a",
+                  background: ct.tooltipBg,
+                  border: `1px solid ${ct.tooltipBorder}`,
                   borderRadius: 8,
                   fontSize: 12,
                 }}
@@ -60,7 +63,7 @@ export function AnalyticsCharts({ data }: { data: Analytics }) {
               <Area
                 type="monotone"
                 dataKey="v"
-                stroke="#3b82f6"
+                stroke={ct.chart1}
                 strokeWidth={2}
                 fill="url(#sa-fill)"
               />
@@ -78,27 +81,27 @@ export function AnalyticsCharts({ data }: { data: Analytics }) {
             <BarChart data={data.hours} margin={{ top: 4, right: 8, left: -24, bottom: 0 }}>
               <XAxis
                 dataKey="hour"
-                tick={{ fontSize: 9, fill: "#71717a" }}
+                tick={{ fontSize: 9, fill: ct.tickFill }}
                 tickLine={false}
                 axisLine={false}
               />
               <YAxis
-                tick={{ fontSize: 10, fill: "#71717a" }}
+                tick={{ fontSize: 10, fill: ct.tickFill }}
                 tickLine={false}
                 axisLine={false}
                 allowDecimals={false}
               />
               <Tooltip
                 contentStyle={{
-                  background: "#18181b",
-                  border: "1px solid #27272a",
+                  background: ct.tooltipBg,
+                  border: `1px solid ${ct.tooltipBorder}`,
                   borderRadius: 8,
                   fontSize: 12,
                 }}
                 formatter={(v: number) => [v, "orders"]}
                 labelFormatter={(h) => `${h}:00`}
               />
-              <Bar dataKey="n" fill="#22c55e" radius={[2, 2, 0, 0]} />
+              <Bar dataKey="n" fill={ct.chart4} radius={[2, 2, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

@@ -48,7 +48,7 @@ function Stat({
     </>
   );
   const cls = `block bg-card border rounded-lg p-4 transition-colors ${
-    highlight ? "border-yellow-500/40" : "border-border"
+    highlight ? "border-warning/40" : "border-border"
   } ${href ? "hover:border-primary/50" : ""}`;
   return href ? (
     <Link href={href} className={cls}>
@@ -84,14 +84,14 @@ export default async function DashboardPage() {
       {data.stats.actionNeeded > 0 && (
         <Link
           href="/orders"
-          className="flex items-center gap-3 bg-blue-500/10 border border-blue-500/40 rounded-lg p-3 hover:border-blue-500/70 transition-colors mb-5"
+          className="flex items-center gap-3 bg-accent/10 border border-accent/40 rounded-lg p-3 hover:border-accent/70 transition-colors mb-5"
         >
-          <AlertTriangle className="size-5 text-blue-400 shrink-0" />
-          <p className="text-sm font-bold text-blue-400">
+          <AlertTriangle className="size-5 text-accent shrink-0" />
+          <p className="text-sm font-bold text-accent">
             {data.stats.actionNeeded} order{data.stats.actionNeeded > 1 ? "s" : ""} need your
             attention
           </p>
-          <span className="text-[10px] text-blue-400/80 ml-auto">Pay or confirm receipt →</span>
+          <span className="text-[10px] text-accent/80 ml-auto">Pay or confirm receipt →</span>
         </Link>
       )}
 

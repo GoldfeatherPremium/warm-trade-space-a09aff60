@@ -12,11 +12,11 @@ type Withdrawal = Awaited<ReturnType<typeof listWithdrawalQueueAction>>[number];
 type Deposit = Awaited<ReturnType<typeof listDepositsAction>>[number];
 
 const STATUS_CLS: Record<string, string> = {
-  pending: "bg-yellow-500/15 text-yellow-400",
-  approved: "bg-emerald-500/15 text-emerald-400",
+  pending: "bg-warning/15 text-warning",
+  approved: "bg-success/15 text-success",
   sent: "bg-accent/15 text-accent",
   rejected: "bg-destructive/15 text-destructive",
-  completed: "bg-emerald-500/15 text-emerald-400",
+  completed: "bg-success/15 text-success",
 };
 
 const BTN_CLS = "px-3 py-1.5 rounded-md text-xs font-bold";
@@ -102,7 +102,7 @@ function WithdrawalCard({ w, onRefresh }: { w: Withdrawal; onRefresh: () => void
               <button
                 disabled={busy}
                 onClick={() => act("approve")}
-                className={`${BTN_CLS} bg-emerald-600 text-white disabled:opacity-50`}
+                className={`${BTN_CLS} bg-success text-success-foreground disabled:opacity-50`}
               >
                 {busy ? "…" : "Approve"}
               </button>

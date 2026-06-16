@@ -99,7 +99,7 @@ function Avatar({ name, size = "sm" }: { name: string; size?: "sm" | "md" }) {
 
 function OnlineDot({ ts }: { ts: number }) {
   return isOnline(ts) ? (
-    <span className="size-2.5 rounded-full bg-emerald-500 border-2 border-background inline-block" />
+    <span className="size-2.5 rounded-full bg-success border-2 border-background inline-block" />
   ) : null;
 }
 
@@ -135,7 +135,7 @@ function ConvRow({
         <div className="relative shrink-0">
           <Avatar name={other} />
           {online && (
-            <span className="absolute bottom-0 right-0 size-2.5 rounded-full bg-emerald-500 border-2 border-background" />
+            <span className="absolute bottom-0 right-0 size-2.5 rounded-full bg-success border-2 border-background" />
           )}
         </div>
         <div className="flex-1 min-w-0">
@@ -175,10 +175,10 @@ function ContextCard({ card }: { card: NonNullable<ConversationDetail>["card"] }
 
   if (card.kind === "order") {
     const statusColor: Record<string, string> = {
-      pending: "text-yellow-400",
-      paid: "text-blue-400",
+      pending: "text-warning",
+      paid: "text-accent",
       delivered: "text-accent",
-      completed: "text-emerald-400",
+      completed: "text-success",
       cancelled: "text-muted-foreground",
       disputed: "text-destructive",
     };
@@ -520,7 +520,7 @@ export function ChatClient({
           <div className="relative">
             <Avatar name={other.name} size="md" />
             {isOnline(other.lastSeen) && (
-              <span className="absolute bottom-0 right-0 size-2.5 rounded-full bg-emerald-500 border-2 border-background" />
+              <span className="absolute bottom-0 right-0 size-2.5 rounded-full bg-success border-2 border-background" />
             )}
           </div>
           <div className="flex-1 min-w-0">
@@ -529,7 +529,7 @@ export function ChatClient({
               {isOnline(other.lastSeen) ? (
                 <>
                   <OnlineDot ts={other.lastSeen} />
-                  <span className="text-emerald-400">Online</span>
+                  <span className="text-success">Online</span>
                 </>
               ) : (
                 `Last seen ${timeAgo(other.lastSeen)}`

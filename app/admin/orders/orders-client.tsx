@@ -12,22 +12,22 @@ import { ShieldAlert, ShieldCheck, Clock } from "lucide-react";
 type Order = Awaited<ReturnType<typeof adminListOrdersAction>>[number];
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {
-  awaiting_payment: { label: "Awaiting payment", cls: "bg-yellow-500/15 text-yellow-400" },
-  paid: { label: "Paid", cls: "bg-blue-500/15 text-blue-400" },
-  delivering: { label: "Delivering", cls: "bg-purple-500/15 text-purple-400" },
+  awaiting_payment: { label: "Awaiting payment", cls: "bg-warning/15 text-warning" },
+  paid: { label: "Paid", cls: "bg-accent/15 text-accent" },
+  delivering: { label: "Delivering", cls: "bg-primary/15 text-primary" },
   delivered: { label: "Delivered", cls: "bg-accent/15 text-accent" },
-  completed: { label: "Completed", cls: "bg-emerald-500/15 text-emerald-400" },
+  completed: { label: "Completed", cls: "bg-success/15 text-success" },
   disputed: { label: "Disputed", cls: "bg-destructive/15 text-destructive" },
-  refunded: { label: "Refunded", cls: "bg-blue-500/15 text-blue-400" },
+  refunded: { label: "Refunded", cls: "bg-accent/15 text-accent" },
   cancelled: { label: "Cancelled", cls: "bg-muted text-muted-foreground" },
   expired: { label: "Expired", cls: "bg-muted text-muted-foreground" },
 };
 
 const ESCROW_CLS: Record<string, string> = {
-  held: "bg-yellow-500/15 text-yellow-300 border-yellow-500/30",
+  held: "bg-warning/15 text-warning border-warning/30",
   on_hold: "bg-destructive/15 text-destructive border-destructive/40",
-  released: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
-  refunded: "bg-blue-500/15 text-blue-300 border-blue-500/30",
+  released: "bg-success/15 text-success border-success/30",
+  refunded: "bg-accent/15 text-accent border-accent/30",
   none: "bg-muted/30 text-muted-foreground border-border",
 };
 

@@ -5,9 +5,9 @@ import { requestWithdrawalAction } from "@/server/actions/wallet";
 import { usdt, dateTime } from "@/lib/format";
 
 const GENERIC_STATUS_CLS: Record<string, string> = {
-  pending: "bg-yellow-500/15 text-yellow-400",
-  approved: "bg-accent/15 text-accent",
-  processing: "bg-blue-500/15 text-blue-400",
+  pending: "bg-warning/15 text-warning",
+  approved: "bg-success/15 text-success",
+  processing: "bg-accent/15 text-accent",
   completed: "bg-accent/15 text-accent",
   rejected: "bg-destructive/15 text-destructive",
 };
@@ -94,7 +94,7 @@ export function WalletClient({ initial }: { initial: WalletData }) {
       <div className="grid grid-cols-3 gap-3">
         {[
           { label: "AVAILABLE", v: data.wallet.available_cents, cls: "text-accent" },
-          { label: "IN ESCROW", v: data.wallet.pending_cents, cls: "text-yellow-400" },
+          { label: "IN ESCROW", v: data.wallet.pending_cents, cls: "text-warning" },
           { label: "FROZEN", v: data.wallet.frozen_cents, cls: "text-destructive" },
         ].map((x) => (
           <div key={x.label} className="bg-card border border-border rounded-lg p-4">

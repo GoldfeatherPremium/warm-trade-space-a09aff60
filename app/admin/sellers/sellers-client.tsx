@@ -12,7 +12,7 @@ type Application = Applications[number];
 
 const STATUS_CLS: Record<string, string> = {
   ...GENERIC_STATUS_CLS,
-  pending: "bg-yellow-500/15 text-yellow-400",
+  pending: "bg-warning/15 text-warning",
   approved: "bg-accent/15 text-accent",
   rejected: "bg-destructive/15 text-destructive",
   suspended: "bg-destructive/15 text-destructive",

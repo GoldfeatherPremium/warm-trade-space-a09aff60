@@ -201,8 +201,8 @@ export function OrderClient({ initial }: { initial: OrderData }) {
 
       {/* Dispute */}
       {disp && (
-        <div className="bg-card border border-yellow-500/30 rounded-lg p-4 space-y-2">
-          <h2 className="text-xs font-bold tracking-widest text-yellow-400 flex items-center gap-1.5">
+        <div className="bg-card border border-warning/30 rounded-lg p-4 space-y-2">
+          <h2 className="text-xs font-bold tracking-widest text-warning flex items-center gap-1.5">
             <AlertTriangle className="size-4" /> DISPUTE — {disp.status.toUpperCase()}
           </h2>
           <p className="text-sm font-bold">{disp.reason.replaceAll("_", " ")}</p>
@@ -284,7 +284,7 @@ export function OrderClient({ initial }: { initial: OrderData }) {
             <button
               onClick={() => act("sla", () => buyerCancelSlaBreachAction(o.id))}
               disabled={!!busy}
-              className="w-full py-2.5 text-sm font-bold bg-destructive/90 text-white rounded-lg disabled:opacity-60"
+              className="w-full py-2.5 text-sm font-bold bg-destructive/90 text-destructive-foreground rounded-lg disabled:opacity-60"
             >
               {busy === "sla" ? "Cancelling…" : "Cancel — SLA breach (no delivery)"}
             </button>
@@ -326,7 +326,7 @@ export function OrderClient({ initial }: { initial: OrderData }) {
                       )
                     }
                     disabled={!!busy}
-                    className="px-4 py-2 text-xs font-bold bg-destructive text-white rounded-md disabled:opacity-60"
+                    className="px-4 py-2 text-xs font-bold bg-destructive text-destructive-foreground rounded-md disabled:opacity-60"
                   >
                     {busy === "dispute" ? "Opening…" : "Open dispute"}
                   </button>
@@ -356,7 +356,7 @@ export function OrderClient({ initial }: { initial: OrderData }) {
                   {[1, 2, 3, 4, 5].map((s) => (
                     <button key={s} onClick={() => setRating(s)}>
                       <Star
-                        className={`size-5 ${s <= rating ? "text-yellow-400 fill-current" : "text-muted-foreground"}`}
+                        className={`size-5 ${s <= rating ? "text-warning fill-current" : "text-muted-foreground"}`}
                       />
                     </button>
                   ))}
@@ -405,7 +405,7 @@ export function OrderClient({ initial }: { initial: OrderData }) {
                 {[1, 2, 3, 4, 5].map((s) => (
                   <Star
                     key={s}
-                    className={`size-3.5 ${s <= rev.rating ? "text-yellow-400 fill-current" : "text-muted-foreground"}`}
+                    className={`size-3.5 ${s <= rev.rating ? "text-warning fill-current" : "text-muted-foreground"}`}
                   />
                 ))}
                 <span className="text-[10px] text-muted-foreground ml-1">

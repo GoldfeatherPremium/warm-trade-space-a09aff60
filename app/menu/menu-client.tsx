@@ -191,7 +191,7 @@ export function MenuClient({ user }: { user: User | null }) {
       id: "buy",
       label: "Buy",
       icon: ShoppingBag,
-      color: "text-yellow-400",
+      color: "text-warning",
       entries: [
         { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
         { label: "Purchase Orders", href: "/orders", icon: ShoppingBag },
@@ -221,14 +221,14 @@ export function MenuClient({ user }: { user: User | null }) {
       id: "disputes",
       label: "Dispute Center",
       icon: Scale,
-      color: "text-cyan-400",
+      color: "text-accent",
       entries: [{ label: "My Disputes", href: "/disputes" }],
     },
     {
       id: "announcement",
       label: "Announcement",
       icon: Megaphone,
-      color: "text-yellow-400",
+      color: "text-warning",
       entries: [
         { label: "Notifications", href: "/notifications", icon: Bell },
         { label: "Messages", href: "/chat" },

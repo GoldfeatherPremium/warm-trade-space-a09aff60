@@ -113,7 +113,7 @@ export default async function StorePage({ params }: { params: Promise<{ username
                 </span>
               </div>
               <p className="text-[11px] text-muted-foreground mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
-                <span className="flex items-center gap-0.5 text-amber-400 font-bold">
+                <span className="flex items-center gap-0.5 text-warning font-bold">
                   <Star className="size-3 fill-current" />
                   {seller.rating > 0 ? seller.rating.toFixed(1) : "New"} ({seller.rating_count})
                 </span>
@@ -194,7 +194,7 @@ export default async function StorePage({ params }: { params: Promise<{ username
             {reviews.slice(0, 20).map((r, i) => (
               <div key={i} className="bg-card border border-border rounded-xl p-3">
                 <div className="flex items-center gap-2 text-xs">
-                  <span className="flex items-center gap-0.5 text-amber-400 font-bold">
+                  <span className="flex items-center gap-0.5 text-warning font-bold">
                     <Star className="size-3 fill-current" />
                     {r.rating}
                   </span>

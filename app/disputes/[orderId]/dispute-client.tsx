@@ -60,9 +60,9 @@ export function DisputeClient({
   const inputCls =
     "w-full bg-background border border-border rounded-md px-2.5 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50";
   const ROLE_CLS: Record<string, string> = {
-    buyer: "bg-blue-500/10 text-blue-400",
+    buyer: "bg-accent/10 text-accent",
     seller: "bg-accent/10 text-accent",
-    staff: "bg-purple-500/10 text-purple-400",
+    staff: "bg-primary/10 text-primary",
   };
 
   async function sendMessage() {

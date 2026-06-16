@@ -56,7 +56,7 @@ export function StatCard({
   );
   const base = cn(
     "block bg-card border rounded-lg p-4 transition-colors",
-    highlight ? "border-yellow-500/40" : "border-border",
+    highlight ? "border-warning/40" : "border-border",
     to && "hover:border-primary/50",
   );
   return to ? (

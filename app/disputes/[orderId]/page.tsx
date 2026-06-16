@@ -12,10 +12,10 @@ export const metadata: Metadata = { title: "Dispute" };
 export const dynamic = "force-dynamic";
 
 const STATUS_CLS: Record<string, string> = {
-  open: "bg-yellow-500/15 text-yellow-400",
-  seller_responded: "bg-blue-500/15 text-blue-400",
-  under_review: "bg-blue-500/15 text-blue-400",
-  awaiting_buyer: "bg-yellow-500/15 text-yellow-400",
+  open: "bg-warning/15 text-warning",
+  seller_responded: "bg-accent/15 text-accent",
+  under_review: "bg-accent/15 text-accent",
+  awaiting_buyer: "bg-warning/15 text-warning",
   resolved: "bg-accent/15 text-accent",
 };
 
@@ -65,11 +65,11 @@ export default async function DisputeDetailPage({
           <>
             {/* Dispute header */}
             <div
-              className={`bg-card border rounded-xl p-5 space-y-3 ${d.status === "resolved" ? "border-accent/30" : "border-yellow-500/30"}`}
+              className={`bg-card border rounded-xl p-5 space-y-3 ${d.status === "resolved" ? "border-accent/30" : "border-warning/30"}`}
             >
               <div className="flex items-center gap-3 flex-wrap">
                 <AlertTriangle
-                  className={`size-5 ${d.status === "resolved" ? "text-accent" : "text-yellow-400"}`}
+                  className={`size-5 ${d.status === "resolved" ? "text-accent" : "text-warning"}`}
                 />
                 <h2 className="font-display text-lg">{d.reason.replaceAll("_", " ")}</h2>
                 <span

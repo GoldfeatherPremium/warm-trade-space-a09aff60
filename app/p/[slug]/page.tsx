@@ -66,7 +66,7 @@ function StarRow({ rating, count }: { rating: number; count: number }) {
         {[1, 2, 3, 4, 5].map((n) => (
           <Star
             key={n}
-            className={`size-3.5 ${n <= Math.round(rating) ? "fill-amber-500 text-amber-500" : "text-border"}`}
+            className={`size-3.5 ${n <= Math.round(rating) ? "fill-warning text-warning" : "text-border"}`}
           />
         ))}
       </div>
@@ -192,7 +192,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   <Zap className="size-3" /> INSTANT DELIVERY
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-md bg-blue-600 text-white">
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-md bg-accent text-accent-foreground">
                   <Clock className="size-3" /> ~{product.delivery_sla_minutes}min
                 </span>
               )}
@@ -291,7 +291,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                       {[1, 2, 3, 4, 5].map((n) => (
                         <Star
                           key={n}
-                          className={`size-4 ${n <= Math.round(avgRating) ? "fill-amber-500 text-amber-500" : "text-border"}`}
+                          className={`size-4 ${n <= Math.round(avgRating) ? "fill-warning text-warning" : "text-border"}`}
                         />
                       ))}
                     </div>
@@ -303,10 +303,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                     {dist.map(({ star, count }) => (
                       <div key={star} className="flex items-center gap-2 text-[11px]">
                         <span className="w-6 text-right text-muted-foreground">{star}</span>
-                        <Star className="size-3 fill-amber-500 text-amber-500 shrink-0" />
+                        <Star className="size-3 fill-warning text-warning shrink-0" />
                         <div className="flex-1 bg-secondary rounded-full h-1.5 overflow-hidden">
                           <div
-                            className="h-full bg-amber-500 rounded-full"
+                            className="h-full bg-warning rounded-full"
                             style={{
                               width:
                                 reviews.length > 0 ? `${(count / reviews.length) * 100}%` : "0%",
@@ -334,7 +334,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                               {[1, 2, 3, 4, 5].map((n) => (
                                 <Star
                                   key={n}
-                                  className={`size-2.5 ${n <= r.rating ? "fill-amber-500 text-amber-500" : "text-border"}`}
+                                  className={`size-2.5 ${n <= r.rating ? "fill-warning text-warning" : "text-border"}`}
                                 />
                               ))}
                             </div>
@@ -375,7 +375,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                   className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
                     auto
                       ? "bg-primary/10 text-primary border border-primary/25"
-                      : "bg-blue-500/10 text-blue-600 border border-blue-500/25"
+                      : "bg-accent/10 text-accent border border-accent/25"
                   }`}
                 >
                   {auto ? <Zap className="size-2.5" /> : <Clock className="size-2.5" />}

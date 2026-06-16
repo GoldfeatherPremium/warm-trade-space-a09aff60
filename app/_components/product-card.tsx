@@ -29,7 +29,7 @@ export function ProductCard({ product, priority }: { product: PublicProduct; pri
         {/* Delivery badge */}
         <span
           className={`absolute top-2 left-2 text-[9px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-1 backdrop-blur-sm ${
-            auto ? "bg-primary/85 text-primary-foreground" : "bg-blue-500/85 text-white"
+            auto ? "bg-primary/85 text-primary-foreground" : "bg-accent/85 text-accent-foreground"
           }`}
         >
           {auto ? <Zap className="size-2.5" /> : <Clock className="size-2.5" />}
@@ -38,17 +38,17 @@ export function ProductCard({ product, priority }: { product: PublicProduct; pri
 
         {/* Right badges */}
         {product.is_promoted && !outOfStock && (
-          <span className="absolute top-2 right-2 text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-fuchsia-500/85 text-white tracking-widest backdrop-blur-sm">
+          <span className="absolute top-2 right-2 text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-primary/85 text-primary-foreground tracking-widest backdrop-blur-sm">
             FEATURED
           </span>
         )}
         {outOfStock && (
-          <span className="absolute top-2 right-2 text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-black/70 text-muted-foreground backdrop-blur-sm">
+          <span className="absolute top-2 right-2 text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-foreground/70 text-background backdrop-blur-sm">
             SOLD OUT
           </span>
         )}
         {auto && !outOfStock && product.stock_count > 0 && product.stock_count <= lowStock && (
-          <span className="absolute top-2 right-2 text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-amber-500/90 text-black backdrop-blur-sm">
+          <span className="absolute top-2 right-2 text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-warning/90 text-warning-foreground backdrop-blur-sm">
             {product.stock_count} LEFT
           </span>
         )}
@@ -68,8 +68,8 @@ export function ProductCard({ product, priority }: { product: PublicProduct; pri
               <span className="truncate font-medium">{product.seller.username}</span>
             </div>
             <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-              <Star className="size-2.5 fill-amber-400 text-amber-400 shrink-0" />
-              <span className="text-amber-400 font-medium">
+              <Star className="size-2.5 fill-warning text-warning shrink-0" />
+              <span className="text-warning font-medium">
                 {product.seller.rating > 0 ? product.seller.rating.toFixed(1) : "New"}
               </span>
               <span className="text-muted-foreground/60">· {product.sold_count} sold</span>

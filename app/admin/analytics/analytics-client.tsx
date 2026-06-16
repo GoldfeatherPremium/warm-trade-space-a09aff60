@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { getAdminAnalyticsAction } from "@/server/actions/admin";
 import { usdt } from "@/lib/format";
+import { useChartTheme } from "../../_lib/use-chart-theme";
 import {
   Area,
   AreaChart,
@@ -44,6 +45,7 @@ export function AnalyticsClient() {
   const [, startTransition] = useTransition();
   const rangeRef = useRef(range);
   rangeRef.current = range;
+  const ct = useChartTheme();
 
   useEffect(() => {
     setLoading(true);
@@ -117,27 +119,27 @@ export function AnalyticsClient() {
                 <AreaChart data={data.daily} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
                   <defs>
                     <linearGradient id="aa-fill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#22c55e" stopOpacity={0.5} />
-                      <stop offset="100%" stopColor="#22c55e" stopOpacity={0} />
+                      <stop offset="0%" stopColor={ct.chart1} stopOpacity={0.5} />
+                      <stop offset="100%" stopColor={ct.chart1} stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid stroke="#27272a" vertical={false} />
+                  <CartesianGrid stroke={ct.grid} vertical={false} />
                   <XAxis
                     dataKey="day"
-                    tick={{ fontSize: 10, fill: "#71717a" }}
+                    tick={{ fontSize: 10, fill: ct.tickFill }}
                     tickLine={false}
                     axisLine={false}
                   />
                   <YAxis
-                    tick={{ fontSize: 10, fill: "#71717a" }}
+                    tick={{ fontSize: 10, fill: ct.tickFill }}
                     tickLine={false}
                     axisLine={false}
                     tickFormatter={(v) => `${(v / 100).toFixed(0)}`}
                   />
                   <Tooltip
                     contentStyle={{
-                      background: "#18181b",
-                      border: "1px solid #27272a",
+                      background: ct.tooltipBg,
+                      border: `1px solid ${ct.tooltipBorder}`,
                       borderRadius: 8,
                       fontSize: 12,
                     }}
@@ -146,7 +148,7 @@ export function AnalyticsClient() {
                   <Area
                     type="monotone"
                     dataKey="v"
-                    stroke="#22c55e"
+                    stroke={ct.chart1}
                     strokeWidth={2}
                     fill="url(#aa-fill)"
                   />
@@ -253,7 +255,7 @@ export function AnalyticsClient() {
                     >
                       <span className="truncate font-mono">{s.query}</span>
                       <span className="text-right font-mono text-muted-foreground">{s.uses}×</span>
-                      <span className="text-right font-mono text-emerald-400">
+                      <span className="text-right font-mono text-success">
                         {s.avg_results.toFixed(0)} hits
                       </span>
                     </div>
@@ -273,7 +275,7 @@ export function AnalyticsClient() {
                       key={s.query}
                       className="grid grid-cols-[1fr_60px] gap-2 text-xs py-1 border-b border-border/40 last:border-0"
                     >
-                      <span className="truncate font-mono text-orange-300">{s.query}</span>
+                      <span className="truncate font-mono text-warning/80">{s.query}</span>
                       <span className="text-right font-mono text-muted-foreground">{s.uses}×</span>
                     </div>
                   ))}
