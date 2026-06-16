@@ -142,10 +142,10 @@ export default async function HomePage() {
         />
         {/* Subtle grid texture */}
         <div
-          className="absolute inset-0 -z-10 opacity-[0.04]"
+          className="absolute inset-0 -z-10 opacity-[0.06]"
           style={{
             backgroundImage:
-              "linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)",
+              "linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)",
             backgroundSize: "44px 44px",
           }}
           aria-hidden
@@ -388,7 +388,7 @@ export default async function HomePage() {
                   className="flex items-center gap-3 py-3 hover:bg-secondary/30 -mx-2 px-2 rounded-lg transition-colors"
                 >
                   <span
-                    className={`font-display text-lg w-6 text-center shrink-0 ${i === 0 ? "text-amber-400" : i === 1 ? "text-slate-300" : i === 2 ? "text-amber-600" : "text-muted-foreground/50"}`}
+                    className={`font-display text-lg w-6 text-center shrink-0 ${i === 0 ? "text-warning" : i === 1 ? "text-muted-foreground" : i === 2 ? "text-warning/70" : "text-muted-foreground/50"}`}
                   >
                     {i + 1}
                   </span>
@@ -402,7 +402,7 @@ export default async function HomePage() {
                     </p>
                   </div>
                   <div className="text-right shrink-0">
-                    <div className="flex items-center gap-0.5 text-amber-400 text-xs font-semibold justify-end">
+                    <div className="flex items-center gap-0.5 text-warning text-xs font-semibold justify-end">
                       <Star className="size-3 fill-current" />
                       {s.rating > 0 ? s.rating.toFixed(1) : "—"}
                     </div>

@@ -59,7 +59,7 @@ export default async function CreditsPage() {
         </div>
 
         {pending && (
-          <div className="bg-yellow-500/10 border border-yellow-500/40 rounded-lg p-3 text-xs">
+          <div className="bg-warning/10 border border-warning/40 rounded-lg p-3 text-xs">
             Withdrawal of <b>{usdt(pending.amount_cents)}</b> is pending admin approval.
           </div>
         )}

@@ -51,7 +51,7 @@ export default async function OrdersPage({
       <div className="flex items-end justify-between gap-3 mb-4 flex-wrap">
         <h1 className="font-display text-3xl">MY ORDERS</h1>
         {actionNeeded > 0 && (
-          <span className="text-[11px] font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30 rounded-full px-3 py-1">
+          <span className="text-[11px] font-bold bg-accent/15 text-accent border border-accent/30 rounded-full px-3 py-1">
             {actionNeeded} need{actionNeeded === 1 ? "s" : ""} your attention
           </span>
         )}
@@ -100,7 +100,7 @@ export default async function OrdersPage({
                 key={o.id}
                 href={`/orders/${o.id}`}
                 className={`bg-card border rounded-lg p-3 flex items-center gap-3 hover:border-primary/50 transition-colors ${
-                  needsAction ? "border-blue-500/40" : "border-border"
+                  needsAction ? "border-accent/40" : "border-border"
                 }`}
               >
                 {" "}

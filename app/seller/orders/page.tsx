@@ -161,7 +161,7 @@ export default function SellerOrdersPage() {
               <Link
                 key={o.id}
                 href={`/orders/${o.id}`}
-                className={`bg-card border rounded-lg p-3 flex items-center gap-3 hover:border-primary/50 ${NEEDS_ACTION.includes(o.status) ? "border-blue-500/40" : "border-border"}`}
+                className={`bg-card border rounded-lg p-3 flex items-center gap-3 hover:border-primary/50 ${NEEDS_ACTION.includes(o.status) ? "border-accent/40" : "border-border"}`}
               >
                 <div className="size-12 rounded-md overflow-hidden bg-secondary shrink-0">
                   <img
@@ -177,7 +177,7 @@ export default function SellerOrdersPage() {
                   </p>
                   {needsDelivery && o.delivery_type === "manual" && (
                     <p
-                      className={`text-[10px] font-bold ${Date.now() > slaDeadline ? "text-destructive" : "text-blue-400"}`}
+                      className={`text-[10px] font-bold ${Date.now() > slaDeadline ? "text-destructive" : "text-accent"}`}
                     >
                       SLA:{" "}
                       {Date.now() > slaDeadline

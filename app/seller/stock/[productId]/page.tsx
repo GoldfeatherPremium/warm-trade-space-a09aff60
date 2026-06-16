@@ -15,8 +15,8 @@ type StockData = Awaited<ReturnType<typeof getProductStockAction>>;
 
 const STATUS_CLS: Record<string, string> = {
   available: "bg-accent/15 text-accent",
-  reserved: "bg-yellow-500/15 text-yellow-400",
-  delivered: "bg-blue-500/15 text-blue-400",
+  reserved: "bg-warning/15 text-warning",
+  delivered: "bg-success/15 text-success",
   invalid: "bg-muted text-muted-foreground",
 };
 

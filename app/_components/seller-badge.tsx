@@ -19,7 +19,7 @@ const TIERS: Record<
   premium: {
     label: "Premium",
     icon: Crown,
-    cls: "text-amber-300 bg-amber-400/10 border-amber-400/30",
+    cls: "text-warning bg-warning/10 border-warning/30",
   },
 };
 

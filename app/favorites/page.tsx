@@ -78,7 +78,7 @@ export default async function FavoritesPage() {
                   {p.delivery_type === "auto" ? `⚡ ${p.stock_count} in stock` : "🕐 manual"}
                 </p>
                 {p.status !== "active" && (
-                  <p className="text-[10px] text-yellow-400 font-bold">Currently unavailable</p>
+                  <p className="text-[10px] text-warning font-bold">Currently unavailable</p>
                 )}
               </div>
               <span className="font-mono text-accent text-sm shrink-0">{usdt(p.price_cents)}</span>

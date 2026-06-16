@@ -430,7 +430,7 @@ export function SmartSearchBox({ variant = "default" }: { variant?: "default" | 
                           )}
                         </p>
                         <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                          <Star className="size-2.5 fill-amber-500 text-amber-500" />
+                          <Star className="size-2.5 fill-warning text-warning" />
                           {s.rating > 0 ? s.rating.toFixed(1) : "—"} · {s.total_sales} sales
                         </p>
                       </div>

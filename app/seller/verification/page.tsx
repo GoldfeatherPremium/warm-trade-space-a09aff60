@@ -32,9 +32,9 @@ const TIER_INFO: Record<Tier, { title: string; bullet: string[] }> = {
 
 function TierBadge({ tier, size = "sm" }: { tier: string; size?: "xs" | "sm" }) {
   const colors: Record<string, string> = {
-    verified: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-    business: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-    premium: "bg-purple-500/15 text-purple-400 border-purple-500/30",
+    verified: "bg-accent/15 text-accent border-accent/30",
+    business: "bg-warning/15 text-warning border-warning/30",
+    premium: "bg-primary/15 text-primary border-primary/30",
   };
   const cls = colors[tier] ?? "bg-muted text-muted-foreground border-border";
   const text = size === "xs" ? "text-[9px]" : "text-[11px]";
@@ -158,7 +158,7 @@ export default function VerificationPage() {
             </span>
             <TierBadge tier={application.tier_requested} size="xs" />
             <span
-              className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${application.status === "pending" ? "bg-yellow-500/15 text-yellow-400" : application.status === "approved" ? "bg-emerald-500/15 text-emerald-400" : "bg-destructive/15 text-destructive"}`}
+              className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${application.status === "pending" ? "bg-warning/15 text-warning" : application.status === "approved" ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}
             >
               {application.status}
             </span>

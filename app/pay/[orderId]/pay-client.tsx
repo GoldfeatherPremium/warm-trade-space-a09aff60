@@ -206,7 +206,7 @@ export function PayClient({ initial, orderId }: { initial: PayData; orderId: str
           <div className="flex justify-between items-center text-xs">
             <span className="text-muted-foreground">{order.order_no}</span>
             {order.expires_at && (
-              <span className="flex items-center gap-1 text-yellow-400 font-mono font-bold">
+              <span className="flex items-center gap-1 text-warning font-mono font-bold">
                 <Timer className="size-3.5" />
                 {countdown(order.expires_at)}
               </span>

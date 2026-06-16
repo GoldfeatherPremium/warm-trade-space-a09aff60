@@ -13,14 +13,14 @@ export const dynamic = "force-dynamic";
 
 const TYPE_META: Record<string, { label: string; cls: string }> = {
   order_paid: { label: "Order paid", cls: "bg-accent/15 text-accent" },
-  order_delivered: { label: "Delivered", cls: "bg-blue-500/15 text-blue-400" },
+  order_delivered: { label: "Delivered", cls: "bg-accent/15 text-accent" },
   order_completed: { label: "Completed", cls: "bg-accent/15 text-accent" },
   order_cancelled: { label: "Cancelled", cls: "bg-muted text-muted-foreground" },
-  dispute_opened: { label: "Dispute", cls: "bg-yellow-500/15 text-yellow-400" },
-  dispute_update: { label: "Dispute update", cls: "bg-yellow-500/15 text-yellow-400" },
+  dispute_opened: { label: "Dispute", cls: "bg-warning/15 text-warning" },
+  dispute_update: { label: "Dispute update", cls: "bg-warning/15 text-warning" },
   chat: { label: "Message", cls: "bg-primary/15 text-primary" },
   review: { label: "Review", cls: "bg-accent/15 text-accent" },
-  withdrawal: { label: "Withdrawal", cls: "bg-blue-500/15 text-blue-400" },
+  withdrawal: { label: "Withdrawal", cls: "bg-accent/15 text-accent" },
   system: { label: "System", cls: "bg-muted text-muted-foreground" },
 };
 
