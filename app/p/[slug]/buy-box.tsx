@@ -179,7 +179,7 @@ export function BuyBox({
             onChange={(e) => setBuyerInfo(e.target.value)}
             rows={2}
             placeholder="What the seller needs to deliver your order (e.g. account ID, username, region)…"
-            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 placeholder:text-muted-foreground/50 resize-none"
+            className="w-full rounded-xl border border-border/70 bg-background px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 placeholder:text-muted-foreground/50 resize-none transition-colors"
           />
         </div>
       )}
@@ -212,9 +212,10 @@ export function BuyBox({
           outOfStock
             ? "bg-secondary text-muted-foreground cursor-not-allowed"
             : busy
-              ? "bg-primary/60 text-primary-foreground cursor-wait"
-              : "bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98]"
+              ? "opacity-70 cursor-wait text-primary-foreground"
+              : "text-primary-foreground hover:opacity-90 active:scale-[0.98] shadow-glow"
         }`}
+        style={!outOfStock ? { background: "var(--gradient-primary)" } : undefined}
       >
         {outOfStock ? "Out of stock" : busy ? "Processing…" : "Buy Now"}
       </button>

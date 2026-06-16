@@ -42,13 +42,17 @@ function StatCard({
   to?: string;
 }) {
   const body = (
-    <div className="bg-card border border-border rounded-lg p-4">
-      <p className="text-[9px] font-bold tracking-widest text-muted-foreground flex items-center gap-1.5">
+    <div className="bg-card border border-border/60 rounded-2xl p-4 card-hover group overflow-hidden relative">
+      <div
+        className="absolute inset-0 bg-gradient-to-br from-primary/4 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"
+        aria-hidden
+      />
+      <p className="text-[9px] font-bold tracking-widest text-muted-foreground flex items-center gap-1.5 relative">
         {Icon && <Icon className="size-3.5" />}
         {label}
       </p>
-      <p className={`font-mono text-lg mt-1.5 ${valueCls ?? ""}`}>{value}</p>
-      {sub && <p className="text-[10px] text-muted-foreground mt-1">{sub}</p>}
+      <p className={`font-mono text-xl mt-2 font-bold relative ${valueCls ?? ""}`}>{value}</p>
+      {sub && <p className="text-[10px] text-muted-foreground mt-1 relative">{sub}</p>}
       {delta && (
         <p
           className={`text-[10px] font-bold mt-0.5 ${tone === "up" ? "text-accent" : tone === "down" ? "text-destructive" : "text-muted-foreground"}`}
@@ -148,7 +152,7 @@ export default function SellerOverviewPage() {
         />
       </div>
 
-      <div className="bg-card border border-border rounded-lg p-4 space-y-3">
+      <div className="bg-card border border-border/60 rounded-2xl p-5 space-y-3">
         <p className="text-[9px] font-bold tracking-widest text-muted-foreground flex items-center gap-1.5">
           <BarChart3 className="size-3.5" /> BUSINESS INTELLIGENCE
         </p>
@@ -184,8 +188,8 @@ export default function SellerOverviewPage() {
         </div>
       </div>
 
-      <div className="bg-card border border-border rounded-lg p-4">
-        <p className="text-[9px] font-bold tracking-widest text-muted-foreground mb-3">
+      <div className="bg-card border border-border/60 rounded-2xl p-5">
+        <p className="text-[9px] font-bold tracking-widest text-muted-foreground mb-4">
           NET SALES — LAST 14 DAYS
         </p>
         <div className="h-44">
@@ -220,7 +224,7 @@ export default function SellerOverviewPage() {
       </div>
 
       {data.topProducts.length > 0 && (
-        <div className="bg-card border border-border rounded-lg p-4">
+        <div className="bg-card border border-border/60 rounded-2xl p-5">
           <p className="text-[9px] font-bold tracking-widest text-muted-foreground flex items-center gap-1.5 mb-3">
             <Boxes className="size-3.5" /> PRODUCT PERFORMANCE
           </p>
@@ -279,7 +283,7 @@ export default function SellerOverviewPage() {
         </div>
       )}
 
-      <div className="bg-card border border-border rounded-lg p-4 text-xs text-muted-foreground leading-relaxed">
+      <div className="bg-card border border-border/60 rounded-2xl p-5 text-xs text-muted-foreground leading-relaxed">
         <b className="text-foreground">Seller level {data.profile.level}</b> ·{" "}
         {data.profile.totalSales} lifetime sales · {data.profile.completionRate.toFixed(0)}%
         completion.

@@ -28,8 +28,11 @@ export default async function AuthPage({
 
   return (
     <PublicShell>
-      <div className="max-w-sm mx-auto py-10">
-        <h1 className="font-display text-2xl text-center mb-5">Welcome to X-VAULT</h1>
+      <div className="max-w-sm mx-auto py-12">
+        <div className="text-center mb-7 animate-enter">
+          <h1 className="font-display text-3xl mb-2">Welcome to X-VAULT</h1>
+          <p className="text-sm text-muted-foreground">The premium digital goods marketplace</p>
+        </div>
         <AuthForm redirectTo={redirectTo} />
       </div>
     </PublicShell>

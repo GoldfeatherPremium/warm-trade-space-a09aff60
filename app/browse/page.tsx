@@ -167,10 +167,10 @@ export default async function BrowsePage({
                 <Link
                   key={s.v}
                   href={qs({ sort: s.v, page: undefined })}
-                  className={`text-[11px] font-bold rounded-md px-2.5 py-1.5 transition-colors ${
+                  className={`text-[11px] font-semibold rounded-xl px-3 py-1.5 transition-all ${
                     (params.sort ?? "popular") === s.v
                       ? "bg-primary text-primary-foreground"
-                      : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
+                      : "bg-secondary/60 text-muted-foreground hover:text-foreground hover:bg-secondary"
                   }`}
                 >
                   {s.label}
@@ -239,7 +239,7 @@ export default async function BrowsePage({
                   {page > 1 && (
                     <Link
                       href={qs({ page: page - 1 })}
-                      className="text-xs font-bold rounded-md px-3 py-2 bg-secondary hover:bg-secondary/70"
+                      className="text-xs font-semibold rounded-xl px-4 py-2 bg-secondary/70 hover:bg-secondary transition-colors border border-border/60"
                     >
                       ← Prev
                     </Link>
@@ -250,7 +250,7 @@ export default async function BrowsePage({
                   {page < pageCount && (
                     <Link
                       href={qs({ page: page + 1 })}
-                      className="text-xs font-bold rounded-md px-3 py-2 bg-secondary hover:bg-secondary/70"
+                      className="text-xs font-semibold rounded-xl px-4 py-2 bg-secondary/70 hover:bg-secondary transition-colors border border-border/60"
                     >
                       Next →
                     </Link>
