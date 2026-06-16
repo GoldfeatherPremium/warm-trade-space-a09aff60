@@ -18,6 +18,7 @@ Extend `admin.categories.tsx` + `adminSaveCategory` so each category stores:
 ## 2. Admin → Products (per-product overrides)
 
 `admin.products_.$id.edit.tsx` already has `adminSeoDescription`. Add:
+
 - **Delivery type override** (defaults to category's).
 - **Subscription duration override** (if category is subscription).
 - Existing min/max qty stay.
@@ -25,6 +26,7 @@ Extend `admin.categories.tsx` + `adminSaveCategory` so each category stores:
 ## 3. Seller → New / Edit product
 
 `seller.new-product.tsx`:
+
 - Read category config; render:
   - **Subscription duration selector** (only if category requires it; options = admin's allowed list).
   - **Min quantity per order** (default 1).
@@ -35,6 +37,7 @@ Extend `admin.categories.tsx` + `adminSaveCategory` so each category stores:
 ## 4. Seller → Stock manager (`seller.stock.$productId.tsx`)
 
 Adapt UI per delivery type:
+
 - `code` → existing bulk textarea (unchanged).
 - `credentials` → rows of `email | password` (CSV-style: `email:password` per line).
 - `giftcard_image` → image upload list.
@@ -44,6 +47,7 @@ Adapt UI per delivery type:
 ## 5. Order fulfillment (delivery)
 
 For `invite` / `manual_text` orders, seller fills delivery details in `seller.orders.tsx` per order. Once `delivered_at` is set:
+
 - DB constraint + server check blocks further edits to `stock_items.payload` / order delivery payload.
 - UI hides edit controls; shows read-only.
 
@@ -89,7 +93,7 @@ Server: `removeStockItem` / any stock-edit fn rejects when `locked_at is not nul
 
 1. **Subscription duration UX**: should buyers see the duration on the product card / checkout (yes by default)? And does ordering quantity=N of a "1 month" sub mean N months stacked, or N separate 1-month subs delivered to different recipients?
 2. **Gift card image**: do you want admin to also accept PDF, or images only?
-3. **Max orders at a time** — is this *per buyer per product* (rate-limit) or *per single checkout* (cart cap)?
+3. **Max orders at a time** — is this _per buyer per product_ (rate-limit) or _per single checkout_ (cart cap)?
 4. **`invite` flow**: who actually sends the invite — seller manually after order, or automated email from the platform using seller-supplied API/instructions?
 
 Answer those four and I'll implement end-to-end.

@@ -22,4 +22,3 @@ export async function markNotificationsReadAction(ids?: string[]): Promise<void>
     ]);
   }
 }
-

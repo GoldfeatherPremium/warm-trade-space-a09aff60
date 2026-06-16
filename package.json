@@ -7,10 +7,6 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "dev:vite": "vite dev",
-    "build:vite": "vite build",
-    "build:dev:vite": "vite build --mode development",
-    "preview:vite": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write ."
   },

@@ -1,16 +1,10 @@
 /**
- * RSC-facing catalog read queries for the Next.js App Router migration.
+ * RSC-facing catalog read queries for the Next.js App Router.
  *
- * These are plain async functions called directly from Server Components — no
+ * Plain async functions called directly from Server Components — no
  * `createServerFn`, no client data layer, zero client JS for the data. They
  * import only the framework-agnostic server core (`db`, `cache`, `app`
- * context), never the legacy `src/lib/api/*` (which pull in the TanStack Start
- * runtime). Shared TYPES are imported type-only (erased at compile), so no
- * runtime coupling to the legacy layer.
- *
- * The SQL select + row mapper are kept byte-identical to the legacy
- * `src/lib/api/catalog.ts` so results match exactly during the transition;
- * the legacy file is retired at cutover (Phase 7).
+ * context) and shared types from `@/lib/types`.
  */
 import { appContext } from "@/lib/server/app.server";
 import { q, q1 } from "@/lib/server/db.server";
@@ -21,7 +15,7 @@ import type {
   CategorySubmissionSchema,
   StoreProfile,
   LeaderboardSeller,
-} from "@/lib/api/catalog";
+} from "@/lib/types";
 
 const productSelect = `
   select p.id, p.title, p.slug, p.description, p.image_key, p.delivery_type, p.delivery_sla_minutes,

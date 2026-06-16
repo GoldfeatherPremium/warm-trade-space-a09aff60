@@ -131,7 +131,7 @@ export function confirmPayment(orderId: string): Promise<void> {
       const staff = await q<{ id: string }>(
         `select id from users where role in ('admin','support')`,
       );
-  // Staff notifications can fire in parallel — each is an independent INSERT.
+      // Staff notifications can fire in parallel — each is an independent INSERT.
       await Promise.all(
         staff.map((s) =>
           notify(

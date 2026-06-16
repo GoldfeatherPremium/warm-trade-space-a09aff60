@@ -115,12 +115,9 @@
   --gradient-surface: linear-gradient(180deg, oklch(1 0 0) 0%, oklch(0.975 0.005 290) 100%);
 
   /* Shadows */
-  --shadow-card:
-    0 1px 3px oklch(0.14 0.02 285 / 0.08),
-    0 4px 16px oklch(0.14 0.02 285 / 0.06);
+  --shadow-card: 0 1px 3px oklch(0.14 0.02 285 / 0.08), 0 4px 16px oklch(0.14 0.02 285 / 0.06);
   --shadow-elev:
-    0 4px 6px oklch(0.14 0.02 285 / 0.05),
-    0 12px 40px -8px oklch(0.14 0.02 285 / 0.18);
+    0 4px 6px oklch(0.14 0.02 285 / 0.05), 0 12px 40px -8px oklch(0.14 0.02 285 / 0.18);
   --shadow-glow: 0 8px 40px -8px oklch(0.52 0.24 295 / 0.3);
   --shadow-glow-lg: 0 16px 64px -16px oklch(0.52 0.24 295 / 0.35);
 
@@ -357,7 +354,8 @@
 
 /* Live indicator pulse */
 @keyframes glow-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     box-shadow: 0 0 0 0 var(--neon-primary, oklch(0.635 0.25 296 / 0.4));
   }
@@ -372,9 +370,16 @@
 
 /* Hero emblem float */
 @keyframes float-soft {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  33% { transform: translateY(-8px) rotate(1deg); }
-  66% { transform: translateY(-4px) rotate(-0.5deg); }
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-8px) rotate(1deg);
+  }
+  66% {
+    transform: translateY(-4px) rotate(-0.5deg);
+  }
 }
 .animate-float {
   animation: float-soft 8s ease-in-out infinite;
@@ -382,7 +387,9 @@
 
 /* Halo spin */
 @keyframes spin-slow {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 .animate-spin-slow {
   animation: spin-slow 16s linear infinite;
@@ -390,7 +397,9 @@
 
 /* Reverse spin for second ring */
 @keyframes spin-slow-reverse {
-  to { transform: rotate(-360deg); }
+  to {
+    transform: rotate(-360deg);
+  }
 }
 .animate-spin-slow-reverse {
   animation: spin-slow-reverse 22s linear infinite;
@@ -398,25 +407,47 @@
 
 /* Slide up entrance */
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .animate-enter {
   animation: slideUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* Staggered child delays */
-.stagger-1 { animation-delay: 0.05s; }
-.stagger-2 { animation-delay: 0.1s; }
-.stagger-3 { animation-delay: 0.15s; }
-.stagger-4 { animation-delay: 0.2s; }
-.stagger-5 { animation-delay: 0.25s; }
-.stagger-6 { animation-delay: 0.3s; }
+.stagger-1 {
+  animation-delay: 0.05s;
+}
+.stagger-2 {
+  animation-delay: 0.1s;
+}
+.stagger-3 {
+  animation-delay: 0.15s;
+}
+.stagger-4 {
+  animation-delay: 0.2s;
+}
+.stagger-5 {
+  animation-delay: 0.25s;
+}
+.stagger-6 {
+  animation-delay: 0.3s;
+}
 
 /* Fade in */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 .animate-fade-in {
   animation: fadeIn 0.45s ease both;
@@ -424,8 +455,14 @@
 
 /* Scale in */
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.94); }
-  to   { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 .animate-scale-in {
   animation: scaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -433,35 +470,72 @@
 
 /* Shimmer skeleton sweep */
 @keyframes shimmer {
-  100% { transform: translateX(100%); }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 /* Animated aurora orb drift — for hero background */
 @keyframes orb-drift-1 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  25%  { transform: translate(3%, 5%) scale(1.04); }
-  50%  { transform: translate(-2%, 8%) scale(0.97); }
-  75%  { transform: translate(4%, 3%) scale(1.02); }
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(3%, 5%) scale(1.04);
+  }
+  50% {
+    transform: translate(-2%, 8%) scale(0.97);
+  }
+  75% {
+    transform: translate(4%, 3%) scale(1.02);
+  }
 }
 @keyframes orb-drift-2 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33%  { transform: translate(-5%, -4%) scale(1.06); }
-  66%  { transform: translate(3%, -7%) scale(0.95); }
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(-5%, -4%) scale(1.06);
+  }
+  66% {
+    transform: translate(3%, -7%) scale(0.95);
+  }
 }
 @keyframes orb-drift-3 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  40%  { transform: translate(4%, 6%) scale(1.08); }
-  80%  { transform: translate(-3%, 2%) scale(0.96); }
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  40% {
+    transform: translate(4%, 6%) scale(1.08);
+  }
+  80% {
+    transform: translate(-3%, 2%) scale(0.96);
+  }
 }
-.animate-orb-1 { animation: orb-drift-1 18s ease-in-out infinite; }
-.animate-orb-2 { animation: orb-drift-2 24s ease-in-out infinite; }
-.animate-orb-3 { animation: orb-drift-3 30s ease-in-out infinite; }
+.animate-orb-1 {
+  animation: orb-drift-1 18s ease-in-out infinite;
+}
+.animate-orb-2 {
+  animation: orb-drift-2 24s ease-in-out infinite;
+}
+.animate-orb-3 {
+  animation: orb-drift-3 30s ease-in-out infinite;
+}
 
 /* Gradient text shine sweep */
 @keyframes gradient-shift {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
 .text-gradient-animated {
   background: linear-gradient(
@@ -480,9 +554,18 @@
 
 /* Trust badge entrance */
 @keyframes badge-pop {
-  0%   { opacity: 0; transform: scale(0.7) translateY(4px); }
-  60%  { opacity: 1; transform: scale(1.05); }
-  100% { opacity: 1; transform: scale(1) translateY(0); }
+  0% {
+    opacity: 0;
+    transform: scale(0.7) translateY(4px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 .animate-badge-pop {
   animation: badge-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
@@ -490,8 +573,14 @@
 
 /* Section reveal on scroll — CSS only approach */
 @keyframes reveal-up {
-  from { opacity: 0; transform: translateY(24px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .reveal-section {
   animation: reveal-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -499,13 +588,22 @@
 
 /* Horizontal scroll indicator */
 @keyframes scroll-hint {
-  0%, 100% { opacity: 0.4; transform: translateX(0); }
-  50% { opacity: 1; transform: translateX(4px); }
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: translateX(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(4px);
+  }
 }
 
 /* Reduce motion */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;

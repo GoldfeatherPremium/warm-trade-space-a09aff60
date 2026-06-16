@@ -7,12 +7,12 @@ architecture and local setup.
 
 ## 1. Environments & secrets
 
-| Secret | Where | Purpose |
-|---|---|---|
-| `DATABASE_URL` | server env | Postgres pooler URL. Unset = SQLite dev mode. |
+| Secret                 | Where      | Purpose                                                                                                                          |
+| ---------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`         | server env | Postgres pooler URL. Unset = SQLite dev mode.                                                                                    |
 | `STOCK_ENCRYPTION_KEY` | server env | AES-256-GCM key for stock ciphertext. **Rotating invalidates existing codes** — only rotate during a planned maintenance window. |
-| `SESSION_SECRET` | server env | Signs httpOnly session cookies. Rotating logs every user out. |
-| `CRON_SECRET` | server env | Bearer for `/api/public/cron/*` endpoints. Must match the scheduler config. |
+| `SESSION_SECRET`       | server env | Signs httpOnly session cookies. Rotating logs every user out.                                                                    |
+| `CRON_SECRET`          | server env | Bearer for `/api/public/cron/*` endpoints. Must match the scheduler config.                                                      |
 
 After changing any secret, redeploy. Never commit secrets — use `.env` locally
 and the host's secret store in production.
@@ -34,6 +34,7 @@ and the host's secret store in production.
 ## 3. Daily checks (5 min)
 
 Admin → Dashboard pulse pills:
+
 - **Escrow on hold** — should match the sum of unreleased orders.
 - **Open disputes** — triage anything older than 24h.
 - **Withdrawals pending** — finance queue; SLA = 24h business.
@@ -45,34 +46,40 @@ Admin → Dashboard pulse pills:
 ## 4. Common incidents
 
 ### "Buyer paid but order still `awaiting_payment`"
+
 1. Open `/admin/orders`, search by order ID.
 2. Confirm the deposit address + amount match the on-chain tx.
 3. Use **Force confirm payment** (audited; mandatory note with tx hash).
 4. Downstream (delivery, escrow, warranty) runs automatically.
 
 ### "Stock code leaked / wrong code delivered"
+
 1. Open the order in `/admin/orders` → **Force refund** with reason.
 2. Open the product in `/admin/products` → **Suspend** until the seller
    replaces the affected batch.
 3. Check `/admin/audit` for who touched the stock row.
 
 ### "Dispute stalled"
+
 1. `/admin/disputes` → open the case.
 2. Read buyer claim + seller evidence + chat transcript (linked).
 3. Resolve with **full refund / partial refund / release**. All wallet math
    (escrow → buyer/seller, commission reversal) is automatic.
 
 ### "Seller withdrawal stuck"
+
 1. `/admin/finance` → Withdrawals tab.
 2. Verify level cap + KYC tier. Approve → paste on-chain tx hash.
 3. Reject reverses funds to `available` instantly with an audit row.
 
 ### "Chat moderation queue full"
+
 1. `/admin/moderation` shows regex-flagged messages (contact share, off-platform
    payment).
 2. **Dismiss** (false positive) or **Ban + reverse order** (policy breach).
 
 ### "Site feels slow"
+
 1. Check Admin pulse — large `orders24h` spike?
 2. Verify Postgres pooler connections (Supabase dashboard).
 3. Lifecycle sweeps are in-process and throttled; if a single request looks
@@ -84,6 +91,7 @@ Admin → Dashboard pulse pills:
 
 The spec's three cron workers run as throttled in-process sweeps
 (`sweepLifecycle()` in `src/lib/server/lifecycle.server.ts`):
+
 - expire unpaid orders past the 30-min window,
 - auto-confirm delivered orders past the buyer confirmation window,
 - release escrow past the warranty window.
@@ -114,6 +122,7 @@ secret rotation.
 ## 8. Going to a real payment processor
 
 Swap the simulated USDT gateway for NOWPayments / Cryptomus:
+
 1. Add a route under `/api/public/webhooks/<provider>.ts`.
 2. Verify the provider's HMAC signature (template in
    `src/routes/api/public/cron/follow-digest.ts`).

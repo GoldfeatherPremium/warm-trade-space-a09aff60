@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Zap, Clock, Heart } from "lucide-react";
-import type { PublicProduct } from "@/lib/api/catalog";
+import type { PublicProduct } from "@/lib/types";
 import { productImage } from "../_lib/product-image";
 import { RatingStars, PriceTag } from "./kit";
 

@@ -885,7 +885,7 @@ export async function adminEnsureBaseCategoriesAction() {
   if (added > 0) {
     await audit(staff.id, "category.ensure_base", "category", `+${added}`);
     invalidateCache("home:v1");
-  invalidateCache("browse:default:v1");
+    invalidateCache("browse:default:v1");
     invalidateCache("catalog-items:v1");
   }
   return { added };
@@ -1169,7 +1169,7 @@ export async function reviewItemSuggestionAction(input: {
   if (input.approve) {
     invalidateCache("catalog-items:v1");
     invalidateCache("home:v1");
-  invalidateCache("browse:default:v1");
+    invalidateCache("browse:default:v1");
   }
   return { ok: true };
 }
