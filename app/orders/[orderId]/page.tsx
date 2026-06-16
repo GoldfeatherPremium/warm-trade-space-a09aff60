@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { MessageCircle, FileText } from "lucide-react";
@@ -42,13 +43,13 @@ export default async function OrderDetailPage({
     <PublicShell>
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center gap-3 mb-4">
-          <div className="size-12 rounded-md overflow-hidden bg-secondary shrink-0">
-            <img
+          <div className="size-12 rounded-md overflow-hidden bg-secondary shrink-0 relative">
+            <Image
               src={productImage(o.image_key)}
               alt=""
-              width={48}
-              height={48}
-              className="w-full h-full object-cover"
+              fill
+              sizes="48px"
+              className="object-cover"
             />
           </div>
           <div>
