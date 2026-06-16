@@ -1,7 +1,12 @@
 /**
- * Tiny in-memory token bucket. Per-Worker instance — adequate for casual abuse
- * defense on auth/checkout/dispute/withdrawal endpoints. For multi-region
- * persistence, swap the store for a DB-backed counter later.
+ * Tiny in-memory token bucket.
+ *
+ * IMPORTANT — SERVERLESS LIMITATION: In serverless environments (Vercel,
+ * Cloudflare Workers, AWS Lambda) every invocation may be a fresh isolate,
+ * so this store is reset on each cold start. Rate limits are best-effort
+ * for casual abuse. For production hardening at 100k+ users, replace this
+ * with a Redis/Upstash-backed counter or use an edge WAF (Cloudflare, Vercel
+ * Edge Middleware with Redis) as the enforcement layer.
  */
 const buckets = new Map<string, { tokens: number; resetAt: number }>();
 

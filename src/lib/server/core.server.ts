@@ -48,7 +48,16 @@ function getStockKey(): Buffer {
         "stock items would be encrypted under a public constant, exposing all sold goods.",
     );
   }
-  return createHash("sha256").update(rawKey).digest();
+  if (rawKey.length < 32) {
+    throw new Error(
+      "STOCK_ENCRYPTION_KEY must be at least 32 characters. " +
+        "Generate one with: openssl rand -hex 32",
+    );
+  }
+  // scrypt KDF: safe even if the env var is a passphrase rather than pure random bytes.
+  // Cost params (N=2^17, r=8, p=1) deliberately higher than Node defaults — stock key
+  // derivation happens once per process startup, not per request.
+  return scryptSync(rawKey, "xvault-stock-v1", 32, { N: 131072, r: 8, p: 1 });
 }
 
 export function encryptStock(plaintext: string): string {

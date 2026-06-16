@@ -1,11 +1,17 @@
-// Next-side session/auth. Self-contained (no import from the TanStack-coupled
-// src/lib/server/auth.server.ts) but fully interoperable with it: same
-// `sessions` table, same `xv_session` cookie name and token format, so a
-// session created on either stack is valid on the other during the migration.
 import { randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { q1, run } from "@/lib/server/db.server";
 import { now, fail } from "@/lib/server/core.server";
+
+if (
+  process.env.NODE_ENV === "production" &&
+  process.env.NEXT_PHASE !== "phase-production-build" &&
+  !process.env.SESSION_SECRET
+) {
+  throw new Error(
+    "SESSION_SECRET is required in production. Generate one with: openssl rand -hex 32",
+  );
+}
 
 const SESSION_COOKIE = "xv_session";
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 14; // 14 days

@@ -136,10 +136,10 @@ async function makePgClient(): Promise<PgSql> {
   const { default: postgres } = await import("postgres");
   const numericOids = [20, 1700];
   return postgres(process.env.DATABASE_URL!, {
-    max: 5,
+    max: 20,
     prepare: false,
-    idle_timeout: 5,
-    max_lifetime: 60,
+    idle_timeout: 10,
+    max_lifetime: 300,
     types: Object.fromEntries(
       numericOids.map((oid) => [
         `num${oid}`,
@@ -1191,6 +1191,18 @@ async function migrate(e: Engine): Promise<void> {
   // seller dashboard order counts filter by (seller_id, status)
   await e
     .exec(`create index if not exists idx_orders_seller_status on orders(seller_id, status)`)
+    .catch(() => {});
+
+  // --- Phase F (audit): remaining hot-path indexes ---
+  // Withdrawals are queried by user_id (seller wallet, admin finance) — missing index caused full scans
+  await e
+    .exec(
+      `create index if not exists idx_withdrawals_user_created on withdrawals(user_id, created_at)`,
+    )
+    .catch(() => {});
+  // Deposits by user_id for analytics and admin finance page
+  await e
+    .exec(`create index if not exists idx_deposits_user_created on deposits(user_id, created_at)`)
     .catch(() => {});
 
   // --- Phase E (perf audit): full-text search acceleration ---

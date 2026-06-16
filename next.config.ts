@@ -2,6 +2,12 @@ import type { NextConfig } from "next";
 
 const securityHeaders = [
   { key: "X-DNS-Prefetch-Control", value: "on" },
+  // HSTS: force HTTPS for 2 years, include subdomains, allow preload list.
+  // The middleware also sets this header so serverless Edge routes pick it up.
+  {
+    key: "Strict-Transport-Security",
+    value: "max-age=63072000; includeSubDomains; preload",
+  },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
@@ -13,7 +19,8 @@ const securityHeaders = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      // unsafe-eval removed; not needed in production Next.js 15 builds
+      // Next.js 15 inlines small chunks during SSR — 'unsafe-inline' is required
+      // until nonce-based CSP is wired up. Track: https://github.com/vercel/next.js/issues/14221
       "script-src 'self' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline'",
       // Allow next/image optimized images (/_next/image) and uploaded images

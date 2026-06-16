@@ -35,7 +35,7 @@ export async function maybePayoutReferralForOrder(
   );
   if (!ref) return;
   const already = await q1(
-    `select 1 from wallet_ledger where user_id = ? and ref_id = ? and kind = 'adjustment'`,
+    `select 1 from wallet_ledger where user_id = ? and order_id = ? and type = 'adjustment'`,
     [ref.owner_user_id, orderId],
   );
   if (already) return;

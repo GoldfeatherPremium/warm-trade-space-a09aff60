@@ -2,7 +2,6 @@ import js from "@eslint/js";
 import eslintPluginPrettier from "eslint-plugin-prettier/recommended";
 import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
-import reactRefresh from "eslint-plugin-react-refresh";
 import nextPlugin from "@next/eslint-plugin-next";
 import tseslint from "typescript-eslint";
 
@@ -30,39 +29,22 @@ export default tseslint.config(
     },
     plugins: {
       "react-hooks": reactHooks,
-      "react-refresh": reactRefresh,
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      "no-restricted-imports": [
-        "error",
-        {
-          paths: [
-            {
-              name: "server-only",
-              message:
-                "TanStack Start does not use the Next.js `server-only` package. Rename the module to `*.server.ts` or mark it with `@tanstack/react-start/server-only`.",
-            },
-          ],
-        },
-      ],
-      "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "@typescript-eslint/no-unused-vars": "off",
     },
   },
   {
     // Next.js App Router files legitimately export non-components (metadata,
     // generateMetadata, route config, Server Actions) and use the idiomatic
-    // `server-only` package — relax the Vite-era guards here. Add the Next.js
-    // plugin (the build warned it was missing) and the icon/global collision
+    // `server-only` package. Add the Next.js plugin and the icon/global collision
     // guard so a forgotten lucide import fails the build instead of prod.
     files: ["app/**/*.{ts,tsx}"],
     plugins: { "@next/next": nextPlugin },
     rules: {
       ...nextPlugin.configs.recommended.rules,
       ...nextPlugin.configs["core-web-vitals"].rules,
-      "react-refresh/only-export-components": "off",
-      "no-restricted-imports": "off",
       "no-restricted-globals": [
         "error",
         ...ICON_DOM_GLOBAL_COLLISIONS.map((name) => ({

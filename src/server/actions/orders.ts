@@ -127,7 +127,7 @@ export async function createOrderAction(input: z.infer<typeof createSchema>): Pr
     const openUnpaid = (await q1<{ c: number }>(
       `select count(*) c from orders where buyer_id = ? and status = 'awaiting_payment'`,
       [user.id],
-    ))!.c;
+    ))?.c ?? 0;
     if (openUnpaid >= 5)
       return { ok: false, error: "You have too many unpaid orders. Pay or cancel them first." };
 
@@ -447,7 +447,7 @@ export async function openDisputeAction(
     const recent = (await q1<{ c: number }>(
       `select count(*) c from disputes where opened_by = ? and created_at > ?`,
       [user.id, now() - 30 * 86_400_000],
-    ))!.c;
+    ))?.c ?? 0;
     if (recent >= 5)
       return { ok: false, error: "Dispute limit reached — contact support directly." };
 

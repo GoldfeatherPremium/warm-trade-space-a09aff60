@@ -3,48 +3,78 @@
 import { z } from "zod";
 import { q, q1, run } from "@/lib/server/db.server";
 import { appContext } from "@/lib/server/app.server";
-import { decryptStock, now } from "@/lib/server/core.server";
+import { decryptStock, hashPassword, verifyPassword, now } from "@/lib/server/core.server";
 import { requireUser } from "../auth";
+import { cookies } from "next/headers";
 
 type ActionResult = { ok: true } | { ok: false; error: string };
 
-export async function updateProfileAction(input: {
-  username?: string;
-  currentPassword?: string;
-  newPassword?: string;
-}): Promise<ActionResult> {
+const SUPPORTED_LOCALES = ["en", "es", "fr", "de", "pt", "ru", "zh", "ja", "ko", "ar"] as const;
+const SUPPORTED_CURRENCIES = [
+  "USD",
+  "EUR",
+  "GBP",
+  "BRL",
+  "INR",
+  "NGN",
+  "RUB",
+  "IDR",
+  "PHP",
+  "TRY",
+] as const;
+
+const updateProfileSchema = z.object({
+  username: z
+    .string()
+    .min(3)
+    .max(24)
+    .regex(/^[a-zA-Z0-9_]+$/, "Letters, numbers and underscore only")
+    .optional(),
+  currentPassword: z.string().max(100).optional(),
+  newPassword: z.string().min(8).max(100).optional(),
+});
+
+export async function updateProfileAction(
+  input: z.infer<typeof updateProfileSchema>,
+): Promise<ActionResult> {
   try {
     await appContext();
     const user = await requireUser();
-    const { createHash } = await import("node:crypto");
-    const hash = (p: string) => createHash("sha256").update(p).digest("hex");
+    const data = updateProfileSchema.parse(input);
 
-    if (input.newPassword) {
-      if (!input.currentPassword) return { ok: false, error: "Current password required." };
+    if (data.newPassword) {
+      if (!data.currentPassword) return { ok: false, error: "Current password required." };
       const row = await q1<{ password_hash: string }>(
         `select password_hash from users where id = ?`,
         [user.id],
       );
-      if (!row || row.password_hash !== hash(input.currentPassword))
+      if (!row || !verifyPassword(data.currentPassword, row.password_hash))
         return { ok: false, error: "Current password is incorrect." };
-      await run(`update users set password_hash = ?, updated_at = ? where id = ?`, [
-        hash(input.newPassword),
-        now(),
+      await run(`update users set password_hash = ? where id = ?`, [
+        hashPassword(data.newPassword),
         user.id,
       ]);
+      // Invalidate all other sessions so stolen sessions can't persist after a
+      // password change. Keep the current session active for smooth UX.
+      const store = await cookies();
+      const currentToken = store.get("xv_session")?.value;
+      if (currentToken) {
+        await run(`delete from sessions where user_id = ? and token != ?`, [
+          user.id,
+          currentToken,
+        ]);
+      } else {
+        await run(`delete from sessions where user_id = ?`, [user.id]);
+      }
     }
 
-    if (input.username && input.username !== user.username) {
+    if (data.username && data.username !== user.username) {
       const taken = await q1(
         `select 1 as x from users where lower(username) = lower(?) and id != ?`,
-        [input.username, user.id],
+        [data.username, user.id],
       );
       if (taken) return { ok: false, error: "Username already taken." };
-      await run(`update users set username = ?, updated_at = ? where id = ?`, [
-        input.username,
-        now(),
-        user.id,
-      ]);
+      await run(`update users set username = ? where id = ?`, [data.username, user.id]);
     }
 
     return { ok: true };
@@ -53,18 +83,29 @@ export async function updateProfileAction(input: {
   }
 }
 
-export async function updatePreferencesAction(input: {
-  locale: string;
-  preferred_currency: string;
-  country: string;
-}): Promise<ActionResult> {
+const updatePreferencesSchema = z.object({
+  locale: z.enum(SUPPORTED_LOCALES).default("en"),
+  preferred_currency: z.enum(SUPPORTED_CURRENCIES).default("USD"),
+  country: z
+    .string()
+    .regex(/^[A-Z]{2}$/, "Must be a 2-letter ISO country code")
+    .nullable()
+    .optional(),
+});
+
+export async function updatePreferencesAction(
+  input: z.infer<typeof updatePreferencesSchema>,
+): Promise<ActionResult> {
   try {
     await appContext();
     const user = await requireUser();
-    await run(
-      `update users set locale = ?, preferred_currency = ?, country = ?, updated_at = ? where id = ?`,
-      [input.locale, input.preferred_currency, input.country || null, now(), user.id],
-    );
+    const data = updatePreferencesSchema.parse(input);
+    await run(`update users set locale = ?, preferred_currency = ?, country = ? where id = ?`, [
+      data.locale,
+      data.preferred_currency,
+      data.country ?? null,
+      user.id,
+    ]);
     return { ok: true };
   } catch (e) {
     return { ok: false, error: (e as Error).message };
