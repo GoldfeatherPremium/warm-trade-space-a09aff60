@@ -8,10 +8,10 @@ complete admin back office.
 Built with **TanStack Start + React 19 + Tailwind 4**. The backend runs entirely in
 server functions on a **dual-engine data layer**:
 
-| `DATABASE_URL` env var | Engine | Use case |
-|---|---|---|
-| not set | SQLite file in `./data` (zero config) | local development |
-| set to a Supabase/Postgres URL | Postgres via postgres.js | Lovable / production |
+| `DATABASE_URL` env var         | Engine                                | Use case             |
+| ------------------------------ | ------------------------------------- | -------------------- |
+| not set                        | SQLite file in `./data` (zero config) | local development    |
+| set to a Supabase/Postgres URL | Postgres via postgres.js              | Lovable / production |
 
 Schema creation **and demo seeding happen automatically on first boot** on either
 engine — there is nothing to migrate by hand.
@@ -46,14 +46,14 @@ needs a hosted database. Steps (no SQL knowledge required):
 
 ### Demo accounts (password for all: `Password123!`)
 
-| Email | Role |
-|---|---|
-| `admin@xvault.test` | Super admin |
-| `finance@xvault.test` | Finance staff (withdrawal queue) |
-| `support@xvault.test` | Support staff (disputes, moderation) |
-| `goldrush@xvault.test` | Approved seller with live products & stock |
-| `keymaster@xvault.test` | Approved seller |
-| `buyer@xvault.test` | Buyer |
+| Email                   | Role                                       |
+| ----------------------- | ------------------------------------------ |
+| `admin@xvault.test`     | Super admin                                |
+| `finance@xvault.test`   | Finance staff (withdrawal queue)           |
+| `support@xvault.test`   | Support staff (disputes, moderation)       |
+| `goldrush@xvault.test`  | Approved seller with live products & stock |
+| `keymaster@xvault.test` | Approved seller                            |
+| `buyer@xvault.test`     | Buyer                                      |
 
 ## What's implemented
 
@@ -91,7 +91,7 @@ awaiting_payment → paid → delivered → completed (warranty) → released
   risk tier; search, filters, sorting, pagination; product pages with reviews and
   escrow explainer; public seller stores.
 - **Seller dashboard**: overview (sales, escrow, low-stock alerts), product CRUD with
-  admin review on create *and* edit, stock manager, order queue with SLA column,
+  admin review on create _and_ edit, stock manager, order queue with SLA column,
   reviews with replies, vacation mode, seller levels (listing caps + withdrawal caps).
 - **Admin panel**: KPI dashboard (GMV, revenue, escrow held), seller KYC queue,
   product approval queue with prohibited-items policy, global order search with

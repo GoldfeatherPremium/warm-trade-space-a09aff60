@@ -20,9 +20,7 @@ self.addEventListener("activate", (e) => {
   e.waitUntil(
     caches
       .keys()
-      .then((keys) =>
-        Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))),
-      )
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
 });
@@ -75,7 +73,12 @@ self.addEventListener("fetch", (e) => {
 
 // ── Push: show notification ────────────────────────────────────────────────
 self.addEventListener("push", (e) => {
-  let data = { title: "X-VAULT", body: "You have a new notification.", url: "/notifications", icon: "/icon-192.png" };
+  let data = {
+    title: "X-VAULT",
+    body: "You have a new notification.",
+    url: "/notifications",
+    icon: "/icon-192.png",
+  };
   try {
     if (e.data) data = { ...data, ...e.data.json() };
   } catch {
@@ -100,19 +103,17 @@ self.addEventListener("notificationclick", (e) => {
   const targetUrl = e.notification.data?.url ?? "/";
 
   e.waitUntil(
-    self.clients
-      .matchAll({ type: "window", includeUncontrolled: true })
-      .then((clients) => {
-        const match = clients.find((c) => {
-          try {
-            return new URL(c.url).pathname === new URL(targetUrl, self.location.origin).pathname;
-          } catch {
-            return false;
-          }
-        });
-        if (match) return match.focus();
-        return self.clients.openWindow(targetUrl);
-      }),
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+      const match = clients.find((c) => {
+        try {
+          return new URL(c.url).pathname === new URL(targetUrl, self.location.origin).pathname;
+        } catch {
+          return false;
+        }
+      });
+      if (match) return match.focus();
+      return self.clients.openWindow(targetUrl);
+    }),
   );
 });
 
@@ -120,12 +121,21 @@ self.addEventListener("notificationclick", (e) => {
 self.addEventListener("pushsubscriptionchange", (e) => {
   e.waitUntil(
     self.registration.pushManager
-      .subscribe({ userVisibleOnly: true, applicationServerKey: e.oldSubscription?.options?.applicationServerKey })
+      .subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: e.oldSubscription?.options?.applicationServerKey,
+      })
       .then((sub) =>
         fetch("/api/push/subscribe", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ endpoint: sub.endpoint, keys: { p256dh: arrayBufferToBase64(sub.getKey("p256dh")), auth: arrayBufferToBase64(sub.getKey("auth")) } }),
+          body: JSON.stringify({
+            endpoint: sub.endpoint,
+            keys: {
+              p256dh: arrayBufferToBase64(sub.getKey("p256dh")),
+              auth: arrayBufferToBase64(sub.getKey("auth")),
+            },
+          }),
         }),
       )
       .catch(() => {}),

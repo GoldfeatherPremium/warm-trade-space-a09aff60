@@ -32,11 +32,9 @@ const nextConfig: NextConfig = {
   compress: true,
   // Native / Node-only DB drivers must not be bundled by the server compiler.
   serverExternalPackages: ["better-sqlite3", "postgres"],
-  // During the in-place migration the legacy TanStack app under src/routes is
-  // frozen and Vite-built; only lint the new App Router surface.
+  // Lint the App Router surface.
   eslint: { dirs: ["app"] },
-  // Use a Next-scoped tsconfig so the build's type-check doesn't choke on the
-  // legacy Vite entrypoints (?url imports, vite/client types).
+  // Next-scoped tsconfig (app/** plus the shared src server modules).
   typescript: { tsconfigPath: "tsconfig.next.json" },
   images: {
     formats: ["image/avif", "image/webp"],

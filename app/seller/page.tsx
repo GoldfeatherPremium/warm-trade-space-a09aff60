@@ -18,7 +18,7 @@ import {
 import { getSellerOverviewAction } from "@/server/actions/seller";
 import { usdt } from "@/lib/format";
 
-const SalesAreaChart = lazy(() => import("@/components/charts/sales-area-chart"));
+const SalesAreaChart = lazy(() => import("../_components/charts/sales-area-chart"));
 
 type Overview = Awaited<ReturnType<typeof getSellerOverviewAction>>;
 

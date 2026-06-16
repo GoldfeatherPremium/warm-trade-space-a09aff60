@@ -840,70 +840,63 @@ export async function getSellerAnalyticsAction(range: Range = "30d") {
     const since = t - days * DAY;
     const prevSince = since - days * DAY;
 
-    const [
-      paidRows,
-      summary,
-      prevSummary,
-      topProducts,
-      categoryMix,
-      buyerStats,
-      productCounts,
-    ] = await Promise.all([
-      q<{ paid_at: number; v: number; n: number }>(
-        `select paid_at, seller_net_cents as v, 1 as n from orders
+    const [paidRows, summary, prevSummary, topProducts, categoryMix, buyerStats, productCounts] =
+      await Promise.all([
+        q<{ paid_at: number; v: number; n: number }>(
+          `select paid_at, seller_net_cents as v, 1 as n from orders
          where seller_id = ? and paid_at > ? and status not in ('cancelled','expired','refunded')`,
-        [user.id, since],
-      ),
-      q1<{ n: number; gross: number; net: number; qty: number; buyers: number }>(
-        `select count(*) n, coalesce(sum(total_cents),0) gross, coalesce(sum(seller_net_cents),0) net,
+          [user.id, since],
+        ),
+        q1<{ n: number; gross: number; net: number; qty: number; buyers: number }>(
+          `select count(*) n, coalesce(sum(total_cents),0) gross, coalesce(sum(seller_net_cents),0) net,
                 coalesce(sum(qty),0) qty, count(distinct buyer_id) buyers
          from orders where seller_id = ? and paid_at > ? and status not in ('cancelled','expired','refunded')`,
-        [user.id, since],
-      ),
-      q1<{ net: number }>(
-        `select coalesce(sum(seller_net_cents),0) net from orders
+          [user.id, since],
+        ),
+        q1<{ net: number }>(
+          `select coalesce(sum(seller_net_cents),0) net from orders
          where seller_id = ? and paid_at > ? and paid_at <= ? and status not in ('cancelled','expired','refunded')`,
-        [user.id, prevSince, since],
-      ),
-      q<{
-        id: string;
-        title: string;
-        revenue: number;
-        orders: number;
-        views: number;
-        sold_count: number;
-      }>(
-        `select p.id, p.title,
+          [user.id, prevSince, since],
+        ),
+        q<{
+          id: string;
+          title: string;
+          revenue: number;
+          orders: number;
+          views: number;
+          sold_count: number;
+        }>(
+          `select p.id, p.title,
                 coalesce(sum(o.seller_net_cents),0) as revenue,
                 count(o.id) as orders,
                 p.views, p.sold_count
          from products p left join orders o on o.product_id = p.id
            and o.paid_at > ? and o.status not in ('cancelled','expired','refunded')
          where p.seller_id = ? group by p.id order by revenue desc limit 10`,
-        [since, user.id],
-      ),
-      q<{ name: string; revenue: number; orders: number }>(
-        `select c.name, coalesce(sum(o.seller_net_cents),0) as revenue, count(*) as orders
+          [since, user.id],
+        ),
+        q<{ name: string; revenue: number; orders: number }>(
+          `select c.name, coalesce(sum(o.seller_net_cents),0) as revenue, count(*) as orders
          from orders o join products p on p.id = o.product_id join categories c on c.id = p.category_id
          where o.seller_id = ? and o.paid_at > ? and o.status not in ('cancelled','expired','refunded')
          group by c.id order by revenue desc`,
-        [user.id, since],
-      ),
-      q1<{ buyers: number; repeat: number }>(
-        `select count(distinct buyer_id) buyers,
+          [user.id, since],
+        ),
+        q1<{ buyers: number; repeat: number }>(
+          `select count(distinct buyer_id) buyers,
                 count(distinct case when cnt > 1 then buyer_id end) repeat
          from (select buyer_id, count(*) cnt from orders where seller_id = ? and paid_at > ? and status not in ('cancelled','expired','refunded') group by buyer_id) sub`,
-        [user.id, since],
-      ),
-      q1<{ active: number; paused: number; oos: number }>(
-        `select
+          [user.id, since],
+        ),
+        q1<{ active: number; paused: number; oos: number }>(
+          `select
            sum(case when status = 'active' then 1 else 0 end) as active,
            sum(case when status = 'paused' then 1 else 0 end) as paused,
            sum(case when status = 'out_of_stock' then 1 else 0 end) as oos
          from products where seller_id = ?`,
-        [user.id],
-      ),
-    ]);
+          [user.id],
+        ),
+      ]);
 
     const daily: Array<{ day: string; v: number; n: number }> = [];
     for (let i = days - 1; i >= 0; i--) {
