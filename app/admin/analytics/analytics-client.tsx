@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { getAdminAnalyticsAction } from "@/server/actions/admin";
 import { usdt } from "@/lib/format";
-import { useChartTheme } from "../../_lib/use-chart-theme";
+import { CHART_COLORS } from "../../_lib/chart-colors";
 import {
   Area,
   AreaChart,
@@ -45,7 +45,7 @@ export function AnalyticsClient() {
   const [, startTransition] = useTransition();
   const rangeRef = useRef(range);
   rangeRef.current = range;
-  const ct = useChartTheme();
+  const ct = CHART_COLORS;
 
   useEffect(() => {
     setLoading(true);

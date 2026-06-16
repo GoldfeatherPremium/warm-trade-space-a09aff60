@@ -12,7 +12,7 @@ import {
   YAxis,
 } from "recharts";
 import { usdt } from "@/lib/format";
-import { useChartTheme } from "../../_lib/use-chart-theme";
+import { CHART_COLORS } from "../../_lib/chart-colors";
 
 type Analytics = {
   daily: { day: string; v: number }[];
@@ -21,7 +21,7 @@ type Analytics = {
 };
 
 export function AnalyticsCharts({ data }: { data: Analytics }) {
-  const ct = useChartTheme();
+  const ct = CHART_COLORS;
 
   return (
     <>

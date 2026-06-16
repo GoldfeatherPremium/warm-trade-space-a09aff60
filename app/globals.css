@@ -4,231 +4,35 @@
 @source "../app";
 @source "../src";
 
-@custom-variant dark (&:is(.dark *));
-
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-success: var(--success);
-  --color-success-foreground: var(--success-foreground);
-  --color-warning: var(--warning);
-  --color-warning-foreground: var(--warning-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --color-chart-6: var(--chart-6);
   --font-display: var(--nf-display, "Archivo Black", sans-serif);
   --font-body: var(--nf-body, "Inter", sans-serif);
   --font-mono: var(--nf-mono, "JetBrains Mono", monospace);
 }
 
-/* ════════════════════════════════════════════════════════════════
-   LIGHT MODE — "Stripe × Apple" premium fintech
-   Pure whites, architectural grays, refined violet, crisp depth.
-   ════════════════════════════════════════════════════════════════ */
 :root {
   --radius: 0.75rem;
-
-  /* Surfaces */
-  --background: oklch(0.985 0.003 290);
-  --foreground: oklch(0.14 0.022 285);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.14 0.022 285);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.14 0.022 285);
-
-  /* Refined violet primary */
-  --primary: oklch(0.52 0.24 295);
-  --primary-foreground: oklch(0.99 0 0);
-  --primary-glow: oklch(0.58 0.22 295);
-
-  --secondary: oklch(0.963 0.006 290);
-  --secondary-foreground: oklch(0.28 0.022 285);
-  --muted: oklch(0.97 0.004 290);
-  --muted-foreground: oklch(0.48 0.02 285);
-
-  /* Indigo accent */
-  --accent: oklch(0.54 0.19 268);
-  --accent-foreground: oklch(0.99 0 0);
-
-  /* Semantic */
-  --success: oklch(0.55 0.15 160);
-  --success-foreground: oklch(0.99 0 0);
-  --warning: oklch(0.68 0.17 70);
-  --warning-foreground: oklch(0.2 0.04 70);
-  --destructive: oklch(0.55 0.22 25);
-  --destructive-foreground: oklch(0.99 0 0);
-
-  --border: oklch(0.9 0.006 290);
-  --input: oklch(0.945 0.005 290);
-  --ring: oklch(0.52 0.24 295);
-
-  /* Charts */
-  --chart-1: oklch(0.52 0.24 295);
-  --chart-2: oklch(0.55 0.18 268);
-  --chart-3: oklch(0.6 0.17 200);
-  --chart-4: oklch(0.6 0.15 160);
-  --chart-5: oklch(0.7 0.16 70);
-  --chart-6: oklch(0.58 0.2 350);
-
-  /* Glass */
-  --glass-bg: oklch(1 0 0 / 0.78);
-  --glass-border: oklch(0.4 0.02 285 / 0.1);
-  --neon-primary: transparent;
-
-  /* Gradients */
-  --gradient-primary: linear-gradient(135deg, oklch(0.54 0.25 296), oklch(0.55 0.21 268));
-  --gradient-hero: radial-gradient(
-    130% 130% at 50% -15%,
-    oklch(0.94 0.05 295) 0%,
-    oklch(0.985 0.004 290) 50%,
-    oklch(0.985 0.003 290) 100%
-  );
-  --gradient-aurora:
-    radial-gradient(52% 62% at 10% -5%, oklch(0.62 0.22 296 / 0.12), transparent 65%),
-    radial-gradient(45% 58% at 94% 8%, oklch(0.6 0.18 268 / 0.1), transparent 62%),
-    radial-gradient(35% 45% at 55% 95%, oklch(0.58 0.2 286 / 0.06), transparent 58%);
-  --gradient-text: linear-gradient(125deg, oklch(0.14 0.02 285) 0%, oklch(0.52 0.24 295) 100%);
-  --gradient-surface: linear-gradient(180deg, oklch(1 0 0) 0%, oklch(0.975 0.005 290) 100%);
-
-  /* Shadows */
-  --shadow-card: 0 1px 3px oklch(0.14 0.02 285 / 0.08), 0 4px 16px oklch(0.14 0.02 285 / 0.06);
-  --shadow-elev:
-    0 4px 6px oklch(0.14 0.02 285 / 0.05), 0 12px 40px -8px oklch(0.14 0.02 285 / 0.18);
-  --shadow-glow: 0 8px 40px -8px oklch(0.52 0.24 295 / 0.3);
-  --shadow-glow-lg: 0 16px 64px -16px oklch(0.52 0.24 295 / 0.35);
-
-  color-scheme: light;
-}
-
-/* ════════════════════════════════════════════════════════════════
-   DARK MODE — "Cyber Luxury" (Linear × Raycast × Vercel × Arc)
-   Near-black, electric violet, glass, neon edges, premium depth.
-   ════════════════════════════════════════════════════════════════ */
-.dark {
-  /* Surfaces */
-  --background: oklch(0.055 0.009 290);
-  --foreground: oklch(0.97 0.004 290);
-  --card: oklch(0.1 0.015 290);
-  --card-foreground: oklch(0.97 0.004 290);
-  --popover: oklch(0.09 0.013 290);
-  --popover-foreground: oklch(0.97 0.004 290);
-
-  /* Electric violet */
-  --primary: oklch(0.635 0.25 296);
-  --primary-foreground: oklch(0.99 0 0);
-  --primary-glow: oklch(0.72 0.23 296);
-
-  --secondary: oklch(0.145 0.019 290);
-  --secondary-foreground: oklch(0.97 0.004 290);
-  --muted: oklch(0.135 0.016 290);
-  --muted-foreground: oklch(0.64 0.024 290);
-
-  /* Bright indigo accent */
-  --accent: oklch(0.67 0.17 268);
-  --accent-foreground: oklch(0.99 0 0);
-
-  /* Semantic */
-  --success: oklch(0.72 0.17 158);
-  --success-foreground: oklch(0.08 0.01 160);
-  --warning: oklch(0.8 0.16 75);
-  --warning-foreground: oklch(0.18 0.04 75);
-  --destructive: oklch(0.64 0.24 22);
-  --destructive-foreground: oklch(0.99 0 0);
-
-  --border: oklch(0.19 0.022 290);
-  --input: oklch(0.19 0.022 290);
-  --ring: oklch(0.635 0.25 296);
-
-  /* Charts */
-  --chart-1: oklch(0.67 0.25 296);
-  --chart-2: oklch(0.69 0.18 268);
-  --chart-3: oklch(0.73 0.16 200);
-  --chart-4: oklch(0.74 0.17 158);
-  --chart-5: oklch(0.8 0.16 75);
-  --chart-6: oklch(0.68 0.22 350);
-
-  /* Glass */
-  --glass-bg: oklch(0.11 0.015 290 / 0.7);
-  --glass-border: oklch(0.99 0 0 / 0.07);
-  --neon-primary: oklch(0.635 0.25 296 / 0.6);
-
-  /* Gradients */
-  --gradient-primary: linear-gradient(135deg, oklch(0.62 0.26 298), oklch(0.63 0.19 268));
-  --gradient-hero: radial-gradient(
-    130% 130% at 50% -15%,
-    oklch(0.18 0.06 292) 0%,
-    oklch(0.08 0.018 290) 48%,
-    oklch(0.055 0.009 290) 100%
-  );
-  --gradient-aurora:
-    radial-gradient(52% 65% at 10% -5%, oklch(0.635 0.25 296 / 0.32), transparent 65%),
-    radial-gradient(45% 58% at 94% 8%, oklch(0.67 0.17 268 / 0.22), transparent 62%),
-    radial-gradient(38% 52% at 55% 100%, oklch(0.62 0.2 286 / 0.14), transparent 60%);
-  --gradient-text: linear-gradient(125deg, oklch(0.99 0 0) 0%, oklch(0.78 0.13 296) 100%);
-  --gradient-surface: linear-gradient(180deg, oklch(0.12 0.016 290) 0%, oklch(0.07 0.01 290) 100%);
-
-  /* Shadows */
-  --shadow-card: 0 8px 32px -12px oklch(0 0 0 / 0.65);
-  --shadow-elev: 0 20px 60px -20px oklch(0 0 0 / 0.75);
-  --shadow-glow: 0 24px 80px -24px oklch(0.635 0.25 296 / 0.55);
-  --shadow-glow-lg: 0 32px 100px -32px oklch(0.635 0.25 296 / 0.65);
-
-  color-scheme: dark;
 }
 
 @layer base {
-  * {
-    border-color: var(--color-border);
-  }
-
   html,
   body {
-    background-color: var(--color-background);
-    color: var(--color-foreground);
     font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
 
-  /* Premium scrollbar */
+  /* Scrollbar */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
   ::-webkit-scrollbar-track {
     background: transparent;
-  }
-  ::-webkit-scrollbar-thumb {
-    background: color-mix(in oklch, var(--color-muted-foreground) 28%, transparent);
-    border-radius: 9999px;
-    border: 2px solid var(--color-background);
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: color-mix(in oklch, var(--color-muted-foreground) 48%, transparent);
   }
 
   .font-display {
@@ -249,105 +53,6 @@
   }
 }
 
-@layer utilities {
-  /* ── Glass ──────────────────────────────────────────────────── */
-  .glass {
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px) saturate(160%);
-    -webkit-backdrop-filter: blur(20px) saturate(160%);
-    border: 1px solid var(--glass-border);
-  }
-
-  .glass-xl {
-    background: var(--glass-bg);
-    backdrop-filter: blur(40px) saturate(180%) brightness(105%);
-    -webkit-backdrop-filter: blur(40px) saturate(180%) brightness(105%);
-    border: 1px solid var(--glass-border);
-  }
-
-  /* ── Gradient text ───────────────────────────────────────────── */
-  .text-gradient {
-    background: var(--gradient-text);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-  .text-gradient-brand {
-    background: var(--gradient-primary);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
-  /* ── Shadows & glows ─────────────────────────────────────────── */
-  .ring-glow {
-    box-shadow: var(--shadow-glow);
-  }
-  .ring-glow-lg {
-    box-shadow: var(--shadow-glow-lg);
-  }
-  .shadow-card {
-    box-shadow: var(--shadow-card);
-  }
-  .shadow-elev {
-    box-shadow: var(--shadow-elev);
-  }
-
-  /* ── Neon border ─────────────────────────────────────────────── */
-  .neon-border {
-    box-shadow:
-      0 0 0 1px var(--color-primary),
-      0 0 16px -4px oklch(from var(--color-primary) l c h / 0.5);
-  }
-
-  /* ── Premium card hover ──────────────────────────────────────── */
-  .card-hover {
-    transition:
-      transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
-      box-shadow 0.22s ease,
-      border-color 0.22s ease;
-  }
-  .card-hover:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-glow);
-    border-color: color-mix(in oklch, var(--color-primary) 50%, transparent);
-  }
-
-  /* ── Gradient border ─────────────────────────────────────────── */
-  .gradient-border {
-    position: relative;
-    background-clip: padding-box;
-  }
-  .gradient-border::before {
-    content: "";
-    position: absolute;
-    inset: -1px;
-    border-radius: inherit;
-    background: var(--gradient-primary);
-    z-index: -1;
-    opacity: 0.6;
-  }
-
-  /* ── Shimmer skeleton ───────────────────────────────────────── */
-  .shimmer {
-    position: relative;
-    overflow: hidden;
-  }
-  .shimmer::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    transform: translateX(-100%);
-    background: linear-gradient(
-      90deg,
-      transparent,
-      color-mix(in oklch, var(--color-foreground) 8%, transparent),
-      transparent
-    );
-    animation: shimmer 2s infinite;
-  }
-}
-
 /* ════════════════════════════════════════════════════════════════
    ANIMATIONS
    ════════════════════════════════════════════════════════════════ */
@@ -357,11 +62,9 @@
   0%,
   100% {
     opacity: 1;
-    box-shadow: 0 0 0 0 var(--neon-primary, oklch(0.635 0.25 296 / 0.4));
   }
   50% {
     opacity: 0.75;
-    box-shadow: 0 0 0 6px transparent;
   }
 }
 .live-dot {
@@ -468,13 +171,6 @@
   animation: scaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* Shimmer skeleton sweep */
-@keyframes shimmer {
-  100% {
-    transform: translateX(100%);
-  }
-}
-
 /* Animated aurora orb drift — for hero background */
 @keyframes orb-drift-1 {
   0%,
@@ -523,33 +219,6 @@
 }
 .animate-orb-3 {
   animation: orb-drift-3 30s ease-in-out infinite;
-}
-
-/* Gradient text shine sweep */
-@keyframes gradient-shift {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-.text-gradient-animated {
-  background: linear-gradient(
-    120deg,
-    oklch(0.635 0.25 296),
-    oklch(0.67 0.17 268),
-    oklch(0.72 0.23 296),
-    oklch(0.635 0.25 296)
-  );
-  background-size: 300% 300%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: gradient-shift 5s ease infinite;
 }
 
 /* Trust badge entrance */

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { DollarSign, ShoppingBag, Coins, Lock, Trophy } from "lucide-react";
 import { getAdminDashboardAction } from "@/server/actions/admin";
 import { usdt, ORDER_STATUS_META } from "@/lib/format";
-import { useChartTheme, type ChartTheme } from "../_lib/use-chart-theme";
+import { CHART_COLORS, type ChartTheme } from "../_lib/chart-colors";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -177,7 +177,7 @@ export function AdminDashboardClient() {
   const [data, setData] = useState<Dashboard | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
-  const ct = useChartTheme();
+  const ct = CHART_COLORS;
 
   const load = () => {
     startTransition(async () => {
