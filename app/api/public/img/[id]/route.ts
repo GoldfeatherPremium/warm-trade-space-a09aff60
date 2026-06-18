@@ -15,6 +15,19 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   );
   if (!row) return new Response("Not found", { status: 404 });
 
+  // CDN-backed image (H6): the row stores a public URL → permanent redirect to
+  // the CDN (cached by browser + edge). Legacy `upload:<id>` references keep
+  // working, now served from the CDN instead of base64 through this function.
+  if (/^https?:\/\//.test(row.data)) {
+    return new Response(null, {
+      status: 308,
+      headers: {
+        location: row.data,
+        "cache-control": "public, max-age=2592000, immutable",
+      },
+    });
+  }
+
   // Reject non-image mimes — guards against stored XSS via MIME sniffing
   if (!ALLOWED_MIMES.has(row.mime)) return new Response("Not found", { status: 404 });
 

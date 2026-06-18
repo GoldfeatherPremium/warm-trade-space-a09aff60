@@ -13,6 +13,7 @@ import {
   uid,
 } from "@/lib/server/core.server";
 import { getWallet, txWithdrawalHold } from "@/lib/server/money.server";
+import { storageEnabled, uploadPublicImage } from "@/lib/server/storage.server";
 import { requireSeller, requireUser } from "@/server/auth";
 import { cached } from "@/lib/server/cache.server";
 
@@ -441,10 +442,21 @@ export async function uploadProductImageAction(mime: string, dataBase64: string)
   ))!.c;
   if (recent > 60) fail("Upload limit reached, try again later.");
   const id = uid();
+  // CDN-backed when configured: store the public URL instead of base64. Falls
+  // back to inline base64 if storage is off or the upload fails, so uploads
+  // never break. The img route + productImage() resolve either form.
+  let stored = dataBase64;
+  if (storageEnabled()) {
+    try {
+      stored = await uploadPublicImage(Buffer.from(dataBase64, "base64"), detectedMime!);
+    } catch (e) {
+      console.error("[storage] blob upload failed, storing inline:", (e as Error)?.message);
+    }
+  }
   await run(
     `insert into product_images (id, product_id, seller_id, mime, data, sort, created_at)
      values (?, null, ?, ?, ?, 0, ?)`,
-    [id, user.id, detectedMime, dataBase64, now()],
+    [id, user.id, detectedMime, stored, now()],
   );
   return { id };
 }
