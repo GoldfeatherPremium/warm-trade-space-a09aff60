@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ShieldCheck, Zap, Lock, ArrowRight } from "lucide-react";
 import { SmartSearchBox } from "./smart-search-box";
 import { AccountNav } from "./account-nav";
+import { ThemeToggle } from "./theme-toggle";
 import { CategoryBar } from "./category-bar";
 import { BottomNav } from "./bottom-nav";
 
@@ -46,6 +47,7 @@ function SiteHeader() {
 
         {/* Right actions */}
         <div className="ml-auto sm:ml-0 flex items-center gap-1.5">
+          <ThemeToggle />
           <AccountNav />
         </div>
       </div>

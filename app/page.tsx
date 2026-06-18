@@ -188,16 +188,14 @@ export default async function HomePage() {
 
             {/* Headline */}
             <h1 className="animate-enter font-display leading-[0.92] mb-5 text-[2.6rem] sm:text-5xl lg:text-[3.6rem]">
-              The Trusted
+              Buy. Sell. Trade.
               <br />
-              <span className="text-gradient-animated">Marketplace</span>
-              <br />
-              for Digital Goods
+              <span className="text-gradient-animated">Securely.</span>
             </h1>
 
-            <p className="animate-enter stagger-2 text-sm sm:text-[15px] text-muted-foreground max-w-[460px] mb-7 leading-relaxed">
-              Buy and sell digital products instantly — with escrow protection, verified sellers,
-              USDT payments and instant delivery.
+            <p className="animate-enter stagger-2 text-sm sm:text-[15px] text-muted-foreground max-w-[480px] mb-7 leading-relaxed">
+              The most trusted marketplace for digital products, gaming assets, subscriptions,
+              software, gift cards, services and accounts — escrow-protected, instant delivery.
             </p>
 
             {/* Search bar — hero variant */}
@@ -212,13 +210,13 @@ export default async function HomePage() {
                 className="inline-flex items-center gap-2 text-[11px] font-bold tracking-widest px-5 py-3 rounded-xl text-primary-foreground shadow-glow transition-all hover:scale-[1.03] hover:shadow-[var(--shadow-glow-lg)] active:scale-[0.98]"
                 style={{ background: "var(--gradient-primary)" }}
               >
-                BROWSE MARKETPLACE <ArrowRight className="size-3.5" />
+                EXPLORE MARKETPLACE <ArrowRight className="size-3.5" />
               </Link>
               <Link
                 href="/sell"
                 className="inline-flex items-center gap-2 text-[11px] font-bold tracking-widest px-5 py-3 rounded-xl border border-border bg-card/60 hover:border-primary/50 hover:text-primary transition-colors"
               >
-                BECOME A SELLER
+                START SELLING
               </Link>
             </div>
 

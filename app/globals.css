@@ -4,6 +4,8 @@
 @source "../app";
 @source "../src";
 
+@custom-variant dark (&:is(.dark *));
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -12,18 +14,186 @@
   --font-display: var(--nf-display, "Archivo Black", sans-serif);
   --font-body: var(--nf-body, "Inter", sans-serif);
   --font-mono: var(--nf-mono, "JetBrains Mono", monospace);
+
+  /* Semantic colour tokens — resolve to runtime vars so they switch with the
+     .dark class (see :root / .dark below). `inline` emits the var() reference
+     into each utility so a single class works in both themes. */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
 }
 
+/* ════════════════════════════════════════════════════════════════
+   LIGHT MODE — premium fintech (Stripe × Apple). Crisp whites, slate
+   architecture, violet primary, electric-cyan accent.
+   ════════════════════════════════════════════════════════════════ */
 :root {
   --radius: 0.75rem;
+
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+
+  --primary: #7c3aed;
+  --primary-foreground: #ffffff;
+  --primary-glow: #9f67ff;
+
+  --secondary: #f1f5f9;
+  --secondary-foreground: #334155;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+
+  --accent: #00d4ff;
+  --accent-foreground: #04293a;
+
+  --success: #10b981;
+  --success-foreground: #ffffff;
+  --warning: #f59e0b;
+  --warning-foreground: #422006;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #7c3aed;
+
+  --chart-1: #7c3aed;
+  --chart-2: #00d4ff;
+  --chart-3: #6366f1;
+  --chart-4: #10b981;
+  --chart-5: #f59e0b;
+  --chart-6: #ec4899;
+
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(15, 23, 42, 0.08);
+
+  --gradient-primary: linear-gradient(135deg, #7c3aed, #00d4ff);
+  --gradient-hero: radial-gradient(130% 130% at 50% -20%, #ede9fe 0%, #f8fafc 46%, #f8fafc 100%);
+  --gradient-text: linear-gradient(120deg, #0f172a 0%, #7c3aed 60%, #6d28d9 100%);
+  --gradient-aurora:
+    radial-gradient(50% 60% at 12% -5%, rgba(124, 58, 237, 0.1), transparent 64%),
+    radial-gradient(46% 58% at 92% 6%, rgba(0, 212, 255, 0.1), transparent 62%);
+
+  --shadow-card: 0 1px 3px rgba(15, 23, 42, 0.06), 0 8px 24px -10px rgba(15, 23, 42, 0.1);
+  --shadow-elev: 0 4px 12px rgba(15, 23, 42, 0.06), 0 24px 48px -16px rgba(15, 23, 42, 0.14);
+  --shadow-glow: 0 8px 40px -10px rgba(124, 58, 237, 0.28);
+  --shadow-glow-lg: 0 16px 64px -18px rgba(124, 58, 237, 0.32);
+
+  color-scheme: light;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   DARK MODE — cyber luxury (Linear × Vercel × Arc). Deep space navy,
+   electric violet, glass surfaces, neon edges.
+   ════════════════════════════════════════════════════════════════ */
+.dark {
+  --background: #050816;
+  --foreground: #f8fafc;
+  --card: #131c31;
+  --card-foreground: #f8fafc;
+  --popover: #0d1324;
+  --popover-foreground: #f8fafc;
+
+  --primary: #7c3aed;
+  --primary-foreground: #ffffff;
+  --primary-glow: #9f67ff;
+
+  --secondary: #18223a;
+  --secondary-foreground: #cbd5e1;
+  --muted: #0d1324;
+  --muted-foreground: #94a3b8;
+
+  --accent: #00d4ff;
+  --accent-foreground: #042a38;
+
+  --success: #10b981;
+  --success-foreground: #ffffff;
+  --warning: #f59e0b;
+  --warning-foreground: #271804;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.1);
+  --ring: #7c3aed;
+
+  --chart-1: #a78bfa;
+  --chart-2: #00d4ff;
+  --chart-3: #818cf8;
+  --chart-4: #34d399;
+  --chart-5: #fbbf24;
+  --chart-6: #f472b6;
+
+  --glass-bg: rgba(13, 19, 36, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.08);
+
+  --gradient-primary: linear-gradient(135deg, #7c3aed, #00d4ff);
+  --gradient-hero:
+    radial-gradient(120% 120% at 50% -20%, rgba(124, 58, 237, 0.28) 0%, rgba(5, 8, 22, 0) 55%),
+    radial-gradient(80% 80% at 85% 0%, rgba(0, 212, 255, 0.12), transparent 60%), #050816;
+  --gradient-text: linear-gradient(120deg, #ffffff 0%, #a78bfa 55%, #00d4ff 100%);
+  --gradient-aurora:
+    radial-gradient(52% 62% at 10% -5%, rgba(124, 58, 237, 0.2), transparent 65%),
+    radial-gradient(46% 58% at 94% 8%, rgba(0, 212, 255, 0.14), transparent 62%);
+
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4), 0 8px 24px -10px rgba(0, 0, 0, 0.55);
+  --shadow-elev: 0 8px 30px -10px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 8px 40px -10px rgba(124, 58, 237, 0.45);
+  --shadow-glow-lg: 0 16px 64px -18px rgba(124, 58, 237, 0.5);
+
+  color-scheme: dark;
 }
 
 @layer base {
+  html {
+    scroll-behavior: smooth;
+  }
   html,
   body {
     font-family: var(--font-body);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+  }
+  body {
+    background: var(--background);
+    color: var(--foreground);
+  }
+  * {
+    border-color: var(--border);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
   }
 
   /* Scrollbar */
@@ -50,6 +220,67 @@
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   DESIGN-SYSTEM UTILITIES (referenced across components)
+   ════════════════════════════════════════════════════════════════ */
+
+/* Frosted surface for the sticky header / bottom nav. A single sticky element,
+   so the backdrop-filter cost is fine (per-card blur was removed for scroll). */
+.glass {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  backdrop-filter: saturate(180%) blur(14px);
+  border: 1px solid var(--glass-border);
+}
+
+/* Floating-card hover — transform/box-shadow only (GPU), hover-gated. */
+.card-hover {
+  transition:
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+@media (hover: hover) {
+  .card-hover:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-elev);
+    border-color: color-mix(in oklab, var(--primary) 38%, transparent);
+  }
+}
+
+.shadow-card {
+  box-shadow: var(--shadow-card);
+}
+.shadow-elev {
+  box-shadow: var(--shadow-elev);
+}
+.shadow-glow {
+  box-shadow: var(--shadow-glow);
+}
+.shadow-glow-lg {
+  box-shadow: var(--shadow-glow-lg);
+}
+
+.text-gradient {
+  background: var(--gradient-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.text-gradient-animated {
+  background: linear-gradient(120deg, #7c3aed, #00d4ff, #a78bfa, #7c3aed);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: text-shimmer 8s linear infinite;
+}
+@keyframes text-shimmer {
+  to {
+    background-position: 300% 0;
   }
 }
 
