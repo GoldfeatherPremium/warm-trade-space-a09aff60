@@ -14,6 +14,9 @@ const PRESET: Record<string, string> = {
 };
 
 export function productImage(key: string | null | undefined): string {
+  // CDN-backed (H6): image_key may be an absolute URL after backfill — use it
+  // directly so next/image loads from the CDN without the route redirect hop.
+  if (key && /^https?:\/\//.test(key)) return key;
   if (key && key.startsWith("upload:")) return `/api/public/img/${key.slice("upload:".length)}`;
   return (key && PRESET[key]) || "/assets/item-gold.jpg";
 }

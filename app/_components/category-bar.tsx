@@ -25,7 +25,7 @@ function CategoryBarInner() {
   const isAllActive = pathname === "/browse" && !activeCategory;
 
   return (
-    <div className="border-b border-border/60 bg-background/95 backdrop-blur-sm sticky top-16 z-30">
+    <div className="border-b border-border/60 bg-background sticky top-16 z-30">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-2">
           <Link

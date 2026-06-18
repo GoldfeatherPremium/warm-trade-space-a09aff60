@@ -18,7 +18,7 @@ export function ProductCard({ product, priority }: { product: PublicProduct; pri
   return (
     <Link
       href={`/p/${product.slug}`}
-      className="group relative flex flex-col bg-card border border-border rounded-2xl overflow-hidden card-hover"
+      className="group relative flex flex-col bg-card border border-border rounded-2xl overflow-hidden card-hover cv-auto"
     >
       {/* Wishlist (visual only for now) */}
       <button
@@ -48,10 +48,10 @@ export function ProductCard({ product, priority }: { product: PublicProduct; pri
 
         {/* Delivery badge — high-contrast over the image */}
         <span
-          className={`absolute top-2.5 left-2.5 text-[9px] font-bold px-2 py-1 rounded-lg flex items-center gap-1 backdrop-blur-sm border ${
+          className={`absolute top-2.5 left-2.5 text-[9px] font-bold px-2 py-1 rounded-lg flex items-center gap-1 border ${
             auto
-              ? "bg-primary/85 text-primary-foreground border-primary/40"
-              : "bg-accent/85 text-accent-foreground border-accent/40"
+              ? "bg-primary/90 text-primary-foreground border-primary/40"
+              : "bg-accent/90 text-accent-foreground border-accent/40"
           }`}
         >
           {auto ? <Zap className="size-2.5" /> : <Clock className="size-2.5" />}
@@ -59,17 +59,17 @@ export function ProductCard({ product, priority }: { product: PublicProduct; pri
         </span>
 
         {product.is_promoted && !outOfStock && (
-          <span className="absolute top-2.5 left-[88px] text-[9px] font-bold px-2 py-1 rounded-lg bg-warning/90 text-warning-foreground border border-warning/40 backdrop-blur-sm tracking-wide">
+          <span className="absolute top-2.5 left-[88px] text-[9px] font-bold px-2 py-1 rounded-lg bg-warning text-warning-foreground border border-warning/40 tracking-wide">
             FEATURED
           </span>
         )}
         {outOfStock && (
-          <span className="absolute top-2.5 right-2.5 text-[9px] font-bold px-2 py-1 rounded-lg bg-foreground/60 text-background backdrop-blur-sm">
+          <span className="absolute top-2.5 right-2.5 text-[9px] font-bold px-2 py-1 rounded-lg bg-foreground/75 text-background">
             SOLD OUT
           </span>
         )}
         {isLowStock && (
-          <span className="absolute bottom-2.5 left-2.5 text-[9px] font-bold px-2 py-1 rounded-lg bg-destructive/85 text-destructive-foreground backdrop-blur-sm animate-pulse">
+          <span className="absolute bottom-2.5 left-2.5 text-[9px] font-bold px-2 py-1 rounded-lg bg-destructive text-destructive-foreground animate-pulse">
             {product.stock_count} LEFT
           </span>
         )}

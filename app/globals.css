@@ -171,44 +171,47 @@
   animation: scaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* Animated aurora orb drift — for hero background */
+/* Animated aurora orb drift — for hero background.
+   Translate-only (no scale): animating scale on a blurred layer forces the
+   compositor to re-rasterize the blur every frame, which is a major mobile
+   jank/battery cost. Translate is a cheap GPU transform. */
 @keyframes orb-drift-1 {
   0%,
   100% {
-    transform: translate(0, 0) scale(1);
+    transform: translate3d(0, 0, 0);
   }
   25% {
-    transform: translate(3%, 5%) scale(1.04);
+    transform: translate3d(3%, 5%, 0);
   }
   50% {
-    transform: translate(-2%, 8%) scale(0.97);
+    transform: translate3d(-2%, 8%, 0);
   }
   75% {
-    transform: translate(4%, 3%) scale(1.02);
+    transform: translate3d(4%, 3%, 0);
   }
 }
 @keyframes orb-drift-2 {
   0%,
   100% {
-    transform: translate(0, 0) scale(1);
+    transform: translate3d(0, 0, 0);
   }
   33% {
-    transform: translate(-5%, -4%) scale(1.06);
+    transform: translate3d(-5%, -4%, 0);
   }
   66% {
-    transform: translate(3%, -7%) scale(0.95);
+    transform: translate3d(3%, -7%, 0);
   }
 }
 @keyframes orb-drift-3 {
   0%,
   100% {
-    transform: translate(0, 0) scale(1);
+    transform: translate3d(0, 0, 0);
   }
   40% {
-    transform: translate(4%, 6%) scale(1.08);
+    transform: translate3d(4%, 6%, 0);
   }
   80% {
-    transform: translate(-3%, 2%) scale(0.96);
+    transform: translate3d(-3%, 2%, 0);
   }
 }
 .animate-orb-1 {
@@ -266,6 +269,15 @@
     opacity: 1;
     transform: translateX(4px);
   }
+}
+
+/* Off-screen render-skipping for long lists / repeated cards → smoother
+   scrolling. The browser skips layout, paint and hit-testing for blocks far
+   from the viewport; contain-intrinsic-size reserves approximate space so the
+   scrollbar and layout stay stable (no CLS) until the block scrolls near. */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 300px;
 }
 
 /* Reduce motion */
